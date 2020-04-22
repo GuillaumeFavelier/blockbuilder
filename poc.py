@@ -19,7 +19,6 @@ grid_size = 10
 grid_length = (grid_size - 1) ** 2
 grid = pv.UniformGrid()
 grid.dimensions = (grid_size, grid_size, 1)
-grid._name = "GRID"
 
 # box
 box = pv.Box(bounds=(0, 1.0, 0, 1.0, 0, 1.0))
@@ -37,16 +36,24 @@ plotter._key_press_event_callbacks.clear()
 plotter._style = vtk.vtkInteractorStyleUser()
 plotter.update_style()
 
-plotter.add_mesh(plane, show_edges=True, color=plane_color)
-plotter.add_mesh(grid, show_edges=True, color=grid_color, opacity=0.7)
+# plane_actor = plotter.add_mesh(plane, show_edges=True, color=plane_color)
+# plane_actor._mesh = plane
+# plane_actor._name = "plane"
+grid_actor = plotter.add_mesh(grid, show_edges=True, color=grid_color,
+                              opacity=0.7)
+grid_actor._mesh = grid
+grid_actor._name = "grid"
 box_actor = plotter.add_mesh(box, show_edges=True, scalars="color",
                              rgb=True, opacity=0.7)
+box_actor._mesh = box
+box_actor._name = "selector"
 box_actor.VisibilityOff()
 
 
 class Builder(object):
     def __init__(self, plotter):
         self.plotter = plotter
+        self.button_pressed = False
         self.box_transform = (0, 0, 0)
         self.grid_zpos = 0
 
@@ -65,7 +72,11 @@ class Builder(object):
         )
         iren.AddObserver(
             vtk.vtkCommand.LeftButtonPressEvent,
-            self.on_left_click
+            self.on_mouse_left_press
+        )
+        iren.AddObserver(
+            vtk.vtkCommand.LeftButtonReleaseEvent,
+            self.on_mouse_left_release
         )
 
         self.picker = vtk.vtkCellPicker()
@@ -88,45 +99,65 @@ class Builder(object):
             grid.translate((0, 0, -1))
             self.grid_zpos -= 1
 
-    def on_left_click(self, vtk_picker, event):
-        if self.last_pick == "GRID":
-            fixed_box = pv.Box(bounds=(0, 1.0, 0, 1.0, 0, 1.0))
-            fixed_box_color = (1., 1., 1.)
-            fixed_box_scalars = np.tile(fixed_box_color, (6, 1))
-            fixed_box.cell_arrays["color"] = fixed_box_scalars
-            fixed_box.translate(self.box_transform)
-            actor = plotter.add_mesh(fixed_box, show_edges=True,
-                                     reset_camera=False,
-                                     scalars="color", rgb=True, color='tan')
-            fixed_box._actor = actor
-            fixed_box._transform = self.box_transform
-            fixed_box._name = "BLOCK"
+    def on_mouse_left_press(self, vtk_picker, event):
+        self.button_pressed = True
+
+    def on_mouse_left_release(self, vtk_picker, event):
+        x, y = vtk_picker.GetEventPosition()
+        self.picker.Pick(x, y, 0, plotter.renderer)
+        self.button_pressed = False
 
     def on_pick(self, vtk_picker, event):
-        cell_id = vtk_picker.GetCellId()
-        mesh = vtk_picker.GetDataSet()
-        if cell_id != -1:
-            if hasattr(mesh, "_name") and mesh._name == "GRID":
-                indices = vtk.vtkIdList()
-                mesh.GetCellPoints(cell_id, indices)
-                vertices = [mesh.GetPoint(indices.GetId(i)) for i in range(4)]
-                center = np.mean(vertices, axis=0)
-                self.box_transform = center + box_offset
-                box.points = box_points.copy()
-                box.translate(self.box_transform)
-                plotter.update()
-                box_actor.VisibilityOn()
-                self.last_pick = "GRID"
-            elif hasattr(mesh, "_name") and mesh._name == "BLOCK":
-                self.box_transform = mesh._transform
-                box.points = box_points.copy()
-                box.translate(self.box_transform)
-                plotter.update()
-                box_actor.VisibilityOn()
-                self.last_pick = "BLOCK"
+        any_intersection = (vtk_picker.GetCellId() != -1)
+        if any_intersection:
+            intersections = {
+                "grid": False,
+                "selector": False,
+                "block": False,
+                "plane": False,
+            }
+            actors = vtk_picker.GetActors()
+            points = vtk_picker.GetPickedPositions()
+            for idx, actor in enumerate(actors):
+                intersections[actor._name] = (idx, actor)
+
+            if intersections["grid"]:
+                grid_data = intersections["grid"]
+                if grid_data[0] == 0:
+                    point = points.GetPoint(grid_data[0])
+                    pt_min = np.floor(point).astype(np.int)
+                    pt_min[-1] = self.grid_zpos
+                    center = pt_min + [0.5, 0.5, 0]
+                    self.box_transform = center + box_offset
+                    box.points = box_points.copy()
+                    box.translate(self.box_transform)
+                    box_actor.VisibilityOn()
+                    if self.button_pressed:
+                        fixed_box = pv.Box(bounds=(0, 1.0, 0, 1.0, 0, 1.0))
+                        fixed_box_color = (1., 1., 1.)
+                        fixed_box_scalars = np.tile(fixed_box_color, (6, 1))
+                        fixed_box.cell_arrays["color"] = fixed_box_scalars
+                        fixed_box.translate(self.box_transform)
+                        fixed_box_actor = plotter.add_mesh(
+                            fixed_box, show_edges=True, reset_camera=False,
+                            scalars="color", rgb=True
+                        )
+                        fixed_box._transform = self.box_transform
+                        fixed_box_actor._mesh = fixed_box
+                        fixed_box_actor._name = "block"
+                        self.button_released = False
+                    plotter.update()
+            if intersections["block"]:
+                block_data = intersections["block"]
+                if block_data[0] == 0:
+                    mesh = block_data[1]._mesh
+                    self.box_transform = mesh._transform
+                    box.points = box_points.copy()
+                    box.translate(self.box_transform)
+                    box_actor.VisibilityOn()
+                    plotter.update()
         else:
             box_actor.VisibilityOff()
-            self.last_pick = "NONE"
 
 
 builder = Builder(plotter)
