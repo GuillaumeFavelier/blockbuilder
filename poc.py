@@ -5,6 +5,7 @@ import vtk
 
 # default params
 rcParams = {
+    "resolution": 1.,
     "background_color_top": (0.05, 0.05, 0.05),
     "background_color_bottom": (0., 0., .35),
     "plane_color": (.3, .3, .3),
@@ -13,27 +14,40 @@ rcParams = {
     "selector_color": (.1, .1, .7),
     "selector_opacity": .7,
     "block_color": (1., 1., 1.),
-    "camera_move_factor": 0.5,
 }
+rcParams["camera_move_factor"] = rcParams["resolution"]
 
 #################
 
-# plane
-plane_size = 20
-plane = pv.Plane(center=(5, 5, -1.),
-                 i_size=plane_size, j_size=plane_size,
-                 i_resolution=1, j_resolution=1)
+resolution = rcParams["resolution"]
 
 # grid
 grid_size = 10
 grid_length = (grid_size - 1) ** 2
 grid = pv.UniformGrid()
+grid.spacing = (resolution, resolution, resolution)
 grid.dimensions = (grid_size, grid_size, 1)
+grid_center = (
+    grid.origin[0] + (grid_size/2.) * grid.spacing[0],
+    grid.origin[0] + (grid_size/2.) * grid.spacing[0],
+    0.
+)
+
+# plane
+plane_size = resolution * 20
+plane = pv.Plane(center=(grid_center[0], grid_center[1], -resolution),
+                 i_size=plane_size, j_size=plane_size,
+                 i_resolution=1, j_resolution=1)
 
 # selector
-selector = pv.Box(bounds=(0, 1.0, 0, 1.0, 0, 1.0))
+selector_bounds = (
+    0, resolution,
+    0, resolution,
+    0, resolution,
+)
+selector = pv.Box(bounds=selector_bounds)
 selector_points = selector.points.copy()
-selector_offset = (-.5, -.5, 0)
+selector_offset = (-resolution/2., -resolution/2., 0)
 selector_scalars = np.tile(rcParams["selector_color"], (6, 1))
 selector.cell_arrays["color"] = selector_scalars
 
@@ -43,10 +57,12 @@ plotter.set_background(
     color=rcParams["background_color_bottom"],
     top=rcParams["background_color_top"],
 )
-plotter.enable_anti_aliasing()
 plotter._key_press_event_callbacks.clear()
 plotter._style = vtk.vtkInteractorStyleUser()
 plotter.update_style()
+plotter.camera.SetUseScissor(False)
+# graphics
+plotter.enable_anti_aliasing()
 
 plane_actor = plotter.add_mesh(
     plane,
@@ -105,11 +121,11 @@ class Builder(object):
         )
 
         self.plotter.add_key_event(
-            'z',
+            'Up',
             lambda: self.move_camera(rcParams["camera_move_factor"])
         )
         self.plotter.add_key_event(
-            's',
+            'Down',
             lambda: self.move_camera(-rcParams["camera_move_factor"])
         )
         self.plotter.add_key_event(
@@ -122,6 +138,16 @@ class Builder(object):
             lambda: self.move_camera(-rcParams["camera_move_factor"],
                                      tangential=True)
         )
+        self.plotter.add_key_event(
+            'z',
+            lambda: self.move_camera(rcParams["camera_move_factor"],
+                                     tangential=True, inverse=True)
+        )
+        self.plotter.add_key_event(
+            's',
+            lambda: self.move_camera(-rcParams["camera_move_factor"],
+                                     tangential=True, inverse=True)
+        )
 
         self.picker = vtk.vtkCellPicker()
         self.picker.AddObserver(
@@ -129,19 +155,25 @@ class Builder(object):
             self.on_pick
         )
 
-    def move_camera(self, move_factor, tangential=False):
+    def move_camera(self, move_factor, tangential=False, inverse=False):
         position = np.array(self.plotter.camera.GetPosition())
         focal_point = np.array(self.plotter.camera.GetFocalPoint())
         move_vector = focal_point - position
         move_vector /= np.linalg.norm(move_vector)
         if tangential:
             viewup = np.array(self.plotter.camera.GetViewUp())
-            move_vector = np.cross(viewup, move_vector)
-            focal_point += move_vector * move_factor
-            self.plotter.camera.SetFocalPoint(focal_point)
+            tanget_vector = np.cross(viewup, move_vector)
+            if inverse:
+                move_vector = np.cross(move_vector, tanget_vector)
+            else:
+                move_vector = tanget_vector
+
         move_vector *= move_factor
         position += move_vector
         self.plotter.camera.SetPosition(position)
+        # update pick
+        x, y = self.plotter.iren.GetEventPosition()
+        self.picker.Pick(x, y, 0, plotter.renderer)
         self.plotter.update()
 
     def on_mouse_move(self, vtk_picker, event):
@@ -150,13 +182,27 @@ class Builder(object):
 
     def on_mouse_wheel_forward(self, vtk_picker, event):
         if self.grid_zpos < grid_length:
-            grid.translate((0, 0, 1))
-            self.grid_zpos += 1
+            tr = np.array([0, 0, resolution])
+            self.grid_zpos += resolution
+            grid.SetOrigin([0, 0, self.grid_zpos])
+            # update camera
+            position = np.array(self.plotter.camera.GetPosition())
+            position += tr
+            self.plotter.camera.SetPosition(position)
+            self.plotter.camera.SetFocalPoint(grid_center[0], grid_center[1],
+                                              self.grid_zpos)
 
     def on_mouse_wheel_backward(self, vtk_picker, event):
-        if self.grid_zpos > 0:
-            grid.translate((0, 0, -1))
-            self.grid_zpos -= 1
+        if self.grid_zpos > 0.:
+            tr = np.array([0, 0, -resolution])
+            self.grid_zpos -= resolution
+            grid.SetOrigin([0, 0, self.grid_zpos])
+            # update camera
+            position = np.array(self.plotter.camera.GetPosition())
+            position += tr
+            self.plotter.camera.SetPosition(position)
+            self.plotter.camera.SetFocalPoint(grid_center[0], grid_center[1],
+                                              self.grid_zpos)
 
     def on_mouse_left_press(self, vtk_picker, event):
         self.button_pressed = True
@@ -183,11 +229,13 @@ class Builder(object):
             if intersections["grid"]:
                 grid_data = intersections["grid"]
                 # draw the selector
-                point = points.GetPoint(grid_data[0])
-                pt_min = np.floor(point).astype(np.int)
+                point = np.asarray(points.GetPoint(grid_data[0]))
+                pt_min = np.floor(point / resolution) * resolution
                 pt_min[-1] = self.grid_zpos
-                center = pt_min + [0.5, 0.5, 0]
-                self.selector_transform = center + selector_offset
+                # center = pt_min + [resolution/2., resolution/2., 0]
+                center = pt_min
+                # self.selector_transform = center + selector_offset
+                self.selector_transform = center
                 selector.points = selector_points.copy()
                 selector.translate(self.selector_transform)
                 selector_actor.VisibilityOn()
@@ -199,7 +247,7 @@ class Builder(object):
 
                 if add_block:
                     if self.button_pressed:
-                        block = pv.Box(bounds=(0, 1.0, 0, 1.0, 0, 1.0))
+                        block = pv.Box(bounds=selector_bounds)
                         block_scalars = np.tile(
                             rcParams["block_color"],
                             (6, 1)
