@@ -60,9 +60,20 @@ plotter.set_background(
 plotter._key_press_event_callbacks.clear()
 plotter._style = vtk.vtkInteractorStyleUser()
 plotter.update_style()
-plotter.camera.SetUseScissor(False)
+
+
+def _render():
+    rng = [0] * 6
+    plotter.renderer.ComputeVisiblePropBounds(rng)
+    plotter.renderer.ResetCameraClippingRange(rng)
+    plotter.ren_win.Render()
+
+
+plotter.render = _render
+
 # graphics
 plotter.enable_anti_aliasing()
+plotter.ren_win.LineSmoothingOn()
 
 plane_actor = plotter.add_mesh(
     plane,
@@ -191,6 +202,7 @@ class Builder(object):
             self.plotter.camera.SetPosition(position)
             self.plotter.camera.SetFocalPoint(grid_center[0], grid_center[1],
                                               self.grid_zpos)
+            self.plotter.update()
 
     def on_mouse_wheel_backward(self, vtk_picker, event):
         if self.grid_zpos > 0.:
@@ -203,6 +215,7 @@ class Builder(object):
             self.plotter.camera.SetPosition(position)
             self.plotter.camera.SetFocalPoint(grid_center[0], grid_center[1],
                                               self.grid_zpos)
+            self.plotter.update()
 
     def on_mouse_left_press(self, vtk_picker, event):
         self.button_pressed = True
