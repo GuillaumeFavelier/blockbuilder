@@ -9,8 +9,11 @@ rcParams = {
     "background_color_bottom": (0., 0., .35),
     "plane_color": (.3, .3, .3),
     "grid_color": (.1, .1, .7),
+    "grid_opacity": .7,
     "selector_color": (.1, .1, .7),
+    "selector_opacity": .7,
     "block_color": (1., 1., 1.),
+    "camera_move_factor": 0.5,
 }
 
 #################
@@ -56,7 +59,7 @@ grid_actor = plotter.add_mesh(
     grid,
     show_edges=True,
     color=rcParams["grid_color"],
-    opacity=0.7
+    opacity=rcParams["grid_opacity"],
 )
 grid_actor._mesh = grid
 grid_actor._name = "grid"
@@ -65,7 +68,7 @@ selector_actor = plotter.add_mesh(
     show_edges=True,
     scalars="color",
     rgb=True,
-    opacity=0.7
+    opacity=rcParams["selector_opacity"],
 )
 selector_actor._mesh = selector
 selector_actor._name = "selector"
@@ -101,11 +104,45 @@ class Builder(object):
             self.on_mouse_left_release
         )
 
+        self.plotter.add_key_event(
+            'z',
+            lambda: self.move_camera(rcParams["camera_move_factor"])
+        )
+        self.plotter.add_key_event(
+            's',
+            lambda: self.move_camera(-rcParams["camera_move_factor"])
+        )
+        self.plotter.add_key_event(
+            'q',
+            lambda: self.move_camera(rcParams["camera_move_factor"],
+                                     tangential=True)
+        )
+        self.plotter.add_key_event(
+            'd',
+            lambda: self.move_camera(-rcParams["camera_move_factor"],
+                                     tangential=True)
+        )
+
         self.picker = vtk.vtkCellPicker()
         self.picker.AddObserver(
             vtk.vtkCommand.EndPickEvent,
             self.on_pick
         )
+
+    def move_camera(self, move_factor, tangential=False):
+        position = np.array(self.plotter.camera.GetPosition())
+        focal_point = np.array(self.plotter.camera.GetFocalPoint())
+        move_vector = focal_point - position
+        move_vector /= np.linalg.norm(move_vector)
+        if tangential:
+            viewup = np.array(self.plotter.camera.GetViewUp())
+            move_vector = np.cross(viewup, move_vector)
+            focal_point += move_vector * move_factor
+            self.plotter.camera.SetFocalPoint(focal_point)
+        move_vector *= move_factor
+        position += move_vector
+        self.plotter.camera.SetPosition(position)
+        self.plotter.update()
 
     def on_mouse_move(self, vtk_picker, event):
         x, y = vtk_picker.GetEventPosition()
