@@ -1,3 +1,4 @@
+import enum
 import numpy as np
 import pyvista as pv
 import vtk
@@ -41,7 +42,6 @@ rcParams = {
         "opacity": 1.,
     },
 }
-rcParams["camera_move_factor"] = rcParams["unit"]
 
 #################
 
@@ -98,10 +98,20 @@ class Graphics(object):
         self.plotter.ren_win.Render()
 
 
+@enum.unique
+class Element(enum.Enum):
+    GRID = 0
+    PLANE = 1
+    SELECTOR = 2
+    BLOCK = 3
+
+
 class Grid(object):
-    def __init__(self, plotter, name="grid", unit=None, origin=None,
+    def __init__(self, plotter, element_id=None, unit=None, origin=None,
                  resolution=None, color=None, edges=None, edge_color=None,
                  opacity=None):
+        if element_id is None:
+            element_id = Element.GRID
         if unit is None:
             unit = rcParams["unit"]
         if origin is None:
@@ -117,7 +127,7 @@ class Grid(object):
         if opacity is None:
             opacity = rcParams["grid"]["opacity"]
         self.plotter = plotter
-        self.name = name
+        self.element_id = element_id
         self.unit = unit
         self.origin = np.asarray(origin)
         self.resolution = resolution
@@ -165,9 +175,11 @@ class Grid(object):
 
 
 class Block(object):
-    def __init__(self, plotter, name="block", unit=None, origin=None,
+    def __init__(self, plotter, element_id=None, unit=None, origin=None,
                  color=None, array=None, edges=None, edge_color=None,
                  opacity=None):
+        if element_id is None:
+            element_id = Element.BLOCK
         if unit is None:
             unit = rcParams["unit"]
         if origin is None:
@@ -182,8 +194,8 @@ class Block(object):
             edge_color = rcParams["block"]["edge_color"]
         if opacity is None:
             opacity = rcParams["block"]["opacity"]
+        self.element_id = element_id
         self.plotter = plotter
-        self.name = name
         self.unit = unit
         self.origin = origin
         self.bounds = (
@@ -214,20 +226,40 @@ class Block(object):
 
 
 class Builder(object):
-    def __init__(self, plotter, grid, plane, selector, unit=None):
+    def __init__(self, unit=None):
         if unit is None:
             unit = rcParams["unit"]
         self.unit = unit
-        self.plotter = plotter
-        self.grid = grid
-        self.plane = plane
-        self.selector = selector
+        self.graphics = Graphics()
+        self.plotter = self.graphics.plotter
+        self.grid = Grid(
+            plotter=self.plotter,
+            unit=self.unit,
+        )
+        self.plane = Grid(
+            plotter=self.plotter,
+            element_id=Element.PLANE,
+            unit=self.unit,
+            color=rcParams["plane"]["color"],
+            edges=rcParams["plane"]["edges"],
+            opacity=rcParams["plane"]["opacity"],
+        )
+        self.selector = Block(
+            plotter=self.plotter,
+            element_id=Element.SELECTOR,
+            unit=self.unit,
+            color=rcParams["selector"]["color"],
+            edge_color=rcParams["selector"]["edge_color"],
+            opacity=rcParams["selector"]["opacity"],
+        )
+        self.plane.actor.VisibilityOff()
+        self.selector.actor.VisibilityOff()
 
         self.button_pressed = False
         self.selector_transform = (0, 0, 0)
         self.min_unit = 0.
         self.max_unit = self.grid.resolution * self.unit
-        self.selector_points = selector.mesh.points.copy()
+        self.selector_points = self.selector.mesh.points.copy()
 
         iren = self.plotter.iren
         iren.AddObserver(
@@ -253,30 +285,30 @@ class Builder(object):
 
         self.plotter.add_key_event(
             'Up',
-            lambda: self.move_camera(rcParams["camera_move_factor"])
+            lambda: self.move_camera(self.unit)
         )
         self.plotter.add_key_event(
             'Down',
-            lambda: self.move_camera(-rcParams["camera_move_factor"])
+            lambda: self.move_camera(-self.unit)
         )
         self.plotter.add_key_event(
             'q',
-            lambda: self.move_camera(rcParams["camera_move_factor"],
+            lambda: self.move_camera(self.unit,
                                      tangential=True)
         )
         self.plotter.add_key_event(
             'd',
-            lambda: self.move_camera(-rcParams["camera_move_factor"],
+            lambda: self.move_camera(-self.unit,
                                      tangential=True)
         )
         self.plotter.add_key_event(
             'z',
-            lambda: self.move_camera(rcParams["camera_move_factor"],
+            lambda: self.move_camera(self.unit,
                                      tangential=True, inverse=True)
         )
         self.plotter.add_key_event(
             's',
-            lambda: self.move_camera(-rcParams["camera_move_factor"],
+            lambda: self.move_camera(-self.unit,
                                      tangential=True, inverse=True)
         )
 
@@ -336,64 +368,43 @@ class Builder(object):
     def on_pick(self, vtk_picker, event):
         any_intersection = (vtk_picker.GetCellId() != -1)
         if any_intersection:
-            intersections = {
-                "grid": False,
-                "selector": False,
-                "block": False,
-                "plane": False,
-            }
             actors = vtk_picker.GetActors()
             points = vtk_picker.GetPickedPositions()
+            intersections = [False for element in Element]
             for idx, actor in enumerate(actors):
-                intersections[actor._metadata.name] = (idx, actor)
+                intersections[actor._metadata.element_id.value] = (idx, actor)
 
-            if intersections["grid"]:
-                grid_data = intersections["grid"]
+            if intersections[Element.GRID.value]:
+                grid_idata = intersections[Element.GRID.value]
                 # draw the selector
-                point = np.asarray(points.GetPoint(grid_data[0]))
+                point = np.asarray(points.GetPoint(grid_idata[0]))
                 pt_min = np.floor(point / self.unit) * self.unit
                 pt_min[-1] = self.grid.origin[2]
                 center = pt_min
                 self.selector_transform = center
-                selector.mesh.points = self.selector_points.copy()
-                selector.mesh.translate(self.selector_transform)
-                selector.actor.VisibilityOn()
+                self.selector.mesh.points = self.selector_points.copy()
+                self.selector.mesh.translate(self.selector_transform)
+                self.selector.actor.VisibilityOn()
                 add_block = True
-                if intersections["block"]:
-                    block_data = intersections["block"][1]._metadata
-                    if block_data.origin[2] == self.grid.origin[2]:
+                if intersections[Element.BLOCK.value]:
+                    block_idata = intersections[Element.BLOCK.value]
+                    block_metadata = block_idata[1]._metadata
+                    if block_metadata.origin[2] == self.grid.origin[2]:
                         add_block = False
 
                 if add_block:
                     if self.button_pressed:
                         Block(
                             plotter=self.plotter,
+                            unit=self.unit,
                             origin=self.selector_transform
                         )
                         self.button_released = False
                 self.plotter.update()
-            elif intersections["plane"]:
+            elif intersections[Element.PLANE.value]:
                 self.selector.actor.VisibilityOff()
         else:
             self.selector.actor.VisibilityOff()
 
 
-graphics = Graphics()
-grid = Grid(plotter=graphics.plotter)
-plane = Grid(
-    plotter=graphics.plotter,
-    name="plane",
-    color=rcParams["plane"]["color"],
-    edges=rcParams["plane"]["edges"],
-    opacity=rcParams["plane"]["opacity"],
-)
-plane.actor.VisibilityOff()
-selector = Block(
-    plotter=graphics.plotter,
-    name="selector",
-    color=rcParams["selector"]["color"],
-    edge_color=rcParams["selector"]["edge_color"],
-    opacity=rcParams["selector"]["opacity"],
-)
-selector.actor.VisibilityOff()
-builder = Builder(graphics.plotter, grid, plane, selector)
+builder = Builder()
