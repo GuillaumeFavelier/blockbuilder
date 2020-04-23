@@ -352,13 +352,16 @@ class Builder(object):
 
     def benchmark(self):
         origin = self.grid.origin.copy()
-        for x in range(self.grid.dimensions[0] - 1):
-            for y in range(self.grid.dimensions[1] - 1):
-                for z in range(self.grid.dimensions[2] - 1):
+        fps = 0
+        for z in range(10):
+            for y in range(10):
+                for x in range(10):
                     origin[0] = self.grid.origin[0] + x * self.grid.spacing[0]
                     origin[1] = self.grid.origin[1] + y * self.grid.spacing[1]
                     origin[2] = self.grid.origin[2] + z * self.grid.spacing[2]
                     Block(plotter=self.plotter, unit=self.unit, origin=origin)
+                    fps += self.graphics.fps
+        print(fps / 1000.0)
 
     def move_camera(self, move_factor, tangential=False, inverse=False):
         position = np.array(self.plotter.camera.GetPosition())
