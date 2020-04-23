@@ -43,6 +43,9 @@ rcParams = {
         "color": (0.4, 0.4, 0.4),
         "show_edges": False,
     },
+    "builder": {
+        "toolbar": True,
+    }
 }
 
 #################
@@ -73,27 +76,56 @@ class Graphics(object):
         self.background_bottom_color = background_bottom_color
         self.pyvista_menu_bar = rcParams["graphics"]["pyvista_menu_bar"]
         self.pyvista_toolbar = rcParams["graphics"]["pyvista_toolbar"]
-        fps_position = rcParams["graphics"]["fps_position"]
-        font_size = rcParams["graphics"]["font_size"]
+        self.fps_position = rcParams["graphics"]["fps_position"]
+        self.font_size = rcParams["graphics"]["font_size"]
+        self.plotter = None
+        self.window = None
+        self.icons = dict()
+
+        # configure the graphics
+        self.configure_plotter()
+        self.configure_interaction()
+        self.configure_graphic_quality()
+        self.configure_icons()
+        self.configure_fps()
+
+    def configure_plotter(self):
         self.plotter = pv.BackgroundPlotter(
             window_size=self.window_size,
             menu_bar=self.pyvista_menu_bar,
             toolbar=self.pyvista_toolbar,
         )
+        # fix the clipping planes being too small
+        self.plotter.render = self.render
+        self.window = self.plotter.app_window
         self.plotter.set_background(
             color=self.background_bottom_color,
             top=self.background_top_color,
         )
+
+    def configure_interaction(self):
+        # remove all default key binding
+        self.plotter._key_press_event_callbacks.clear()
+        # allow flexible interactions
+        self.plotter._style = vtk.vtkInteractorStyleUser()
+        self.plotter.update_style()
+
+    def configure_graphic_quality(self):
         if self.advanced:
             self.plotter.enable_anti_aliasing()
             self.plotter.ren_win.LineSmoothingOn()
         else:
             self.plotter.disable_anti_aliasing()
             self.plotter.ren_win.LineSmoothingOff()
-        self.fps = 0
-        self.font_size = font_size
+
+    def configure_icons(self):
+        from PyQt5.Qt import QIcon
+        self.icons["build"] = QIcon("icons/add_box-black-48dp.svg")
+        self.icons["delete"] = QIcon("icons/remove_circle_outline-black-48dp.svg")
+
+    def configure_fps(self):
         if self.show_fps:
-            self.fps_position = fps_position
+            self.fps = 0
             self.block_position = np.asarray(self.fps_position) + \
                 [0, 2 * self.font_size]
             if self.show_fps:
@@ -102,14 +134,6 @@ class Graphics(object):
                 self.block_actor = self.plotter.add_text(
                     "blocks: 0", self.block_position, font_size=self.font_size)
             self.plotter.add_callback(self.compute_fps)
-
-        # remove all default key binding
-        self.plotter._key_press_event_callbacks.clear()
-        # allow flexible interactions
-        self.plotter._style = vtk.vtkInteractorStyleUser()
-        self.plotter.update_style()
-        # fix the clipping planes being too small
-        self.plotter.render = self.render
 
     def render(self):
         rng = [0] * 6
@@ -272,11 +296,23 @@ class Plane(Grid):
         )
 
 
+@enum.unique
+class InteractionMode(enum.Enum):
+    BUILD = enum.auto()
+    CAMERA = enum.auto()
+    DELETE = enum.auto()
+    SELECT = enum.auto()
+    LIBRARY = enum.auto()
+    SETTINGS = enum.auto()
+    HELP = enum.auto()
+
+
 class Builder(object):
     def __init__(self, unit=None):
         if unit is None:
             unit = rcParams["unit"]
         self.unit = unit
+        self.mode = InteractionMode.BUILD
         self.graphics = Graphics()
         self.plotter = self.graphics.plotter
         self.grid = Grid(
@@ -359,6 +395,11 @@ class Builder(object):
             self.on_pick
         )
 
+        self.toolbar = rcParams["builder"]["toolbar"]
+        self.toolbar_widget = None
+        self.actions = dict()
+        self.configure_toolbar()
+
     def benchmark(self):
         origin = self.grid.origin.copy()
         fps = 0
@@ -420,6 +461,61 @@ class Builder(object):
         self.button_pressed = False
 
     def on_pick(self, vtk_picker, event):
+        if self.mode is InteractionMode.BUILD:
+            self.use_build_mode(vtk_picker)
+        elif self.mode is InteractionMode.DELETE:
+            self.use_delete_mode(vtk_picker)
+
+    def configure_toolbar(self):
+        if self.toolbar:
+            self.toolbar_widget = self.graphics.window.addToolBar("toolbar")
+            self.actions["build"] = self.toolbar_widget.addAction(
+                self.graphics.icons["build"],
+                "Build Mode",
+                lambda: self.set_mode(InteractionMode.BUILD)
+            )
+            self.actions["delete"] = self.toolbar_widget.addAction(
+                self.graphics.icons["delete"],
+                "Delete Mode",
+                lambda: self.set_mode(InteractionMode.DELETE)
+            )
+
+    def set_mode(self, mode):
+        if mode in InteractionMode:
+            self.mode = mode
+
+    def use_delete_mode(self, vtk_picker):
+        any_intersection = (vtk_picker.GetCellId() != -1)
+        if any_intersection:
+            actors = vtk_picker.GetActors()
+            points = vtk_picker.GetPickedPositions()
+            intersections = [False for element in Element]
+            for idx, actor in enumerate(actors):
+                intersections[actor._metadata.element_id.value] = (idx, actor)
+
+            if intersections[Element.GRID.value]:
+                grid_idata = intersections[Element.GRID.value]
+                # draw the selector
+                point = np.asarray(points.GetPoint(grid_idata[0]))
+                pt_min = np.floor(point / self.unit) * self.unit
+                pt_min[-1] = self.grid.origin[2]
+                center = pt_min
+                self.selector_transform = center
+                self.selector.mesh.SetOrigin(center)
+                self.selector.actor.VisibilityOn()
+                if self.button_pressed:
+                    if intersections[Element.BLOCK.value]:
+                        block_idata = intersections[Element.BLOCK.value]
+                        block_metadata = block_idata[1]._metadata
+                        if block_metadata.origin[2] == self.grid.origin[2]:
+                            self.plotter.remove_actor(block_metadata.actor)
+                self.plotter.render()
+            elif intersections[Element.PLANE.value]:
+                self.selector.actor.VisibilityOff()
+        else:
+            self.selector.actor.VisibilityOff()
+
+    def use_build_mode(self, vtk_picker):
         any_intersection = (vtk_picker.GetCellId() != -1)
         if any_intersection:
             actors = vtk_picker.GetActors()

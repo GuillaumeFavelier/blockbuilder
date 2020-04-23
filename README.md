@@ -3,3 +3,23 @@
     Resembling a block in shape.
 
         *The oldest video games had crude, blocky graphics.*
+
+*Toolbar*
+
+- [ ] build mode
+- [ ] camera mode
+- [ ] edit mode
+- [ ] delete mode
+- [ ] select mode
+- [ ] library
+- [ ] settings
+- [ ] help
+
+*ToDo*
+
+- [ ] Improve performance (FPS drops after a few blocks ~100)
+- [ ] Improve splashscreen (background can be transparent)
+- [ ] Fix benchmark (not compatible with default `compute_fps`?)
+- [ ] Add property/setter functions (i.e. Block.origin)
+- [ ] Builder is too big
+- [ ] Better split of Graphics/Builder
