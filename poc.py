@@ -21,6 +21,7 @@ rcParams = {
         "background_bottom_color": (0., 0., .35),
     },
     "plane": {
+        "dimensions": (15, 15, 1),
         "color": (0.4, 0.4, 0.4),
         "show_edges": False,
         "opacity": 1.,
@@ -200,6 +201,36 @@ class Grid(object):
             self.plotter.render()
 
 
+class Plane(Grid):
+    def __init__(self, plotter, element_id=None, unit=None, origin=None,
+                 dimensions=None, color=None, show_edges=None, edge_color=None,
+                 opacity=None):
+        if element_id is None:
+            element_id = Element.PLANE
+        if unit is None:
+            unit = rcParams["unit"]
+        if origin is None:
+            origin = rcParams["origin"]
+        if dimensions is None:
+            dimensions = rcParams["plane"]["dimensions"]
+        if color is None:
+            color = rcParams["plane"]["color"]
+        if show_edges is None:
+            show_edges = rcParams["plane"]["show_edges"]
+        if opacity is None:
+            opacity = rcParams["plane"]["opacity"]
+        super().__init__(
+            plotter=plotter,
+            element_id=element_id,
+            unit=unit,
+            origin=origin,
+            dimensions=dimensions,
+            color=color,
+            show_edges=show_edges,
+            opacity=opacity,
+        )
+
+
 class Block(Grid):
     number_of_blocks = 0
 
@@ -271,13 +302,10 @@ class Builder(object):
             plotter=self.plotter,
             unit=self.unit,
         )
-        self.plane = Grid(
+        self.plane = Plane(
             plotter=self.plotter,
             element_id=Element.PLANE,
             unit=self.unit,
-            color=rcParams["plane"]["color"],
-            show_edges=rcParams["plane"]["show_edges"],
-            opacity=rcParams["plane"]["opacity"],
         )
         self.selector = Selector(
             plotter=self.plotter,
