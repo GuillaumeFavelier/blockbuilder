@@ -7,10 +7,14 @@ import vtk
 rcParams = {
     "unit": 1.,
     "origin": (0., 0., 0.),
-    "line_width": 2,
-    "background": {
-        "top_color": (0.05, 0.05, 0.05),
-        "bottom_color": (0., 0., .35),
+    "graphics": {
+        "window_size": (1280, 720),
+        "pyvista_menu_bar": False,
+        "pyvista_toolbar": False,
+        "line_width": 2,
+        "background_top_color": (0.05, 0.05, 0.05),
+        "background_bottom_color": (0., 0., .35),
+        "advanced": True,
     },
     "plane": {
         "color": (0.4, 0.4, 0.4),
@@ -19,7 +23,7 @@ rcParams = {
     },
     "grid": {
         "color": (.1, .1, .5),
-        "resolution": 30,
+        "resolution": 15,
         "edges": True,
         "edge_color": (.2, .2, .7),
         "opacity": .7,
@@ -41,33 +45,63 @@ rcParams["camera_move_factor"] = rcParams["unit"]
 
 #################
 
-# plotter
-plotter = pv.BackgroundPlotter(menu_bar=False, toolbar=False)
-plotter.set_background(
-    color=rcParams["background"]["bottom_color"],
-    top=rcParams["background"]["top_color"],
-)
-plotter._key_press_event_callbacks.clear()
-plotter._style = vtk.vtkInteractorStyleUser()
-plotter.update_style()
-# graphics
-plotter.enable_anti_aliasing()
-plotter.ren_win.LineSmoothingOn()
 
+class Graphics(object):
+    def __init__(self, window_size=None, line_width=None, advanced=None,
+                 background_top_color=None, background_bottom_color=None):
+        if window_size is None:
+            window_size = rcParams["graphics"]["window_size"]
+        if line_width is None:
+            line_width = rcParams["graphics"]["line_width"]
+        if advanced is None:
+            advanced = rcParams["graphics"]["advanced"]
+        if background_top_color is None:
+            background_top_color = rcParams["graphics"]["background_top_color"]
+        if background_bottom_color is None:
+            background_bottom_color = \
+                rcParams["graphics"]["background_bottom_color"]
+        self.window_size = window_size
+        self.line_width = line_width
+        self.advanced = advanced
+        self.background_top_color = background_top_color
+        self.background_bottom_color = background_bottom_color
+        self.pyvista_menu_bar = rcParams["graphics"]["pyvista_menu_bar"]
+        self.pyvista_toolbar = rcParams["graphics"]["pyvista_toolbar"]
+        self.plotter = pv.BackgroundPlotter(
+            window_size=self.window_size,
+            menu_bar=self.pyvista_menu_bar,
+            toolbar=self.pyvista_toolbar,
+        )
+        self.plotter.set_background(
+            color=self.background_bottom_color,
+            top=self.background_top_color,
+        )
+        if self.advanced:
+            self.plotter.enable_anti_aliasing()
+            self.plotter.ren_win.LineSmoothingOn()
+        else:
+            self.plotter.disable_anti_aliasing()
+            self.plotter.ren_win.LineSmoothingOff()
 
-def _render():
-    rng = [0] * 6
-    plotter.renderer.ComputeVisiblePropBounds(rng)
-    plotter.renderer.ResetCameraClippingRange(rng)
-    plotter.ren_win.Render()
+        # remove all default key binding
+        self.plotter._key_press_event_callbacks.clear()
+        # allow flexible interactions
+        self.plotter._style = vtk.vtkInteractorStyleUser()
+        self.plotter.update_style()
+        # fix the clipping planes being too small
+        self.plotter.render = self.render
 
-
-plotter.render = _render
+    def render(self):
+        rng = [0] * 6
+        self.plotter.renderer.ComputeVisiblePropBounds(rng)
+        self.plotter.renderer.ResetCameraClippingRange(rng)
+        self.plotter.ren_win.Render()
 
 
 class Grid(object):
-    def __init__(self, name="grid", unit=None, origin=None, resolution=None,
-                 color=None, edges=None, edge_color=None, opacity=None):
+    def __init__(self, plotter, name="grid", unit=None, origin=None,
+                 resolution=None, color=None, edges=None, edge_color=None,
+                 opacity=None):
         if unit is None:
             unit = rcParams["unit"]
         if origin is None:
@@ -82,6 +116,7 @@ class Grid(object):
             edge_color = rcParams["grid"]["edge_color"]
         if opacity is None:
             opacity = rcParams["grid"]["opacity"]
+        self.plotter = plotter
         self.name = name
         self.unit = unit
         self.origin = np.asarray(origin)
@@ -99,18 +134,18 @@ class Grid(object):
             self.origin[2],
         )
         self.mesh = pv.UniformGrid(self.dimensions, self.spacing, self.origin)
-        self.actor = plotter.add_mesh(
+        self.actor = self.plotter.add_mesh(
             mesh=self.mesh,
             color=self.color,
             show_edges=self.edges,
             edge_color=self.edge_color,
-            line_width=rcParams["line_width"],
+            line_width=rcParams["graphics"]["line_width"],
             opacity=self.opacity,
         )
         # add data for picking
         self.actor._metadata = self
 
-    def translate(self, tr, plotter):
+    def translate(self, tr):
         # update origin
         self.origin += tr
         self.mesh.SetOrigin(self.origin)
@@ -123,15 +158,16 @@ class Grid(object):
         )
 
         # update camera
-        position = np.array(plotter.camera.GetPosition())
-        plotter.camera.SetPosition(position + tr)
-        plotter.camera.SetFocalPoint(self.center)
-        plotter.update()
+        position = np.array(self.plotter.camera.GetPosition())
+        self.plotter.camera.SetPosition(position + tr)
+        self.plotter.camera.SetFocalPoint(self.center)
+        self.plotter.update()
 
 
 class Block(object):
-    def __init__(self, name="block", unit=None, origin=None, color=None,
-                 array=None, edges=None, edge_color=None, opacity=None):
+    def __init__(self, plotter, name="block", unit=None, origin=None,
+                 color=None, array=None, edges=None, edge_color=None,
+                 opacity=None):
         if unit is None:
             unit = rcParams["unit"]
         if origin is None:
@@ -146,6 +182,7 @@ class Block(object):
             edge_color = rcParams["block"]["edge_color"]
         if opacity is None:
             opacity = rcParams["block"]["opacity"]
+        self.plotter = plotter
         self.name = name
         self.unit = unit
         self.origin = origin
@@ -162,11 +199,11 @@ class Block(object):
         self.scalars = np.tile(self.color, (6, 1))
         self.mesh = pv.Box(bounds=self.bounds)
         self.mesh.cell_arrays[self.array] = self.scalars
-        self.actor = plotter.add_mesh(
+        self.actor = self.plotter.add_mesh(
             mesh=self.mesh,
             show_edges=self.edges,
             edge_color=self.edge_color,
-            line_width=rcParams["line_width"],
+            line_width=rcParams["graphics"]["line_width"],
             opacity=self.opacity,
             scalars=self.array,
             rgb=True,
@@ -267,23 +304,23 @@ class Builder(object):
         self.plotter.camera.SetPosition(position)
         # update pick
         x, y = self.plotter.iren.GetEventPosition()
-        self.picker.Pick(x, y, 0, plotter.renderer)
+        self.picker.Pick(x, y, 0, self.plotter.renderer)
         self.plotter.update()
 
     def on_mouse_move(self, vtk_picker, event):
         x, y = vtk_picker.GetEventPosition()
-        self.picker.Pick(x, y, 0, plotter.renderer)
+        self.picker.Pick(x, y, 0, self.plotter.renderer)
 
     def on_mouse_wheel_forward(self, vtk_picker, event):
         if self.grid.origin[2] < self.max_unit:
-            self.grid.translate([0., 0., self.unit], plotter)
+            self.grid.translate([0., 0., self.unit])
         if self.grid.origin[2] > self.min_unit:
             self.plane.actor.VisibilityOn()
             self.plotter.update()
 
     def on_mouse_wheel_backward(self, vtk_picker, event):
         if self.grid.origin[2] > self.min_unit:
-            self.grid.translate([0., 0., -self.unit], plotter)
+            self.grid.translate([0., 0., -self.unit])
         if self.grid.origin[2] <= self.min_unit:
             self.plane.actor.VisibilityOff()
             self.plotter.update()
@@ -293,7 +330,7 @@ class Builder(object):
 
     def on_mouse_left_release(self, vtk_picker, event):
         x, y = vtk_picker.GetEventPosition()
-        self.picker.Pick(x, y, 0, plotter.renderer)
+        self.picker.Pick(x, y, 0, self.plotter.renderer)
         self.button_pressed = False
 
     def on_pick(self, vtk_picker, event):
@@ -329,17 +366,22 @@ class Builder(object):
 
                 if add_block:
                     if self.button_pressed:
-                        Block(origin=self.selector_transform)
+                        Block(
+                            plotter=self.plotter,
+                            origin=self.selector_transform
+                        )
                         self.button_released = False
-                plotter.update()
+                self.plotter.update()
             elif intersections["plane"]:
                 self.selector.actor.VisibilityOff()
         else:
             self.selector.actor.VisibilityOff()
 
 
-grid = Grid()
+graphics = Graphics()
+grid = Grid(plotter=graphics.plotter)
 plane = Grid(
+    plotter=graphics.plotter,
     name="plane",
     color=rcParams["plane"]["color"],
     edges=rcParams["plane"]["edges"],
@@ -347,10 +389,11 @@ plane = Grid(
 )
 plane.actor.VisibilityOff()
 selector = Block(
+    plotter=graphics.plotter,
     name="selector",
     color=rcParams["selector"]["color"],
     edge_color=rcParams["selector"]["edge_color"],
     opacity=rcParams["selector"]["opacity"],
 )
 selector.actor.VisibilityOff()
-builder = Builder(plotter, grid, plane, selector)
+builder = Builder(graphics.plotter, grid, plane, selector)
