@@ -5,61 +5,54 @@ import vtk
 
 # default params
 rcParams = {
-    "resolution": 1.,
-    "background_color_top": (0.05, 0.05, 0.05),
-    "background_color_bottom": (0., 0., .35),
-    "plane_color": (.3, .3, .3),
-    "grid_color": (.1, .1, .7),
-    "grid_opacity": .7,
-    "selector_color": (.1, .1, .7),
-    "selector_opacity": .7,
-    "block_color": (1., 1., 1.),
+    "unit": 1.,
+    "origin": (0., 0., 0.),
+    "line_width": 2,
+    "background": {
+        "top_color": (0.05, 0.05, 0.05),
+        "bottom_color": (0., 0., .35),
+    },
+    "plane": {
+        "color": (0.4, 0.4, 0.4),
+        "edges": False,
+        "opacity": 1.,
+    },
+    "grid": {
+        "color": (.1, .1, .5),
+        "resolution": 30,
+        "edges": True,
+        "edge_color": (.2, .2, .7),
+        "opacity": .7,
+    },
+    "selector": {
+        "color": (.3, .3, .8),
+        "edge_color": (.4, .4, 1.),
+        "opacity": .7,
+    },
+    "block": {
+        "array": "color",
+        "color": (1., 1., 1.),
+        "edges": True,
+        "edge_color": (.1, .1, .1),
+        "opacity": 1.,
+    },
 }
-rcParams["camera_move_factor"] = rcParams["resolution"]
+rcParams["camera_move_factor"] = rcParams["unit"]
 
 #################
-
-resolution = rcParams["resolution"]
-
-# grid
-grid_size = 10
-grid_length = (grid_size - 1) ** 2
-grid = pv.UniformGrid()
-grid.spacing = (resolution, resolution, resolution)
-grid.dimensions = (grid_size, grid_size, 1)
-grid_center = (
-    grid.origin[0] + (grid_size/2.) * grid.spacing[0],
-    grid.origin[0] + (grid_size/2.) * grid.spacing[0],
-    0.
-)
-
-# plane
-plane_size = resolution * 20
-plane = pv.Plane(center=(grid_center[0], grid_center[1], -resolution),
-                 i_size=plane_size, j_size=plane_size,
-                 i_resolution=1, j_resolution=1)
-
-# selector
-selector_bounds = (
-    0, resolution,
-    0, resolution,
-    0, resolution,
-)
-selector = pv.Box(bounds=selector_bounds)
-selector_points = selector.points.copy()
-selector_offset = (-resolution/2., -resolution/2., 0)
-selector_scalars = np.tile(rcParams["selector_color"], (6, 1))
-selector.cell_arrays["color"] = selector_scalars
 
 # plotter
 plotter = pv.BackgroundPlotter(menu_bar=False, toolbar=False)
 plotter.set_background(
-    color=rcParams["background_color_bottom"],
-    top=rcParams["background_color_top"],
+    color=rcParams["background"]["bottom_color"],
+    top=rcParams["background"]["top_color"],
 )
 plotter._key_press_event_callbacks.clear()
 plotter._style = vtk.vtkInteractorStyleUser()
 plotter.update_style()
+# graphics
+plotter.enable_anti_aliasing()
+plotter.ren_win.LineSmoothingOn()
 
 
 def _render():
@@ -71,43 +64,133 @@ def _render():
 
 plotter.render = _render
 
-# graphics
-plotter.enable_anti_aliasing()
-plotter.ren_win.LineSmoothingOn()
 
-plane_actor = plotter.add_mesh(
-    plane,
-    show_edges=True,
-    color=rcParams["plane_color"],
-)
-plane_actor._mesh = plane
-plane_actor._name = "plane"
-grid_actor = plotter.add_mesh(
-    grid,
-    show_edges=True,
-    color=rcParams["grid_color"],
-    opacity=rcParams["grid_opacity"],
-)
-grid_actor._mesh = grid
-grid_actor._name = "grid"
-selector_actor = plotter.add_mesh(
-    selector,
-    show_edges=True,
-    scalars="color",
-    rgb=True,
-    opacity=rcParams["selector_opacity"],
-)
-selector_actor._mesh = selector
-selector_actor._name = "selector"
-selector_actor.VisibilityOff()
+class Grid(object):
+    def __init__(self, name="grid", unit=None, origin=None, resolution=None,
+                 color=None, edges=None, edge_color=None, opacity=None):
+        if unit is None:
+            unit = rcParams["unit"]
+        if origin is None:
+            origin = rcParams["origin"]
+        if resolution is None:
+            resolution = rcParams["grid"]["resolution"]
+        if color is None:
+            color = rcParams["grid"]["color"]
+        if edges is None:
+            edges = rcParams["grid"]["edges"]
+        if edge_color is None:
+            edge_color = rcParams["grid"]["edge_color"]
+        if opacity is None:
+            opacity = rcParams["grid"]["opacity"]
+        self.name = name
+        self.unit = unit
+        self.origin = np.asarray(origin)
+        self.resolution = resolution
+        self.color = color
+        self.edges = edges
+        self.edge_color = edge_color
+        self.opacity = opacity
+        self.spacing = [self.unit, self.unit, self.unit]
+        self.length = self.resolution * self.spacing
+        self.dimensions = (self.resolution, self.resolution, 1)
+        self.center = (
+            self.origin[0] + (self.resolution/2.) * self.spacing[0],
+            self.origin[1] + (self.resolution/2.) * self.spacing[1],
+            self.origin[2],
+        )
+        self.mesh = pv.UniformGrid(self.dimensions, self.spacing, self.origin)
+        self.actor = plotter.add_mesh(
+            mesh=self.mesh,
+            color=self.color,
+            show_edges=self.edges,
+            edge_color=self.edge_color,
+            line_width=rcParams["line_width"],
+            opacity=self.opacity,
+        )
+        # add data for picking
+        self.actor._metadata = self
+
+    def translate(self, tr, plotter):
+        # update origin
+        self.origin += tr
+        self.mesh.SetOrigin(self.origin)
+
+        # update center
+        self.center = (
+            self.origin[0] + (self.resolution/2.) * self.spacing[0],
+            self.origin[1] + (self.resolution/2.) * self.spacing[1],
+            self.origin[2],
+        )
+
+        # update camera
+        position = np.array(plotter.camera.GetPosition())
+        plotter.camera.SetPosition(position + tr)
+        plotter.camera.SetFocalPoint(self.center)
+        plotter.update()
+
+
+class Block(object):
+    def __init__(self, name="block", unit=None, origin=None, color=None,
+                 array=None, edges=None, edge_color=None, opacity=None):
+        if unit is None:
+            unit = rcParams["unit"]
+        if origin is None:
+            origin = rcParams["origin"]
+        if color is None:
+            color = rcParams["block"]["color"]
+        if array is None:
+            array = rcParams["block"]["array"]
+        if edges is None:
+            edges = rcParams["block"]["edges"]
+        if edge_color is None:
+            edge_color = rcParams["block"]["edge_color"]
+        if opacity is None:
+            opacity = rcParams["block"]["opacity"]
+        self.name = name
+        self.unit = unit
+        self.origin = origin
+        self.bounds = (
+            self.origin[0], self.origin[0] + self.unit,
+            self.origin[1], self.origin[1] + self.unit,
+            self.origin[2], self.origin[2] + self.unit,
+        )
+        self.color = color
+        self.array = array
+        self.edges = edges
+        self.edge_color = edge_color
+        self.opacity = opacity
+        self.scalars = np.tile(self.color, (6, 1))
+        self.mesh = pv.Box(bounds=self.bounds)
+        self.mesh.cell_arrays[self.array] = self.scalars
+        self.actor = plotter.add_mesh(
+            mesh=self.mesh,
+            show_edges=self.edges,
+            edge_color=self.edge_color,
+            line_width=rcParams["line_width"],
+            opacity=self.opacity,
+            scalars=self.array,
+            rgb=True,
+            reset_camera=False,
+        )
+        # add data for picking
+        self.actor._metadata = self
 
 
 class Builder(object):
-    def __init__(self, plotter):
+    def __init__(self, plotter, grid, plane, selector, unit=None):
+        if unit is None:
+            unit = rcParams["unit"]
+        self.unit = unit
         self.plotter = plotter
+        self.grid = grid
+        self.plane = plane
+        self.selector = selector
+
         self.button_pressed = False
         self.selector_transform = (0, 0, 0)
-        self.grid_zpos = 0
+        self.min_unit = 0.
+        self.max_unit = self.grid.resolution * self.unit
+        self.selector_points = selector.mesh.points.copy()
 
         iren = self.plotter.iren
         iren.AddObserver(
@@ -192,29 +275,17 @@ class Builder(object):
         self.picker.Pick(x, y, 0, plotter.renderer)
 
     def on_mouse_wheel_forward(self, vtk_picker, event):
-        if self.grid_zpos < grid_length:
-            tr = np.array([0, 0, resolution])
-            self.grid_zpos += resolution
-            grid.SetOrigin([0, 0, self.grid_zpos])
-            # update camera
-            position = np.array(self.plotter.camera.GetPosition())
-            position += tr
-            self.plotter.camera.SetPosition(position)
-            self.plotter.camera.SetFocalPoint(grid_center[0], grid_center[1],
-                                              self.grid_zpos)
+        if self.grid.origin[2] < self.max_unit:
+            self.grid.translate([0., 0., self.unit], plotter)
+        if self.grid.origin[2] > self.min_unit:
+            self.plane.actor.VisibilityOn()
             self.plotter.update()
 
     def on_mouse_wheel_backward(self, vtk_picker, event):
-        if self.grid_zpos > 0.:
-            tr = np.array([0, 0, -resolution])
-            self.grid_zpos -= resolution
-            grid.SetOrigin([0, 0, self.grid_zpos])
-            # update camera
-            position = np.array(self.plotter.camera.GetPosition())
-            position += tr
-            self.plotter.camera.SetPosition(position)
-            self.plotter.camera.SetFocalPoint(grid_center[0], grid_center[1],
-                                              self.grid_zpos)
+        if self.grid.origin[2] > self.min_unit:
+            self.grid.translate([0., 0., -self.unit], plotter)
+        if self.grid.origin[2] <= self.min_unit:
+            self.plane.actor.VisibilityOff()
             self.plotter.update()
 
     def on_mouse_left_press(self, vtk_picker, event):
@@ -237,60 +308,49 @@ class Builder(object):
             actors = vtk_picker.GetActors()
             points = vtk_picker.GetPickedPositions()
             for idx, actor in enumerate(actors):
-                intersections[actor._name] = (idx, actor)
+                intersections[actor._metadata.name] = (idx, actor)
 
             if intersections["grid"]:
                 grid_data = intersections["grid"]
                 # draw the selector
                 point = np.asarray(points.GetPoint(grid_data[0]))
-                pt_min = np.floor(point / resolution) * resolution
-                pt_min[-1] = self.grid_zpos
-                # center = pt_min + [resolution/2., resolution/2., 0]
+                pt_min = np.floor(point / self.unit) * self.unit
+                pt_min[-1] = self.grid.origin[2]
                 center = pt_min
-                # self.selector_transform = center + selector_offset
                 self.selector_transform = center
-                selector.points = selector_points.copy()
-                selector.translate(self.selector_transform)
-                selector_actor.VisibilityOn()
+                selector.mesh.points = self.selector_points.copy()
+                selector.mesh.translate(self.selector_transform)
+                selector.actor.VisibilityOn()
                 add_block = True
                 if intersections["block"]:
-                    block_data = intersections["block"]
-                    if block_data[1]._zpos == self.grid_zpos:
+                    block_data = intersections["block"][1]._metadata
+                    if block_data.origin[2] == self.grid.origin[2]:
                         add_block = False
 
                 if add_block:
                     if self.button_pressed:
-                        block = pv.Box(bounds=selector_bounds)
-                        block_scalars = np.tile(
-                            rcParams["block_color"],
-                            (6, 1)
-                        )
-                        block.cell_arrays["color"] = block_scalars
-                        block.translate(self.selector_transform)
-                        block_actor = plotter.add_mesh(
-                            block, show_edges=True, reset_camera=False,
-                            scalars="color", rgb=True
-                        )
-                        block._transform = self.selector_transform
-                        block_actor._mesh = block
-                        block_actor._name = "block"
-                        block_actor._zpos = self.grid_zpos
+                        Block(origin=self.selector_transform)
                         self.button_released = False
                 plotter.update()
             elif intersections["plane"]:
-                selector_actor.VisibilityOff()
-
-            if intersections["block"]:
-                block_data = intersections["block"]
-                if block_data[0] == 1:
-                    mesh = block_data[1]._mesh
-                    self.selector_transform = mesh._transform
-                    selector.points = selector_points.copy()
-                    selector.translate(self.selector_transform)
-                    selector_actor.VisibilityOn()
-                    plotter.update()
+                self.selector.actor.VisibilityOff()
         else:
-            selector_actor.VisibilityOff()
+            self.selector.actor.VisibilityOff()
 
 
-builder = Builder(plotter)
+grid = Grid()
+plane = Grid(
+    name="plane",
+    color=rcParams["plane"]["color"],
+    edges=rcParams["plane"]["edges"],
+    opacity=rcParams["plane"]["opacity"],
+)
+plane.actor.VisibilityOff()
+selector = Block(
+    name="selector",
+    color=rcParams["selector"]["color"],
+    edge_color=rcParams["selector"]["edge_color"],
+    opacity=rcParams["selector"]["opacity"],
+)
+selector.actor.VisibilityOff()
+builder = Builder(plotter, grid, plane, selector)
