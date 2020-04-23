@@ -94,15 +94,16 @@ class Graphics(object):
         self.fps = 0
         self.font_size = font_size
         self.show_fps = show_fps
-        self.fps_position = fps_position
-        self.block_position = np.asarray(self.fps_position) + \
-            [0, 2 * self.font_size]
         if self.show_fps:
-            self.fps_actor = self.plotter.add_text(
-                "fps: 0", self.fps_position, font_size=self.font_size)
-            self.block_actor = self.plotter.add_text(
-                "blocks: 0", self.block_position, font_size=self.font_size)
-        self.plotter.add_callback(self.compute_fps)
+            self.fps_position = fps_position
+            self.block_position = np.asarray(self.fps_position) + \
+                [0, 2 * self.font_size]
+            if self.show_fps:
+                self.fps_actor = self.plotter.add_text(
+                    "fps: 0", self.fps_position, font_size=self.font_size)
+                self.block_actor = self.plotter.add_text(
+                    "blocks: 0", self.block_position, font_size=self.font_size)
+            self.plotter.add_callback(self.compute_fps)
 
         # remove all default key binding
         self.plotter._key_press_event_callbacks.clear()
@@ -121,12 +122,11 @@ class Graphics(object):
     def compute_fps(self):
         fps = 1.0 / self.plotter.renderer.GetLastRenderTimeInSeconds()
         self.fps = np.round(fps).astype(np.int)
-        if self.show_fps:
-            self.fps_actor.SetInput("fps: {}".format(self.fps))
-            self.fps_actor.SetPosition(self.fps_position)
-            self.block_actor.SetInput("blocks: {}".format(
-                Block.number_of_blocks))
-            self.block_actor.SetPosition(self.block_position)
+        self.fps_actor.SetInput("fps: {}".format(self.fps))
+        self.fps_actor.SetPosition(self.fps_position)
+        self.block_actor.SetInput("blocks: {}".format(
+            Block.number_of_blocks))
+        self.block_actor.SetPosition(self.block_position)
 
 
 @enum.unique
@@ -184,7 +184,8 @@ class Block(object):
         )
         # add data for picking
         self.actor._metadata = self
-        Block.number_of_blocks += 1
+        if self.element_id is Element.BLOCK:
+            Block.number_of_blocks += 1
 
     def translate(self, tr, update_camera=False):
         # update origin
