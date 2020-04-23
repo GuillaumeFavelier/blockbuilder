@@ -20,30 +20,28 @@ rcParams = {
         "background_top_color": (0.05, 0.05, 0.05),
         "background_bottom_color": (0., 0., .35),
     },
-    "plane": {
-        "dimensions": (15, 15, 1),
-        "color": (0.4, 0.4, 0.4),
-        "show_edges": False,
-        "opacity": 1.,
-    },
-    "grid": {
-        "dimensions": (15, 15, 1),
-        "color": (.1, .1, .5),
-        "show_edges": True,
-        "edge_color": (.2, .2, .7),
-        "opacity": .7,
-    },
-    "selector": {
-        "color": (.3, .3, .8),
-        "edge_color": (.4, .4, 1.),
-        "opacity": .7,
-    },
     "block": {
         "dimensions": (2, 2, 2),
         "color": (1., 1., 1.),
         "show_edges": True,
         "edge_color": (.1, .1, .1),
         "opacity": 1.,
+    },
+    "selector": {
+        "color": (.3, .3, .8),
+        "edge_color": (.4, .4, 1.),
+        "opacity": .7,
+    },
+    "grid": {
+        "dimensions": (15, 15, 1),
+        "color": (.1, .1, .5),
+        "edge_color": (.2, .2, .7),
+        "opacity": .7,
+    },
+    "plane": {
+        "dimensions": (15, 15, 1),
+        "color": (0.4, 0.4, 0.4),
+        "show_edges": False,
     },
 }
 
@@ -133,32 +131,34 @@ class Graphics(object):
 
 @enum.unique
 class Element(enum.Enum):
-    GRID = 0
-    PLANE = 1
-    SELECTOR = 2
-    BLOCK = 3
+    BLOCK = 0
+    SELECTOR = 1
+    GRID = 2
+    PLANE = 3
 
 
-class Grid(object):
+class Block(object):
+    number_of_blocks = 0
+
     def __init__(self, plotter, element_id=None, unit=None, origin=None,
                  dimensions=None, color=None, show_edges=None, edge_color=None,
                  opacity=None):
         if element_id is None:
-            element_id = Element.GRID
+            element_id = Element.BLOCK
         if unit is None:
             unit = rcParams["unit"]
         if origin is None:
             origin = rcParams["origin"]
         if dimensions is None:
-            dimensions = rcParams["grid"]["dimensions"]
+            dimensions = rcParams["block"]["dimensions"]
         if color is None:
-            color = rcParams["grid"]["color"]
+            color = rcParams["block"]["color"]
         if show_edges is None:
-            show_edges = rcParams["grid"]["show_edges"]
+            show_edges = rcParams["block"]["show_edges"]
         if edge_color is None:
-            edge_color = rcParams["grid"]["edge_color"]
+            edge_color = rcParams["block"]["edge_color"]
         if opacity is None:
-            opacity = rcParams["grid"]["opacity"]
+            opacity = rcParams["block"]["opacity"]
         self.plotter = plotter
         self.element_id = element_id
         self.unit = unit
@@ -184,6 +184,7 @@ class Grid(object):
         )
         # add data for picking
         self.actor._metadata = self
+        Block.number_of_blocks += 1
 
     def translate(self, tr, update_camera=False):
         # update origin
@@ -201,79 +202,11 @@ class Grid(object):
             self.plotter.render()
 
 
-class Plane(Grid):
-    def __init__(self, plotter, element_id=None, unit=None, origin=None,
-                 dimensions=None, color=None, show_edges=None, edge_color=None,
-                 opacity=None):
-        if element_id is None:
-            element_id = Element.PLANE
-        if unit is None:
-            unit = rcParams["unit"]
-        if origin is None:
-            origin = rcParams["origin"]
-        if dimensions is None:
-            dimensions = rcParams["plane"]["dimensions"]
-        if color is None:
-            color = rcParams["plane"]["color"]
-        if show_edges is None:
-            show_edges = rcParams["plane"]["show_edges"]
-        if opacity is None:
-            opacity = rcParams["plane"]["opacity"]
-        super().__init__(
-            plotter=plotter,
-            element_id=element_id,
-            unit=unit,
-            origin=origin,
-            dimensions=dimensions,
-            color=color,
-            show_edges=show_edges,
-            opacity=opacity,
-        )
-
-
-class Block(Grid):
-    number_of_blocks = 0
-
+class Selector(Block):
     def __init__(self, plotter, element_id=None, unit=None, origin=None,
                  color=None, show_edges=None, edge_color=None, opacity=None):
         if element_id is None:
-            element_id = Element.BLOCK
-        if unit is None:
-            unit = rcParams["unit"]
-        if origin is None:
-            origin = rcParams["origin"]
-        if color is None:
-            color = rcParams["block"]["color"]
-        if show_edges is None:
-            show_edges = rcParams["block"]["show_edges"]
-        if edge_color is None:
-            edge_color = rcParams["block"]["edge_color"]
-        if opacity is None:
-            opacity = rcParams["block"]["opacity"]
-        dimensions = rcParams["block"]["dimensions"]
-        super().__init__(
-            plotter=plotter,
-            element_id=element_id,
-            unit=unit,
-            origin=origin,
-            dimensions=dimensions,
-            color=color,
-            edge_color=edge_color,
-            opacity=opacity,
-        )
-        Block.number_of_blocks += 1
-
-
-class Selector(Block):
-    def __init__(self, plotter, element_id=None, unit=None, origin=None,
-                 color=None, array=None, show_edges=None, edge_color=None,
-                 opacity=None):
-        if element_id is None:
             element_id = Element.SELECTOR
-        if unit is None:
-            unit = rcParams["unit"]
-        if origin is None:
-            origin = rcParams["origin"]
         if color is None:
             color = rcParams["selector"]["color"]
         if edge_color is None:
@@ -288,6 +221,55 @@ class Selector(Block):
             color=color,
             edge_color=edge_color,
             opacity=opacity,
+        )
+
+
+class Grid(Block):
+    def __init__(self, plotter, element_id=None, unit=None, origin=None,
+                 dimensions=None, color=None, show_edges=None, edge_color=None,
+                 opacity=None):
+        if element_id is None:
+            element_id = Element.GRID
+        if dimensions is None:
+            dimensions = rcParams["grid"]["dimensions"]
+        if color is None:
+            color = rcParams["grid"]["color"]
+        if edge_color is None:
+            edge_color = rcParams["grid"]["edge_color"]
+        if opacity is None:
+            opacity = rcParams["grid"]["opacity"]
+        super().__init__(
+            plotter=plotter,
+            element_id=element_id,
+            unit=unit,
+            origin=origin,
+            dimensions=dimensions,
+            color=color,
+            show_edges=show_edges,
+            edge_color=edge_color,
+            opacity=opacity,
+        )
+
+
+class Plane(Grid):
+    def __init__(self, plotter, element_id=None, unit=None, origin=None,
+                 dimensions=None, color=None, show_edges=None):
+        if element_id is None:
+            element_id = Element.PLANE
+        if dimensions is None:
+            dimensions = rcParams["plane"]["dimensions"]
+        if color is None:
+            color = rcParams["plane"]["color"]
+        if show_edges is None:
+            show_edges = rcParams["plane"]["show_edges"]
+        super().__init__(
+            plotter=plotter,
+            element_id=element_id,
+            unit=unit,
+            origin=origin,
+            dimensions=dimensions,
+            color=color,
+            show_edges=show_edges,
         )
 
 
