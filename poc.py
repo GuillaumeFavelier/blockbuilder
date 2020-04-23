@@ -14,7 +14,7 @@ rcParams = {
         "window_size": (1280, 720),
         "line_width": 2,
         "advanced": True,
-        "show_fps": True,
+        "show_fps": False,
         "fps_position": (2, 2),
         "font_size": 12,
         "background_top_color": (0.05, 0.05, 0.05),
@@ -50,8 +50,8 @@ rcParams = {
 
 class Graphics(object):
     def __init__(self, window_size=None, line_width=None, advanced=None,
-                 show_fps=None, fps_position=None, font_size=None,
-                 background_top_color=None, background_bottom_color=None):
+                 show_fps=None, background_top_color=None,
+                 background_bottom_color=None):
         if window_size is None:
             window_size = rcParams["graphics"]["window_size"]
         if line_width is None:
@@ -60,10 +60,6 @@ class Graphics(object):
             advanced = rcParams["graphics"]["advanced"]
         if show_fps is None:
             show_fps = rcParams["graphics"]["show_fps"]
-        if fps_position is None:
-            fps_position = rcParams["graphics"]["fps_position"]
-        if font_size is None:
-            font_size = rcParams["graphics"]["font_size"]
         if background_top_color is None:
             background_top_color = rcParams["graphics"]["background_top_color"]
         if background_bottom_color is None:
@@ -72,10 +68,13 @@ class Graphics(object):
         self.window_size = window_size
         self.line_width = line_width
         self.advanced = advanced
+        self.show_fps = show_fps
         self.background_top_color = background_top_color
         self.background_bottom_color = background_bottom_color
         self.pyvista_menu_bar = rcParams["graphics"]["pyvista_menu_bar"]
         self.pyvista_toolbar = rcParams["graphics"]["pyvista_toolbar"]
+        fps_position = rcParams["graphics"]["fps_position"]
+        font_size = rcParams["graphics"]["font_size"]
         self.plotter = pv.BackgroundPlotter(
             window_size=self.window_size,
             menu_bar=self.pyvista_menu_bar,
@@ -93,7 +92,6 @@ class Graphics(object):
             self.plotter.ren_win.LineSmoothingOff()
         self.fps = 0
         self.font_size = font_size
-        self.show_fps = show_fps
         if self.show_fps:
             self.fps_position = fps_position
             self.block_position = np.asarray(self.fps_position) + \
