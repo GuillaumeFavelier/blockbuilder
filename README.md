@@ -15,11 +15,15 @@
 - [ ] settings
 - [ ] help
 
-*ToDo*
+*PRIORITY*
 
 - [ ] Improve performance (FPS drops after a few blocks ~100)
-- [ ] Improve splashscreen (background can be transparent)
-- [ ] Fix benchmark (not compatible with default `compute_fps`?)
-- [ ] Add property/setter functions (i.e. Block.origin)
-- [ ] Builder is too big
+- [ ] Refactor Builder
 - [ ] Better split of Graphics/Builder
+- [ ] Fix dependency with plotter (all over the place)
+
+*ToDo*
+
+- [ ] Add property/setter functions (i.e. Block.origin)
+- [ ] Fix benchmark (not compatible with default `compute_fps`?)
+- [ ] Improve splashscreen (background can be transparent)
