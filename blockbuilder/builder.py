@@ -20,8 +20,8 @@ class Element(enum.Enum):
 class InteractionMode(enum.Enum):
     BUILD = enum.auto()
     DELETE = enum.auto()
-    # CAMERA = enum.auto()
     # SELECT = enum.auto()
+    # CAMERA = enum.auto()
     # LIBRARY = enum.auto()
     # SETTINGS = enum.auto()
     # HELP = enum.auto()
@@ -214,9 +214,9 @@ class Builder(object):
         if not self.benchmark:
             self.icons = dict()
             self.icons[InteractionMode.BUILD] = \
-                QIcon("icons/add_box-black-48dp.svg")
+                QIcon("icons/build.svg")
             self.icons[InteractionMode.DELETE] = \
-                QIcon("icons/remove_circle_outline-black-48dp.svg")
+                QIcon("icons/delete.svg")
 
     def configure_toolbar(self):
         from PyQt5.QtWidgets import QToolButton, QButtonGroup

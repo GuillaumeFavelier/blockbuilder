@@ -8,9 +8,9 @@
 
 - [x] build mode
 - [x] delete mode
+- [ ] area selection mode
 - [ ] camera mode
 - [ ] edit mode
-- [ ] select mode
 - [ ] library
 - [ ] settings
 - [ ] help
@@ -23,3 +23,6 @@
 ### ToDo
 
 - [ ] Add property/setter functions (i.e. Block.origin)
+- [ ] Change selector/grid color depending on mode
+- [ ] Try glyphs as optimization
+- [ ] Improve intersection processing performance
