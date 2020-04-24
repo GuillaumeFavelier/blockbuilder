@@ -1,4 +1,5 @@
 import enum
+from functools import partial
 import numpy as np
 import pyvista as pv
 import vtk
@@ -120,8 +121,10 @@ class Graphics(object):
 
     def configure_icons(self):
         from PyQt5.Qt import QIcon
-        self.icons["build"] = QIcon("icons/add_box-black-48dp.svg")
-        self.icons["delete"] = QIcon("icons/remove_circle_outline-black-48dp.svg")
+        self.icons[InteractionMode.BUILD] = \
+            QIcon("icons/add_box-black-48dp.svg")
+        self.icons[InteractionMode.DELETE] = \
+            QIcon("icons/remove_circle_outline-black-48dp.svg")
 
     def configure_fps(self):
         if self.show_fps:
@@ -299,12 +302,12 @@ class Plane(Grid):
 @enum.unique
 class InteractionMode(enum.Enum):
     BUILD = enum.auto()
-    CAMERA = enum.auto()
     DELETE = enum.auto()
-    SELECT = enum.auto()
-    LIBRARY = enum.auto()
-    SETTINGS = enum.auto()
-    HELP = enum.auto()
+    # CAMERA = enum.auto()
+    # SELECT = enum.auto()
+    # LIBRARY = enum.auto()
+    # SETTINGS = enum.auto()
+    # HELP = enum.auto()
 
 
 class Builder(object):
@@ -312,7 +315,11 @@ class Builder(object):
         if unit is None:
             unit = rcParams["unit"]
         self.unit = unit
-        self.mode = InteractionMode.BUILD
+        self.set_mode(InteractionMode.BUILD)
+        self.mode_functions = {
+            mode: getattr(self, "use_{}_mode".format(mode.name.lower()))
+            for mode in InteractionMode
+        }
         self.graphics = Graphics()
         self.plotter = self.graphics.plotter
         self.grid = Grid(
@@ -336,7 +343,6 @@ class Builder(object):
         self.selector_transform = (0, 0, 0)
         self.min_unit = 0.
         self.max_unit = self.grid.dimensions[0] * self.unit
-        self.selector_points = self.selector.mesh.points.copy()
 
         iren = self.plotter.iren
         iren.AddObserver(
@@ -461,24 +467,22 @@ class Builder(object):
         self.button_pressed = False
 
     def on_pick(self, vtk_picker, event):
-        if self.mode is InteractionMode.BUILD:
-            self.use_build_mode(vtk_picker)
-        elif self.mode is InteractionMode.DELETE:
-            self.use_delete_mode(vtk_picker)
+        self.mode_functions[self.mode](vtk_picker)
 
     def configure_toolbar(self):
+        from PyQt5.QtWidgets import QToolButton, QButtonGroup
         if self.toolbar:
             self.toolbar_widget = self.graphics.window.addToolBar("toolbar")
-            self.actions["build"] = self.toolbar_widget.addAction(
-                self.graphics.icons["build"],
-                "Build Mode",
-                lambda: self.set_mode(InteractionMode.BUILD)
-            )
-            self.actions["delete"] = self.toolbar_widget.addAction(
-                self.graphics.icons["delete"],
-                "Delete Mode",
-                lambda: self.set_mode(InteractionMode.DELETE)
-            )
+            self.mode_buttons = QButtonGroup()
+            for mode in InteractionMode:
+                button = QToolButton()
+                button.setIcon(self.graphics.icons[mode])
+                button.setCheckable(True)
+                if mode is self.mode:
+                    button.setChecked(True)
+                button.toggled.connect(partial(self.set_mode, mode=mode))
+                self.mode_buttons.addButton(button)
+                self.toolbar_widget.addWidget(button)
 
     def set_mode(self, mode):
         if mode in InteractionMode:
