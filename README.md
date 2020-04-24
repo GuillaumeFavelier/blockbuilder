@@ -17,13 +17,9 @@
 
 ### PRIORITY
 
-- [ ] Refactor Builder
 - [ ] Improve performance (FPS drops after a few blocks ~100)
-- [ ] Better split of Graphics/Builder
 - [ ] Fix dependency with plotter (all over the place)
 
 ### ToDo
 
 - [ ] Add property/setter functions (i.e. Block.origin)
-- [ ] Fix benchmark (not compatible with default `compute_fps`?)
-- [ ] Improve splashscreen (background can be transparent)

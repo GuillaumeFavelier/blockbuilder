@@ -7,7 +7,7 @@ rcParams = {
         "window_size": (1280, 720),
         "line_width": 2,
         "advanced": True,
-        "show_fps": True,
+        "show_fps": False,
         "fps_position": (2, 2),
         "font_size": 12,
         "background_top_color": (0.05, 0.05, 0.05),
@@ -37,7 +37,7 @@ rcParams = {
         "show_edges": False,
     },
     "builder": {
-        "show_toolbar": True,
+        "benchmark": False,
         "number_of_floors": 15,
     }
 }

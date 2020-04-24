@@ -38,6 +38,12 @@ class Graphics(object):
         self.configure_graphic_quality()
         self.configure_fps()
 
+    def render(self):
+        rng = [0] * 6
+        self.plotter.renderer.ComputeVisiblePropBounds(rng)
+        self.plotter.renderer.ResetCameraClippingRange(rng)
+        self.plotter.ren_win.Render()
+
     def configure_plotter(self):
         self.plotter = pv.BackgroundPlotter(
             window_size=self.window_size,
@@ -63,16 +69,9 @@ class Graphics(object):
     def configure_fps(self):
         if self.show_fps:
             self.fps = 0
-            if self.show_fps:
-                self.fps_actor = self.plotter.add_text(
-                    "fps: 0", self.fps_position, font_size=self.font_size)
+            self.fps_actor = self.plotter.add_text(
+                "fps: 0", self.fps_position, font_size=self.font_size)
             self.plotter.add_callback(self.compute_fps)
-
-    def render(self):
-        rng = [0] * 6
-        self.plotter.renderer.ComputeVisiblePropBounds(rng)
-        self.plotter.renderer.ResetCameraClippingRange(rng)
-        self.plotter.ren_win.Render()
 
     def compute_fps(self):
         fps = 1.0 / self.plotter.renderer.GetLastRenderTimeInSeconds()

@@ -28,18 +28,20 @@ class InteractionMode(enum.Enum):
 
 
 class Builder(object):
-    def __init__(self, unit=None, number_of_floors=None):
+    def __init__(self, unit=None, number_of_floors=None, benchmark=None):
         if unit is None:
             unit = rcParams["unit"]
         if number_of_floors is None:
             number_of_floors = rcParams["builder"]["number_of_floors"]
+        if benchmark is None:
+            benchmark = rcParams["builder"]["benchmark"]
         self.unit = unit
         self.number_of_floors = number_of_floors
+        self.benchmark = benchmark
         self.button_pressed = False
         self.selector_transform = (0, 0, 0)
         self.floor = 0.
         self.ceiling = self.number_of_floors * self.unit
-        self.show_toolbar = rcParams["builder"]["show_toolbar"]
         self.icons = None
         self.graphics = None
         self.plotter = None
@@ -54,24 +56,7 @@ class Builder(object):
         self.configure_interaction()
         self.configure_icons()
         self.configure_toolbar()
-
-    def benchmark(self):
-        origin = self.grid.origin.copy()
-        fps = 0
-        for z in range(10):
-            for y in range(10):
-                for x in range(10):
-                    origin[0] = self.grid.origin[0] + x * self.grid.spacing[0]
-                    origin[1] = self.grid.origin[1] + y * self.grid.spacing[1]
-                    origin[2] = self.grid.origin[2] + z * self.grid.spacing[2]
-                    Block(
-                        plotter=self.plotter,
-                        element_id=Element.BLOCK,
-                        unit=self.unit,
-                        origin=origin
-                    )
-                    fps += self.graphics.fps
-        print(fps / 1000.0)
+        self.configure_benchmark()
 
     def move_camera(self, move_factor, tangential=False, inverse=False):
         position = np.array(self.plotter.camera.GetPosition())
@@ -124,32 +109,38 @@ class Builder(object):
         self.mode_functions[self.current_mode](vtk_picker)
 
     def configure_modes(self):
-        self.set_mode(InteractionMode.BUILD)
-        self.mode_functions = {
-            mode: getattr(self, "use_{}_mode".format(mode.name.lower()))
-            for mode in InteractionMode
-        }
+        if not self.benchmark:
+            self.set_mode(InteractionMode.BUILD)
+            self.mode_functions = {
+                mode: getattr(self, "use_{}_mode".format(mode.name.lower()))
+                for mode in InteractionMode
+            }
 
     def configure_elements(self):
-        self.graphics = Graphics()
+        if self.benchmark:
+            show_fps = True
+        else:
+            show_fps = None
+        self.graphics = Graphics(show_fps=show_fps)
         self.plotter = self.graphics.plotter
         self.grid = Grid(
             plotter=self.plotter,
             element_id=Element.GRID,
             unit=self.unit,
         )
-        self.plane = Plane(
-            plotter=self.plotter,
-            element_id=Element.PLANE,
-            unit=self.unit,
-        )
-        self.selector = Selector(
-            plotter=self.plotter,
-            element_id=Element.SELECTOR,
-            unit=self.unit,
-        )
-        self.plane.actor.VisibilityOff()
-        self.selector.actor.VisibilityOff()
+        if not self.benchmark:
+            self.plane = Plane(
+                plotter=self.plotter,
+                element_id=Element.PLANE,
+                unit=self.unit,
+            )
+            self.plane.actor.VisibilityOff()
+            self.selector = Selector(
+                plotter=self.plotter,
+                element_id=Element.SELECTOR,
+                unit=self.unit,
+            )
+            self.selector.actor.VisibilityOff()
         self.plotter.reset_camera()
 
     def configure_interaction(self):
@@ -157,76 +148,79 @@ class Builder(object):
         self.plotter._style = vtk.vtkInteractorStyleUser()
         self.plotter.update_style()
 
-        # enable cell picking
-        self.picker = vtk.vtkCellPicker()
-        self.picker.AddObserver(
-            vtk.vtkCommand.EndPickEvent,
-            self.on_pick
-        )
-
-        # remove all default key binding
+        # remove all default key bindings
         self.plotter._key_press_event_callbacks.clear()
 
-        self.plotter.iren.AddObserver(
-            vtk.vtkCommand.MouseMoveEvent,
-            self.on_mouse_move
-        )
-        self.plotter.iren.AddObserver(
-            vtk.vtkCommand.MouseWheelForwardEvent,
-            self.on_mouse_wheel_forward
-        )
-        self.plotter.iren.AddObserver(
-            vtk.vtkCommand.MouseWheelBackwardEvent,
-            self.on_mouse_wheel_backward
-        )
-        self.plotter.iren.AddObserver(
-            vtk.vtkCommand.LeftButtonPressEvent,
-            self.on_mouse_left_press
-        )
-        self.plotter.iren.AddObserver(
-            vtk.vtkCommand.LeftButtonReleaseEvent,
-            self.on_mouse_left_release
-        )
-        self.plotter.add_key_event(
-            'Up',
-            lambda: self.move_camera(self.unit)
-        )
-        self.plotter.add_key_event(
-            'Down',
-            lambda: self.move_camera(-self.unit)
-        )
-        self.plotter.add_key_event(
-            'q',
-            lambda: self.move_camera(self.unit,
-                                     tangential=True)
-        )
-        self.plotter.add_key_event(
-            'd',
-            lambda: self.move_camera(-self.unit,
-                                     tangential=True)
-        )
-        self.plotter.add_key_event(
-            'z',
-            lambda: self.move_camera(self.unit,
-                                     tangential=True, inverse=True)
-        )
-        self.plotter.add_key_event(
-            's',
-            lambda: self.move_camera(-self.unit,
-                                     tangential=True, inverse=True)
-        )
+        if not self.benchmark:
+            # enable cell picking
+            self.picker = vtk.vtkCellPicker()
+            self.picker.AddObserver(
+                vtk.vtkCommand.EndPickEvent,
+                self.on_pick
+            )
+
+            # setup the key bindings
+            self.plotter.iren.AddObserver(
+                vtk.vtkCommand.MouseMoveEvent,
+                self.on_mouse_move
+            )
+            self.plotter.iren.AddObserver(
+                vtk.vtkCommand.MouseWheelForwardEvent,
+                self.on_mouse_wheel_forward
+            )
+            self.plotter.iren.AddObserver(
+                vtk.vtkCommand.MouseWheelBackwardEvent,
+                self.on_mouse_wheel_backward
+            )
+            self.plotter.iren.AddObserver(
+                vtk.vtkCommand.LeftButtonPressEvent,
+                self.on_mouse_left_press
+            )
+            self.plotter.iren.AddObserver(
+                vtk.vtkCommand.LeftButtonReleaseEvent,
+                self.on_mouse_left_release
+            )
+            self.plotter.add_key_event(
+                'Up',
+                lambda: self.move_camera(self.unit)
+            )
+            self.plotter.add_key_event(
+                'Down',
+                lambda: self.move_camera(-self.unit)
+            )
+            self.plotter.add_key_event(
+                'q',
+                lambda: self.move_camera(self.unit,
+                                         tangential=True)
+            )
+            self.plotter.add_key_event(
+                'd',
+                lambda: self.move_camera(-self.unit,
+                                         tangential=True)
+            )
+            self.plotter.add_key_event(
+                'z',
+                lambda: self.move_camera(self.unit,
+                                         tangential=True, inverse=True)
+            )
+            self.plotter.add_key_event(
+                's',
+                lambda: self.move_camera(-self.unit,
+                                         tangential=True, inverse=True)
+            )
 
     def configure_icons(self):
         from PyQt5.Qt import QIcon
-        self.icons = dict()
-        self.icons[InteractionMode.BUILD] = \
-            QIcon("icons/add_box-black-48dp.svg")
-        self.icons[InteractionMode.DELETE] = \
-            QIcon("icons/remove_circle_outline-black-48dp.svg")
+        if not self.benchmark:
+            self.icons = dict()
+            self.icons[InteractionMode.BUILD] = \
+                QIcon("icons/add_box-black-48dp.svg")
+            self.icons[InteractionMode.DELETE] = \
+                QIcon("icons/remove_circle_outline-black-48dp.svg")
 
     def configure_toolbar(self):
         from PyQt5.QtWidgets import QToolButton, QButtonGroup
-        if self.show_toolbar:
+        if not self.benchmark:
             self.toolbar = self.graphics.window.addToolBar("toolbar")
             self.mode_buttons = QButtonGroup()
             for mode in InteractionMode:
@@ -238,6 +232,28 @@ class Builder(object):
                 button.toggled.connect(partial(self.set_mode, mode=mode))
                 self.mode_buttons.addButton(button)
                 self.toolbar.addWidget(button)
+
+    def configure_benchmark(self):
+        if self.benchmark:
+            fps = 0
+            for z in range(10):
+                for y in range(10):
+                    for x in range(10):
+                        # Allow Qt events during benchmark loop (i.e. fps)
+                        self.plotter.app.processEvents()
+
+                        steps = np.array([x, y, z])
+                        origin = self.grid.origin + np.multiply(
+                            steps, self.grid.spacing)
+                        Block(
+                            plotter=self.plotter,
+                            element_id=Element.BLOCK,
+                            unit=self.unit,
+                            origin=origin
+                        )
+                        fps += self.graphics.fps
+            print(fps / 1000.0)
+            self.plotter.close()
 
     def set_mode(self, mode):
         if mode in InteractionMode:
