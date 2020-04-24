@@ -1,6 +1,5 @@
 import numpy as np
 import pyvista as pv
-import vtk
 
 from .params import rcParams
 
@@ -32,12 +31,10 @@ class Graphics(object):
         self.pyvista_toolbar = rcParams["graphics"]["pyvista_toolbar"]
         self.fps_position = rcParams["graphics"]["fps_position"]
         self.font_size = rcParams["graphics"]["font_size"]
-        self.plotter = None
         self.window = None
 
         # configuration
         self.configure_plotter()
-        self.configure_interaction()
         self.configure_graphic_quality()
         self.configure_fps()
 
@@ -54,13 +51,6 @@ class Graphics(object):
             color=self.background_bottom_color,
             top=self.background_top_color,
         )
-
-    def configure_interaction(self):
-        # remove all default key binding
-        self.plotter._key_press_event_callbacks.clear()
-        # allow flexible interactions
-        self.plotter._style = vtk.vtkInteractorStyleUser()
-        self.plotter.update_style()
 
     def configure_graphic_quality(self):
         if self.advanced:

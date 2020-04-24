@@ -6,10 +6,10 @@
 
 ### Toolbar
 
-- [ ] build mode
+- [x] build mode
+- [x] delete mode
 - [ ] camera mode
 - [ ] edit mode
-- [ ] delete mode
 - [ ] select mode
 - [ ] library
 - [ ] settings
@@ -17,8 +17,8 @@
 
 ### PRIORITY
 
-- [ ] Improve performance (FPS drops after a few blocks ~100)
 - [ ] Refactor Builder
+- [ ] Improve performance (FPS drops after a few blocks ~100)
 - [ ] Better split of Graphics/Builder
 - [ ] Fix dependency with plotter (all over the place)
 

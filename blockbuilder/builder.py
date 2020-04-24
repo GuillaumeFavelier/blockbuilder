@@ -28,104 +28,30 @@ class InteractionMode(enum.Enum):
 
 
 class Builder(object):
-    def __init__(self, unit=None):
+    def __init__(self, unit=None, number_of_floors=None):
         if unit is None:
             unit = rcParams["unit"]
+        if number_of_floors is None:
+            number_of_floors = rcParams["builder"]["number_of_floors"]
         self.unit = unit
-        self.icons = dict()
-        self.set_mode(InteractionMode.BUILD)
-        self.mode_functions = {
-            mode: getattr(self, "use_{}_mode".format(mode.name.lower()))
-            for mode in InteractionMode
-        }
-        self.graphics = Graphics()
-        self.plotter = self.graphics.plotter
-        self.grid = Grid(
-            plotter=self.plotter,
-            element_id=Element.GRID,
-            unit=self.unit,
-        )
-        self.plane = Plane(
-            plotter=self.plotter,
-            element_id=Element.PLANE,
-            unit=self.unit,
-        )
-        self.selector = Selector(
-            plotter=self.plotter,
-            element_id=Element.SELECTOR,
-            unit=self.unit,
-        )
-        self.plane.actor.VisibilityOff()
-        self.selector.actor.VisibilityOff()
-        self.plotter.reset_camera()
-
+        self.number_of_floors = number_of_floors
         self.button_pressed = False
         self.selector_transform = (0, 0, 0)
-        self.min_unit = 0.
-        self.max_unit = self.grid.dimensions[0] * self.unit
-
-        iren = self.plotter.iren
-        iren.AddObserver(
-            vtk.vtkCommand.MouseMoveEvent,
-            self.on_mouse_move
-        )
-        iren.AddObserver(
-            vtk.vtkCommand.MouseWheelForwardEvent,
-            self.on_mouse_wheel_forward
-        )
-        iren.AddObserver(
-            vtk.vtkCommand.MouseWheelBackwardEvent,
-            self.on_mouse_wheel_backward
-        )
-        iren.AddObserver(
-            vtk.vtkCommand.LeftButtonPressEvent,
-            self.on_mouse_left_press
-        )
-        iren.AddObserver(
-            vtk.vtkCommand.LeftButtonReleaseEvent,
-            self.on_mouse_left_release
-        )
-
-        self.plotter.add_key_event(
-            'Up',
-            lambda: self.move_camera(self.unit)
-        )
-        self.plotter.add_key_event(
-            'Down',
-            lambda: self.move_camera(-self.unit)
-        )
-        self.plotter.add_key_event(
-            'q',
-            lambda: self.move_camera(self.unit,
-                                     tangential=True)
-        )
-        self.plotter.add_key_event(
-            'd',
-            lambda: self.move_camera(-self.unit,
-                                     tangential=True)
-        )
-        self.plotter.add_key_event(
-            'z',
-            lambda: self.move_camera(self.unit,
-                                     tangential=True, inverse=True)
-        )
-        self.plotter.add_key_event(
-            's',
-            lambda: self.move_camera(-self.unit,
-                                     tangential=True, inverse=True)
-        )
-
-        self.picker = vtk.vtkCellPicker()
-        self.picker.AddObserver(
-            vtk.vtkCommand.EndPickEvent,
-            self.on_pick
-        )
-
-        self.toolbar = rcParams["builder"]["toolbar"]
-        self.toolbar_widget = None
-        self.actions = dict()
+        self.floor = 0.
+        self.ceiling = self.number_of_floors * self.unit
+        self.show_toolbar = rcParams["builder"]["show_toolbar"]
+        self.icons = None
+        self.graphics = None
+        self.plotter = None
+        self.toolbar = None
+        self.picker = None
+        self.current_mode = None
+        self.mode_functions = None
 
         # configuration
+        self.configure_modes()
+        self.configure_elements()
+        self.configure_interaction()
         self.configure_icons()
         self.configure_toolbar()
 
@@ -173,16 +99,16 @@ class Builder(object):
         self.picker.Pick(x, y, 0, self.plotter.renderer)
 
     def on_mouse_wheel_forward(self, vtk_picker, event):
-        if self.grid.origin[2] < self.max_unit:
+        if self.grid.origin[2] < self.ceiling:
             self.grid.translate([0., 0., self.unit], update_camera=True)
-        if self.grid.origin[2] > self.min_unit:
+        if self.grid.origin[2] > self.floor:
             self.plane.actor.VisibilityOn()
             self.plotter.render()
 
     def on_mouse_wheel_backward(self, vtk_picker, event):
-        if self.grid.origin[2] > self.min_unit:
+        if self.grid.origin[2] > self.floor:
             self.grid.translate([0., 0., -self.unit], update_camera=True)
-        if self.grid.origin[2] <= self.min_unit:
+        if self.grid.origin[2] <= self.floor:
             self.plane.actor.VisibilityOff()
             self.plotter.render()
 
@@ -195,10 +121,104 @@ class Builder(object):
         self.button_pressed = False
 
     def on_pick(self, vtk_picker, event):
-        self.mode_functions[self.mode](vtk_picker)
+        self.mode_functions[self.current_mode](vtk_picker)
+
+    def configure_modes(self):
+        self.set_mode(InteractionMode.BUILD)
+        self.mode_functions = {
+            mode: getattr(self, "use_{}_mode".format(mode.name.lower()))
+            for mode in InteractionMode
+        }
+
+    def configure_elements(self):
+        self.graphics = Graphics()
+        self.plotter = self.graphics.plotter
+        self.grid = Grid(
+            plotter=self.plotter,
+            element_id=Element.GRID,
+            unit=self.unit,
+        )
+        self.plane = Plane(
+            plotter=self.plotter,
+            element_id=Element.PLANE,
+            unit=self.unit,
+        )
+        self.selector = Selector(
+            plotter=self.plotter,
+            element_id=Element.SELECTOR,
+            unit=self.unit,
+        )
+        self.plane.actor.VisibilityOff()
+        self.selector.actor.VisibilityOff()
+        self.plotter.reset_camera()
+
+    def configure_interaction(self):
+        # allow flexible interactions
+        self.plotter._style = vtk.vtkInteractorStyleUser()
+        self.plotter.update_style()
+
+        # enable cell picking
+        self.picker = vtk.vtkCellPicker()
+        self.picker.AddObserver(
+            vtk.vtkCommand.EndPickEvent,
+            self.on_pick
+        )
+
+        # remove all default key binding
+        self.plotter._key_press_event_callbacks.clear()
+
+        self.plotter.iren.AddObserver(
+            vtk.vtkCommand.MouseMoveEvent,
+            self.on_mouse_move
+        )
+        self.plotter.iren.AddObserver(
+            vtk.vtkCommand.MouseWheelForwardEvent,
+            self.on_mouse_wheel_forward
+        )
+        self.plotter.iren.AddObserver(
+            vtk.vtkCommand.MouseWheelBackwardEvent,
+            self.on_mouse_wheel_backward
+        )
+        self.plotter.iren.AddObserver(
+            vtk.vtkCommand.LeftButtonPressEvent,
+            self.on_mouse_left_press
+        )
+        self.plotter.iren.AddObserver(
+            vtk.vtkCommand.LeftButtonReleaseEvent,
+            self.on_mouse_left_release
+        )
+        self.plotter.add_key_event(
+            'Up',
+            lambda: self.move_camera(self.unit)
+        )
+        self.plotter.add_key_event(
+            'Down',
+            lambda: self.move_camera(-self.unit)
+        )
+        self.plotter.add_key_event(
+            'q',
+            lambda: self.move_camera(self.unit,
+                                     tangential=True)
+        )
+        self.plotter.add_key_event(
+            'd',
+            lambda: self.move_camera(-self.unit,
+                                     tangential=True)
+        )
+        self.plotter.add_key_event(
+            'z',
+            lambda: self.move_camera(self.unit,
+                                     tangential=True, inverse=True)
+        )
+        self.plotter.add_key_event(
+            's',
+            lambda: self.move_camera(-self.unit,
+                                     tangential=True, inverse=True)
+        )
 
     def configure_icons(self):
         from PyQt5.Qt import QIcon
+        self.icons = dict()
         self.icons[InteractionMode.BUILD] = \
             QIcon("icons/add_box-black-48dp.svg")
         self.icons[InteractionMode.DELETE] = \
@@ -206,22 +226,22 @@ class Builder(object):
 
     def configure_toolbar(self):
         from PyQt5.QtWidgets import QToolButton, QButtonGroup
-        if self.toolbar:
-            self.toolbar_widget = self.graphics.window.addToolBar("toolbar")
+        if self.show_toolbar:
+            self.toolbar = self.graphics.window.addToolBar("toolbar")
             self.mode_buttons = QButtonGroup()
             for mode in InteractionMode:
                 button = QToolButton()
                 button.setIcon(self.icons[mode])
                 button.setCheckable(True)
-                if mode is self.mode:
+                if mode is self.current_mode:
                     button.setChecked(True)
                 button.toggled.connect(partial(self.set_mode, mode=mode))
                 self.mode_buttons.addButton(button)
-                self.toolbar_widget.addWidget(button)
+                self.toolbar.addWidget(button)
 
     def set_mode(self, mode):
         if mode in InteractionMode:
-            self.mode = mode
+            self.current_mode = mode
 
     def use_delete_mode(self, vtk_picker):
         any_intersection = (vtk_picker.GetCellId() != -1)
