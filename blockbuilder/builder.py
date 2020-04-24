@@ -1,4 +1,5 @@
 import enum
+import os.path as op
 from functools import partial
 import numpy as np
 import vtk
@@ -20,11 +21,11 @@ class Element(enum.Enum):
 class InteractionMode(enum.Enum):
     BUILD = enum.auto()
     DELETE = enum.auto()
-    # SELECT = enum.auto()
-    # CAMERA = enum.auto()
-    # LIBRARY = enum.auto()
-    # SETTINGS = enum.auto()
-    # HELP = enum.auto()
+    SELECT = enum.auto()
+    CAMERA = enum.auto()
+    LIBRARY = enum.auto()
+    SETTINGS = enum.auto()
+    HELP = enum.auto()
 
 
 class Builder(object):
@@ -106,15 +107,18 @@ class Builder(object):
         self.button_pressed = False
 
     def on_pick(self, vtk_picker, event):
-        self.mode_functions[self.current_mode](vtk_picker)
+        func = self.mode_functions.get(self.current_mode, None)
+        if func is not None:
+            func(vtk_picker)
 
     def configure_modes(self):
         if not self.benchmark:
             self.set_mode(InteractionMode.BUILD)
-            self.mode_functions = {
-                mode: getattr(self, "use_{}_mode".format(mode.name.lower()))
-                for mode in InteractionMode
-            }
+            self.mode_functions = dict()
+            for mode in InteractionMode:
+                func_name = "use_{}_mode".format(mode.name.lower())
+                if hasattr(self, func_name):
+                    self.mode_functions[mode] = getattr(self, func_name)
 
     def configure_elements(self):
         if self.benchmark:
@@ -213,10 +217,10 @@ class Builder(object):
         from PyQt5.Qt import QIcon
         if not self.benchmark:
             self.icons = dict()
-            self.icons[InteractionMode.BUILD] = \
-                QIcon("icons/build.svg")
-            self.icons[InteractionMode.DELETE] = \
-                QIcon("icons/delete.svg")
+            for mode in InteractionMode:
+                icon_path = "icons/{}.svg".format(mode.name.lower())
+                if op.isfile(icon_path):
+                    self.icons[mode] = QIcon(icon_path)
 
     def configure_toolbar(self):
         from PyQt5.QtWidgets import QToolButton, QButtonGroup
@@ -224,14 +228,16 @@ class Builder(object):
             self.toolbar = self.graphics.window.addToolBar("toolbar")
             self.mode_buttons = QButtonGroup()
             for mode in InteractionMode:
-                button = QToolButton()
-                button.setIcon(self.icons[mode])
-                button.setCheckable(True)
-                if mode is self.current_mode:
-                    button.setChecked(True)
-                button.toggled.connect(partial(self.set_mode, mode=mode))
-                self.mode_buttons.addButton(button)
-                self.toolbar.addWidget(button)
+                icon = self.icons.get(mode, None)
+                if icon is not None:
+                    button = QToolButton()
+                    button.setIcon(icon)
+                    button.setCheckable(True)
+                    if mode is self.current_mode:
+                        button.setChecked(True)
+                    button.toggled.connect(partial(self.set_mode, mode=mode))
+                    self.mode_buttons.addButton(button)
+                    self.toolbar.addWidget(button)
 
     def configure_benchmark(self):
         if self.benchmark:
