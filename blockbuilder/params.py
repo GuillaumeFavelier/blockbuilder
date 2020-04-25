@@ -7,7 +7,7 @@ rcParams = {
         "window_size": (1280, 720),
         "line_width": 2,
         "advanced": True,
-        "show_fps": False,
+        "show_fps": True,
         "fps_position": (2, 2),
         "font_size": 12,
         "background_top_color": (0.05, 0.05, 0.05),
@@ -26,18 +26,18 @@ rcParams = {
         "opacity": .7,
     },
     "grid": {
-        "dimensions": (15, 15, 1),
+        "dimensions": (30, 30, 1),
         "color": (.1, .1, .5),
         "edge_color": (.2, .2, .7),
         "opacity": .7,
     },
     "plane": {
-        "dimensions": (15, 15, 1),
+        "dimensions": (30, 30, 1),
         "color": (0.4, 0.4, 0.4),
         "show_edges": False,
     },
     "builder": {
         "benchmark": False,
-        "number_of_floors": 15,
+        "number_of_floors": 30,
     }
 }

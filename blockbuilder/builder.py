@@ -2,11 +2,12 @@ import enum
 import os.path as op
 from functools import partial
 import numpy as np
+import pyvista as pv
 import vtk
 
 from .params import rcParams
 from .graphics import Graphics
-from .block import Block, Selector, Grid, Plane
+from .block import Selector, Grid, Plane
 
 
 @enum.unique
@@ -58,6 +59,26 @@ class Builder(object):
         self.configure_icons()
         self.configure_toolbar()
         self.configure_benchmark()
+
+        # experiment:
+        class MetaData(object):
+            def __init__(self, element_id):
+                self.element_id = element_id
+
+        self.box = pv.Box(bounds=(-.5, .5, -.5, .5, -.5, .5))
+        self.offset = [self.unit / 2., self.unit / 2., self.unit / 2.]
+        self.dataset = pv.PolyData()
+        self.points = vtk.vtkPoints()
+        self.dataset.SetPoints(self.points)
+        self.alg = vtk.vtkGlyph3D()
+        self.alg.SetSourceData(self.box)
+        self.alg.SetInputData(self.dataset)
+        self.mapper = vtk.vtkPolyDataMapper()
+        self.mapper.SetInputConnection(self.alg.GetOutputPort())
+        self.actor = vtk.vtkActor()
+        self.actor.SetMapper(self.mapper)
+        self.actor._metadata = MetaData(Element.BLOCK)
+        self.plotter.renderer.AddActor(self.actor)
 
     def move_camera(self, move_factor, tangential=False, inverse=False):
         position = np.array(self.plotter.camera.GetPosition())
@@ -242,21 +263,28 @@ class Builder(object):
     def configure_benchmark(self):
         if self.benchmark:
             fps = 0
-            for z in range(10):
-                for y in range(10):
-                    for x in range(10):
+            box = pv.Box(bounds=(-.5, .5, -.5, .5, -.5, .5))
+            dataset = pv.PolyData()
+            points = vtk.vtkPoints()
+            dataset.SetPoints(points)
+            alg = vtk.vtkGlyph3D()
+            alg.SetSourceData(box)
+            alg.SetInputData(dataset)
+            mapper = vtk.vtkPolyDataMapper()
+            mapper.SetInputConnection(alg.GetOutputPort())
+            actor = vtk.vtkActor()
+            actor.SetMapper(mapper)
+            self.plotter.renderer.AddActor(actor)
+            for z in range(14):
+                for y in range(14):
+                    for x in range(14):
                         # Allow Qt events during benchmark loop (i.e. fps)
                         self.plotter.app.processEvents()
-
                         steps = np.array([x, y, z])
                         origin = self.grid.origin + np.multiply(
                             steps, self.grid.spacing)
-                        Block(
-                            plotter=self.plotter,
-                            element_id=Element.BLOCK,
-                            unit=self.unit,
-                            origin=origin
-                        )
+                        points.InsertNextPoint(origin)
+                        points.Modified()
                         fps += self.graphics.fps
             print(fps / 1000.0)
             self.plotter.close()
@@ -319,20 +347,27 @@ class Builder(object):
                 if intersections[Element.BLOCK.value]:
                     block_idata = intersections[Element.BLOCK.value]
                     block_metadata = block_idata[1]._metadata
-                    if block_metadata.origin[2] == self.grid.origin[2]:
+                    point = np.asarray(points.GetPoint(block_idata[0]))
+                    if self.grid.origin[2] < point[2] < self.grid.origin[2] + self.unit:
                         add_block = False
 
                 if add_block:
                     if self.button_pressed:
-                        Block(
-                            plotter=self.plotter,
-                            element_id=Element.BLOCK,
-                            unit=self.unit,
-                            origin=self.selector_transform,
-                        )
+                        origin = self.selector_transform + self.offset
+                        self.points.InsertNextPoint(origin)
+                        self.points.Modified()
                         self.button_released = False
                 self.plotter.render()
             elif intersections[Element.PLANE.value]:
                 self.selector.actor.VisibilityOff()
         else:
             self.selector.actor.VisibilityOff()
+
+
+def _glyph(dataset, geom):
+    import vtk
+    alg = vtk.vtkGlyph3D()
+    alg.SetSourceData(geom)
+    alg.SetInputData(dataset)
+    alg.Update()
+    return alg.GetOutput()

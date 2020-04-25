@@ -4,6 +4,19 @@
 
         *The oldest video games had crude, blocky graphics.*
 
+### Experimental branch
+
+The build mode rely on a set of vtkPoints sent to a glyph
+filter that computes the output blocks. One actor for all
+the blocks. Adding blocks is really fast. Removing is
+challenging (not done yet):
+
+* Detecting the intersection with a particular block of the
+set of blocks is not trivial
+* Removing a point from the list of points requires data
+copy
+
+
 ### Toolbar
 
 - [x] build mode
@@ -17,7 +30,6 @@
 
 ### PRIORITY
 
-- [ ] Improve performance (FPS drops after a few blocks ~100)
 - [ ] Fix dependency with plotter (all over the place)
 
 ### ToDo
