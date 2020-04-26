@@ -14,7 +14,6 @@ rcParams = {
         "background_bottom_color": (0., 0., .35),
     },
     "block": {
-        "dimensions": (2, 2, 2),
         "color": (1., 1., 1.),
         "show_edges": True,
         "edge_color": (.1, .1, .1),
@@ -26,18 +25,16 @@ rcParams = {
         "opacity": .7,
     },
     "grid": {
-        "dimensions": (30, 30, 1),
         "color": (.1, .1, .5),
         "edge_color": (.2, .2, .7),
         "opacity": .7,
     },
     "plane": {
-        "dimensions": (30, 30, 1),
         "color": (0.4, 0.4, 0.4),
         "show_edges": False,
     },
     "builder": {
+        "dimensions": (50, 50, 50),
         "benchmark": False,
-        "number_of_floors": 30,
     }
 }

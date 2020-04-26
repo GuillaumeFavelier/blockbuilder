@@ -30,20 +30,19 @@ class InteractionMode(enum.Enum):
 
 
 class Builder(object):
-    def __init__(self, unit=None, number_of_floors=None, benchmark=None):
+    def __init__(self, unit=None, dimensions=None, benchmark=None):
         if unit is None:
             unit = rcParams["unit"]
-        if number_of_floors is None:
-            number_of_floors = rcParams["builder"]["number_of_floors"]
+        if dimensions is None:
+            dimensions = rcParams["builder"]["dimensions"]
         if benchmark is None:
             benchmark = rcParams["builder"]["benchmark"]
         self.unit = unit
-        self.number_of_floors = number_of_floors
+        self.dimensions = dimensions
         self.benchmark = benchmark
         self.button_pressed = False
-        self.selector_transform = (0, 0, 0)
         self.floor = 0.
-        self.ceiling = self.number_of_floors * self.unit
+        self.ceiling = self.dimensions[2] * self.unit
         self.icons = None
         self.graphics = None
         self.plotter = None
@@ -65,16 +64,19 @@ class Builder(object):
             def __init__(self, element_id):
                 self.element_id = element_id
 
-        self.box = pv.Box(bounds=(-.5, .5, -.5, .5, -.5, .5))
-        self.offset = [self.unit / 2., self.unit / 2., self.unit / 2.]
-        self.dataset = pv.PolyData()
-        self.points = vtk.vtkPoints()
-        self.dataset.SetPoints(self.points)
-        self.alg = vtk.vtkGlyph3D()
-        self.alg.SetSourceData(self.box)
-        self.alg.SetInputData(self.dataset)
-        self.mapper = vtk.vtkPolyDataMapper()
-        self.mapper.SetInputConnection(self.alg.GetOutputPort())
+        self.cgrid = vtk.vtkStructuredGrid()
+        points = vtk.vtkPoints()
+        for k in range(self.dimensions[0]):
+            for j in range(self.dimensions[1]):
+                for i in range(self.dimensions[2]):
+                    points.InsertNextPoint(i, j, k)
+
+        self.cgrid.SetDimensions(self.dimensions)
+        self.cgrid.SetPoints(points)
+        for cell_id in range(self.cgrid.GetNumberOfCells()):
+            self.cgrid.BlankCell(cell_id)
+        self.mapper = vtk.vtkDataSetMapper()
+        self.mapper.SetInputData(self.cgrid)
         self.actor = vtk.vtkActor()
         self.actor.SetMapper(self.mapper)
         self.actor._metadata = MetaData(Element.BLOCK)
@@ -148,15 +150,22 @@ class Builder(object):
             show_fps = None
         self.graphics = Graphics(show_fps=show_fps)
         self.plotter = self.graphics.plotter
+        grid_dimensions = [
+            self.dimensions[0],
+            self.dimensions[1],
+            1
+        ]
         self.grid = Grid(
             plotter=self.plotter,
             element_id=Element.GRID,
+            dimensions=grid_dimensions,
             unit=self.unit,
         )
         if not self.benchmark:
             self.plane = Plane(
                 plotter=self.plotter,
                 element_id=Element.PLANE,
+                dimensions=grid_dimensions,
                 unit=self.unit,
             )
             self.plane.actor.VisibilityOff()
@@ -295,79 +304,76 @@ class Builder(object):
 
     def use_delete_mode(self, vtk_picker):
         any_intersection = (vtk_picker.GetCellId() != -1)
-        if any_intersection:
-            actors = vtk_picker.GetActors()
-            points = vtk_picker.GetPickedPositions()
-            intersections = [False for element in Element]
-            for idx, actor in enumerate(actors):
-                intersections[actor._metadata.element_id.value] = (idx, actor)
-
-            if intersections[Element.GRID.value]:
-                grid_idata = intersections[Element.GRID.value]
-                # draw the selector
-                point = np.asarray(points.GetPoint(grid_idata[0]))
-                pt_min = np.floor(point / self.unit) * self.unit
-                pt_min[-1] = self.grid.origin[2]
-                center = pt_min
-                self.selector_transform = center
-                self.selector.mesh.SetOrigin(center)
-                self.selector.actor.VisibilityOn()
-                if self.button_pressed:
-                    if intersections[Element.BLOCK.value]:
-                        block_idata = intersections[Element.BLOCK.value]
-                        block_metadata = block_idata[1]._metadata
-                        if block_metadata.origin[2] == self.grid.origin[2]:
-                            self.plotter.remove_actor(block_metadata.actor)
-                self.plotter.render()
-            elif intersections[Element.PLANE.value]:
-                self.selector.actor.VisibilityOff()
-        else:
+        if not any_intersection:
             self.selector.actor.VisibilityOff()
+            return
+
+        intersections = self.compute_intersection_table(vtk_picker)
+        if intersections[Element.GRID.value] is None:
+            return
+
+        picked_points = vtk_picker.GetPickedPositions()
+        grid_idata = intersections[Element.GRID.value]
+        grid_ipoint = np.asarray(picked_points.GetPoint(grid_idata))
+
+        coords = np.floor(grid_ipoint / self.unit)
+        coords[2] = self.grid.origin[2] / self.unit
+
+        selector_origin = coords * self.unit
+        self.selector.mesh.SetOrigin(selector_origin)
+        self.selector.actor.VisibilityOn()
+
+        coords = coords.astype(np.int)
+        cell_id = _coords_to_cell(coords, self.dimensions)
+        if self.button_pressed:
+            self.button_released = False
+            if intersections[Element.BLOCK.value] is not None and self.cgrid.IsCellVisible(cell_id):
+                self.cgrid.BlankCell(cell_id)
+                self.cgrid.Modified()
+        self.plotter.render()
 
     def use_build_mode(self, vtk_picker):
         any_intersection = (vtk_picker.GetCellId() != -1)
-        if any_intersection:
-            actors = vtk_picker.GetActors()
-            points = vtk_picker.GetPickedPositions()
-            intersections = [False for element in Element]
-            for idx, actor in enumerate(actors):
-                intersections[actor._metadata.element_id.value] = (idx, actor)
-
-            if intersections[Element.GRID.value]:
-                grid_idata = intersections[Element.GRID.value]
-                # draw the selector
-                point = np.asarray(points.GetPoint(grid_idata[0]))
-                pt_min = np.floor(point / self.unit) * self.unit
-                pt_min[-1] = self.grid.origin[2]
-                center = pt_min
-                self.selector_transform = center
-                self.selector.mesh.SetOrigin(center)
-                self.selector.actor.VisibilityOn()
-                add_block = True
-                if intersections[Element.BLOCK.value]:
-                    block_idata = intersections[Element.BLOCK.value]
-                    block_metadata = block_idata[1]._metadata
-                    point = np.asarray(points.GetPoint(block_idata[0]))
-                    if self.grid.origin[2] < point[2] < self.grid.origin[2] + self.unit:
-                        add_block = False
-
-                if add_block:
-                    if self.button_pressed:
-                        origin = self.selector_transform + self.offset
-                        self.points.InsertNextPoint(origin)
-                        self.points.Modified()
-                        self.button_released = False
-                self.plotter.render()
-            elif intersections[Element.PLANE.value]:
-                self.selector.actor.VisibilityOff()
-        else:
+        if not any_intersection:
             self.selector.actor.VisibilityOff()
+            return
+
+        intersections = self.compute_intersection_table(vtk_picker)
+        if intersections[Element.GRID.value] is None:
+            return
+
+        picked_points = vtk_picker.GetPickedPositions()
+        grid_idata = intersections[Element.GRID.value]
+        grid_ipoint = np.asarray(picked_points.GetPoint(grid_idata))
+
+        coords = np.floor(grid_ipoint / self.unit)
+        coords[2] = self.grid.origin[2] / self.unit
+
+        selector_origin = coords * self.unit
+        self.selector.mesh.SetOrigin(selector_origin)
+        self.selector.actor.VisibilityOn()
+
+        coords = coords.astype(np.int)
+        cell_id = _coords_to_cell(coords, self.dimensions)
+        if self.button_pressed:
+            self.button_released = False
+            if intersections[Element.BLOCK.value] is not None and self.cgrid.IsCellVisible(cell_id):
+                pass
+            else:
+                self.cgrid.UnBlankCell(cell_id)
+                self.cgrid.Modified()
+        self.plotter.render()
+
+    def compute_intersection_table(self, vtk_picker):
+        picked_actors = vtk_picker.GetActors()
+        intersections = [None for element in Element]
+        for idx, actor in enumerate(picked_actors):
+            intersections[actor._metadata.element_id.value] = idx
+        return intersections
 
 
-def _glyph(dataset, geom):
-    import vtk
-    alg = vtk.vtkGlyph3D()
-    alg.SetSourceData(geom)
-    alg.SetInputData(dataset)
-    alg.Update()
-    return alg.GetOutput()
+def _coords_to_cell(coords, dimensions):
+    cell_id = coords[0] + \
+        coords[1] * (dimensions[0] - 1) + \
+        coords[2] * (dimensions[0] - 1) * (dimensions[1] - 1)
+    return cell_id

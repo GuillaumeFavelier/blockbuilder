@@ -36,5 +36,12 @@ copy
 
 - [ ] Add property/setter functions (i.e. Block.origin)
 - [ ] Change selector/grid color depending on mode
-- [ ] Try glyphs as optimization
-- [ ] Improve intersection processing performance
+- [ ] Refactor intersections management, code duplication between build nad delete
+- [ ] Refactor block.py
+- [ ] Refactor experiment code in Builder
+
+### Bug
+
+- [ ] Fix bug with last floor (not building)
+- [ ] Fix overlap of colors between grid and top of the blocks
+
