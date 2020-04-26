@@ -64,7 +64,7 @@ class Builder(object):
             def __init__(self, element_id):
                 self.element_id = element_id
 
-        self.cgrid = vtk.vtkStructuredGrid()
+        self.cgrid = pv.StructuredGrid()
         points = vtk.vtkPoints()
         for k in range(self.dimensions[0]):
             for j in range(self.dimensions[1]):
@@ -73,14 +73,23 @@ class Builder(object):
 
         self.cgrid.SetDimensions(self.dimensions)
         self.cgrid.SetPoints(points)
-        for cell_id in range(self.cgrid.GetNumberOfCells()):
+        cgrid_color = (1., 1., 1.)
+        number_of_cells = self.cgrid.GetNumberOfCells()
+        self.cgrid.cell_arrays["color"] = np.tile(
+           cgrid_color,
+           (number_of_cells, 1),
+        )
+        for cell_id in range(number_of_cells):
             self.cgrid.BlankCell(cell_id)
-        self.mapper = vtk.vtkDataSetMapper()
-        self.mapper.SetInputData(self.cgrid)
-        self.actor = vtk.vtkActor()
-        self.actor.SetMapper(self.mapper)
-        self.actor._metadata = MetaData(Element.BLOCK)
-        self.plotter.renderer.AddActor(self.actor)
+        actor = self.plotter.add_mesh(
+            self.cgrid,
+            scalars="color",
+            rgb=True,
+            line_width=rcParams["graphics"]["line_width"],
+            show_edges=True,
+            show_scalar_bar=False,
+        )
+        actor._metadata = MetaData(Element.BLOCK)
 
     def move_camera(self, move_factor, tangential=False, inverse=False):
         position = np.array(self.plotter.camera.GetPosition())

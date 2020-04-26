@@ -20,8 +20,8 @@ rcParams = {
         "opacity": 1.,
     },
     "selector": {
-        "color": (.3, .3, .8),
-        "edge_color": (.4, .4, 1.),
+        "build_color": (.3, .3, .8),
+        "delete_color": (.8, .3, .3),
         "opacity": .7,
     },
     "grid": {
@@ -34,7 +34,7 @@ rcParams = {
         "show_edges": False,
     },
     "builder": {
-        "dimensions": (50, 50, 50),
+        "dimensions": (15, 15, 15),
         "benchmark": False,
     }
 }

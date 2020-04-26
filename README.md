@@ -30,18 +30,16 @@ copy
 
 ### PRIORITY
 
-- [ ] Fix dependency with plotter (all over the place)
+- Refactor intersections management, code duplication between build nad delete
+- Refactor block.py
+- Refactor experiment code in Builder
+- Fix dependency with plotter (all over the place)
 
 ### ToDo
 
-- [ ] Add property/setter functions (i.e. Block.origin)
-- [ ] Change selector/grid color depending on mode
-- [ ] Refactor intersections management, code duplication between build nad delete
-- [ ] Refactor block.py
-- [ ] Refactor experiment code in Builder
+- Add property/setter functions (i.e. Block.origin)
+- Change selector/grid color depending on mode
 
 ### Bug
 
-- [ ] Fix bug with last floor (not building)
-- [ ] Fix overlap of colors between grid and top of the blocks
-
+- Fix bug with last floor (no block added)
