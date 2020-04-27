@@ -22,7 +22,7 @@ class Grid(object):
         if origin is None:
             origin = rcParams["origin"]
         if color is None:
-            color = rcParams["grid"]["build_color"]
+            color = rcParams["grid"]["color"]["build"]
         if show_edges is None:
             show_edges = rcParams["grid"]["show_edges"]
         if opacity is None:
@@ -39,15 +39,9 @@ class Grid(object):
         self.center = self.origin + np.multiply(self.dimensions / 2.,
                                                 self.spacing)
         self.mesh = pv.UniformGrid(self.dimensions, self.spacing, self.origin)
-        self.number_of_cells = self.mesh.GetNumberOfCells()
-        self.mesh.cell_arrays[self.color_array] = np.tile(
-           self.color,
-           (self.number_of_cells, 1),
-        )
         self.actor = self.plotter.add_mesh(
             mesh=self.mesh,
-            scalars=self.color_array,
-            rgb=True,
+            color=self.color,
             show_scalar_bar=False,
             show_edges=self.show_edges,
             edge_color=self.edge_color,
@@ -58,19 +52,15 @@ class Grid(object):
         # add data for picking
         self.actor.element_id = Element.GRID
 
-    def set_block_mode(self, mode, mode_list):
+    def set_block_mode(self, mode):
         element_name = self.actor.element_id.name.lower()
-        if mode is mode_list.BUILD:
-            self.color = rcParams[element_name]["build_color"]
-        elif mode is mode_list.DELETE:
-            self.color = rcParams[element_name]["delete_color"]
-        self.mesh.cell_arrays[self.color_array] = np.tile(
-           self.color,
-           (self.number_of_cells, 1),
-        )
-        # update edge_color
+        mode_name = mode.name.lower()
+        self.color = rcParams[element_name]["color"][mode_name]
         self.edge_color = self.color + np.array([.15, .15, .15])
-        self.actor.GetProperty().SetEdgeColor(self.edge_color)
+        # update colors
+        prop = self.actor.GetProperty()
+        prop.SetColor(self.color)
+        prop.SetEdgeColor(self.edge_color)
 
     def translate(self, tr, update_camera=False):
         # update origin
@@ -108,6 +98,7 @@ class Selector(Grid):
         dimensions = rcParams["selector"]["dimensions"]
         super().__init__(
             plotter=plotter,
+            color=color,
             dimensions=dimensions,
         )
         # add data for picking

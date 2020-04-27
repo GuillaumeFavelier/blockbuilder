@@ -282,8 +282,10 @@ class Builder(object):
     def set_block_mode(self, mode):
         if mode in BlockMode:
             self.current_block_mode = mode
-            self.grid.set_block_mode(mode, BlockMode)
-            self.selector.set_block_mode(mode, BlockMode)
+            if self.grid is not None:
+                self.grid.set_block_mode(mode)
+            if self.selector is not None:
+                self.selector.set_block_mode(mode)
 
     def use_delete_mode(self, vtk_picker):
         any_intersection = (vtk_picker.GetCellId() != -1)

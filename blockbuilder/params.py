@@ -14,9 +14,10 @@ rcParams = {
         "background_bottom_color": (0., 0., .35),
     },
     "grid": {
-        "color_array": "color",
-        "build_color": (.1, .1, .4),
-        "delete_color": (.4, .1, .1),
+        "color": {
+            "build": (.05, .05, .35),
+            "delete": (.35, .05, .05),
+        },
         "show_edges": True,
         "opacity": .7,
     },
@@ -26,9 +27,11 @@ rcParams = {
         "opacity": 1.,
     },
     "selector": {
+        "color": {
+            "build": (.3, .3, .8),
+            "delete": (.8, .3, .3),
+        },
         "dimensions": (2, 2, 2),
-        "build_color": (.3, .3, .8),
-        "delete_color": (.8, .3, .3),
     },
     "block": {
         "color_array": "color",
