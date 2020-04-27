@@ -37,6 +37,7 @@ copy
 
 - Add property/setter functions (i.e. Block.origin)
 - Change selector/grid color depending on mode
+- Add support for symmetry
 
 ### Bug
 
