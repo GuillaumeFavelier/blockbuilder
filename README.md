@@ -30,9 +30,7 @@ copy
 
 ### PRIORITY
 
-- Refactor intersections management, code duplication between build nad delete
-- Refactor block.py
-- Refactor experiment code in Builder
+- Refactor intersections management, code duplication between build and delete
 - Fix dependency with plotter (all over the place)
 
 ### ToDo
@@ -43,3 +41,4 @@ copy
 ### Bug
 
 - Fix bug with last floor (no block added)
+- Fix `move_camera`: use unit circle coordinates (cos, sin)

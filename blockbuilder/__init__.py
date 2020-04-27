@@ -1,3 +1,3 @@
 from .params import rcParams
-from .block import Block, Selector, Grid, Plane
+from .elements import Grid, Plane, Selector
 from .builder import Builder

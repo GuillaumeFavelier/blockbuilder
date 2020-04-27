@@ -1,25 +1,17 @@
-import enum
 import os.path as op
+import enum
+import time
 from functools import partial
 import numpy as np
-import pyvista as pv
 import vtk
 
 from .params import rcParams
 from .graphics import Graphics
-from .block import Selector, Grid, Plane
+from .elements import Element, Selector, Grid, Plane, Block
 
 
 @enum.unique
-class Element(enum.Enum):
-    BLOCK = 0
-    SELECTOR = 1
-    GRID = 2
-    PLANE = 3
-
-
-@enum.unique
-class InteractionMode(enum.Enum):
+class BlockMode(enum.Enum):
     BUILD = enum.auto()
     DELETE = enum.auto()
     SELECT = enum.auto()
@@ -30,66 +22,41 @@ class InteractionMode(enum.Enum):
 
 
 class Builder(object):
-    def __init__(self, unit=None, dimensions=None, benchmark=None):
-        if unit is None:
-            unit = rcParams["unit"]
+    def __init__(self, dimensions=None, benchmark=None):
+        self.unit = rcParams["unit"]
+        self.benchmark_dimensions = np.asarray(
+            rcParams["builder"]["benchmark"]["dimensions"])
+        self.benchmark_number_of_runs = \
+            rcParams["builder"]["benchmark"]["number_of_runs"]
         if dimensions is None:
             dimensions = rcParams["builder"]["dimensions"]
         if benchmark is None:
-            benchmark = rcParams["builder"]["benchmark"]
-        self.unit = unit
-        self.dimensions = dimensions
+            benchmark = rcParams["builder"]["benchmark"]["enabled"]
+        if benchmark:
+            self.dimensions = np.asarray(self.benchmark_dimensions)
+        else:
+            self.dimensions = np.asarray(dimensions)
         self.benchmark = benchmark
         self.button_pressed = False
         self.floor = 0.
-        self.ceiling = self.dimensions[2] * self.unit
+        self.ceiling = (self.dimensions[2] - 1) * self.unit
         self.icons = None
         self.graphics = None
         self.plotter = None
         self.toolbar = None
         self.picker = None
-        self.current_mode = None
+        self.current_block_mode = None
         self.mode_functions = None
+        self.cached_coords = [-1, -1, -1]
+        self.coords_type = np.int
 
         # configuration
-        self.configure_modes()
-        self.configure_elements()
-        self.configure_interaction()
-        self.configure_icons()
-        self.configure_toolbar()
-        self.configure_benchmark()
-
-        # experiment:
-        class MetaData(object):
-            def __init__(self, element_id):
-                self.element_id = element_id
-
-        self.cgrid = pv.StructuredGrid()
-        points = vtk.vtkPoints()
-        for k in range(self.dimensions[0]):
-            for j in range(self.dimensions[1]):
-                for i in range(self.dimensions[2]):
-                    points.InsertNextPoint(i, j, k)
-
-        self.cgrid.SetDimensions(self.dimensions)
-        self.cgrid.SetPoints(points)
-        cgrid_color = (1., 1., 1.)
-        number_of_cells = self.cgrid.GetNumberOfCells()
-        self.cgrid.cell_arrays["color"] = np.tile(
-           cgrid_color,
-           (number_of_cells, 1),
-        )
-        for cell_id in range(number_of_cells):
-            self.cgrid.BlankCell(cell_id)
-        actor = self.plotter.add_mesh(
-            self.cgrid,
-            scalars="color",
-            rgb=True,
-            line_width=rcParams["graphics"]["line_width"],
-            show_edges=True,
-            show_scalar_bar=False,
-        )
-        actor._metadata = MetaData(Element.BLOCK)
+        self.load_block_modes()
+        self.load_elements()
+        self.load_interaction()
+        self.load_icons()
+        self.load_toolbar()
+        self.load_benchmark()
 
     def move_camera(self, move_factor, tangential=False, inverse=False):
         position = np.array(self.plotter.camera.GetPosition())
@@ -98,11 +65,13 @@ class Builder(object):
         move_vector /= np.linalg.norm(move_vector)
         if tangential:
             viewup = np.array(self.plotter.camera.GetViewUp())
-            tanget_vector = np.cross(viewup, move_vector)
+            viewup /= np.linalg.norm(viewup)
+            tangent_vector = np.cross(viewup, move_vector)
+            tangent_vector /= np.linalg.norm(tangent_vector)
             if inverse:
-                move_vector = np.cross(move_vector, tanget_vector)
+                move_vector = np.cross(move_vector, tangent_vector)
             else:
-                move_vector = tanget_vector
+                move_vector = tangent_vector
 
         move_vector *= move_factor
         position += move_vector
@@ -110,25 +79,29 @@ class Builder(object):
         # update pick
         x, y = self.plotter.iren.GetEventPosition()
         self.picker.Pick(x, y, 0, self.plotter.renderer)
-        self.plotter.render()
+        self.graphics.render()
 
     def on_mouse_move(self, vtk_picker, event):
         x, y = vtk_picker.GetEventPosition()
         self.picker.Pick(x, y, 0, self.plotter.renderer)
 
     def on_mouse_wheel_forward(self, vtk_picker, event):
+        tr = np.array([0., 0., self.unit])
         if self.grid.origin[2] < self.ceiling:
-            self.grid.translate([0., 0., self.unit], update_camera=True)
-        if self.grid.origin[2] > self.floor:
-            self.plane.actor.VisibilityOn()
-            self.plotter.render()
+            self.grid.translate(tr)
+            position = np.array(self.plotter.camera.GetPosition())
+            self.plotter.camera.SetPosition(position + tr)
+            self.plotter.camera.SetFocalPoint(self.grid.center)
+        self.graphics.render()
 
     def on_mouse_wheel_backward(self, vtk_picker, event):
+        tr = np.array([0., 0., -self.unit])
         if self.grid.origin[2] > self.floor:
-            self.grid.translate([0., 0., -self.unit], update_camera=True)
-        if self.grid.origin[2] <= self.floor:
-            self.plane.actor.VisibilityOff()
-            self.plotter.render()
+            self.grid.translate(tr)
+            position = np.array(self.plotter.camera.GetPosition())
+            self.plotter.camera.SetPosition(position + tr)
+            self.plotter.camera.SetFocalPoint(self.grid.center)
+        self.graphics.render()
 
     def on_mouse_left_press(self, vtk_picker, event):
         self.button_pressed = True
@@ -139,26 +112,30 @@ class Builder(object):
         self.button_pressed = False
 
     def on_pick(self, vtk_picker, event):
-        func = self.mode_functions.get(self.current_mode, None)
+        func = self.mode_functions.get(self.current_block_mode, None)
         if func is not None:
             func(vtk_picker)
 
-    def configure_modes(self):
+    def load_block_modes(self):
         if not self.benchmark:
-            self.set_mode(InteractionMode.BUILD)
+            self.set_block_mode(BlockMode.BUILD)
             self.mode_functions = dict()
-            for mode in InteractionMode:
+            for mode in BlockMode:
                 func_name = "use_{}_mode".format(mode.name.lower())
                 if hasattr(self, func_name):
                     self.mode_functions[mode] = getattr(self, func_name)
 
-    def configure_elements(self):
+    def load_elements(self):
         if self.benchmark:
             show_fps = True
         else:
             show_fps = None
         self.graphics = Graphics(show_fps=show_fps)
         self.plotter = self.graphics.plotter
+        self.block = Block(
+            plotter=self.plotter,
+            dimensions=self.dimensions,
+        )
         grid_dimensions = [
             self.dimensions[0],
             self.dimensions[1],
@@ -166,27 +143,26 @@ class Builder(object):
         ]
         self.grid = Grid(
             plotter=self.plotter,
-            element_id=Element.GRID,
             dimensions=grid_dimensions,
-            unit=self.unit,
         )
         if not self.benchmark:
+            plane_dimensions = [
+                self.dimensions[0],
+                self.dimensions[1],
+                2
+            ]
             self.plane = Plane(
                 plotter=self.plotter,
-                element_id=Element.PLANE,
-                dimensions=grid_dimensions,
-                unit=self.unit,
+                dimensions=plane_dimensions,
             )
-            self.plane.actor.VisibilityOff()
             self.selector = Selector(
                 plotter=self.plotter,
-                element_id=Element.SELECTOR,
-                unit=self.unit,
             )
-            self.selector.actor.VisibilityOff()
+            self.selector.hide()
+        self.plotter.camera.SetFocalPoint(self.grid.center)
         self.plotter.reset_camera()
 
-    def configure_interaction(self):
+    def load_interaction(self):
         # allow flexible interactions
         self.plotter._style = vtk.vtkInteractorStyleUser()
         self.plotter.update_style()
@@ -252,69 +228,65 @@ class Builder(object):
                                          tangential=True, inverse=True)
             )
 
-    def configure_icons(self):
+    def load_icons(self):
         from PyQt5.Qt import QIcon
         if not self.benchmark:
             self.icons = dict()
-            for mode in InteractionMode:
+            for mode in BlockMode:
                 icon_path = "icons/{}.svg".format(mode.name.lower())
                 if op.isfile(icon_path):
                     self.icons[mode] = QIcon(icon_path)
 
-    def configure_toolbar(self):
+    def load_toolbar(self):
         from PyQt5.QtWidgets import QToolButton, QButtonGroup
         if not self.benchmark:
             self.toolbar = self.graphics.window.addToolBar("toolbar")
             self.mode_buttons = QButtonGroup()
-            for mode in InteractionMode:
+            for mode in BlockMode:
                 icon = self.icons.get(mode, None)
                 if icon is not None:
                     button = QToolButton()
                     button.setIcon(icon)
                     button.setCheckable(True)
-                    if mode is self.current_mode:
+                    if mode is self.current_block_mode:
                         button.setChecked(True)
-                    button.toggled.connect(partial(self.set_mode, mode=mode))
+                    button.toggled.connect(
+                        partial(self.set_block_mode, mode=mode))
                     self.mode_buttons.addButton(button)
                     self.toolbar.addWidget(button)
 
-    def configure_benchmark(self):
+    def load_benchmark(self):
         if self.benchmark:
-            fps = 0
-            box = pv.Box(bounds=(-.5, .5, -.5, .5, -.5, .5))
-            dataset = pv.PolyData()
-            points = vtk.vtkPoints()
-            dataset.SetPoints(points)
-            alg = vtk.vtkGlyph3D()
-            alg.SetSourceData(box)
-            alg.SetInputData(dataset)
-            mapper = vtk.vtkPolyDataMapper()
-            mapper.SetInputConnection(alg.GetOutputPort())
-            actor = vtk.vtkActor()
-            actor.SetMapper(mapper)
-            self.plotter.renderer.AddActor(actor)
-            for z in range(14):
-                for y in range(14):
-                    for x in range(14):
-                        # Allow Qt events during benchmark loop (i.e. fps)
-                        self.plotter.app.processEvents()
-                        steps = np.array([x, y, z])
-                        origin = self.grid.origin + np.multiply(
-                            steps, self.grid.spacing)
-                        points.InsertNextPoint(origin)
-                        points.Modified()
-                        fps += self.graphics.fps
-            print(fps / 1000.0)
+            timings = np.empty(self.benchmark_number_of_runs)
+            number_of_blocks = np.prod(self.dimensions - 1)
+            for operation in (self.block.add, self.block.remove):
+                for run in range(self.benchmark_number_of_runs):
+                    start_time = time.perf_counter()
+                    for z in range(self.dimensions[2] - 1):
+                        for y in range(self.dimensions[1] - 1):
+                            for x in range(self.dimensions[0] - 1):
+                                # Allow Qt events during benchmark loop
+                                self.plotter.app.processEvents()
+                                operation([x, y, z])
+                    end_time = time.perf_counter()
+                    timings[run] = end_time - start_time
+                    if operation == self.block.add:
+                        self.block.remove_all()
+                    else:
+                        self.block.add_all()
+                print("{}: {:.2f} blk/s".format(operation.__name__,
+                                                number_of_blocks /
+                                                np.mean(timings)))
             self.plotter.close()
 
-    def set_mode(self, mode):
-        if mode in InteractionMode:
-            self.current_mode = mode
+    def set_block_mode(self, mode):
+        if mode in BlockMode:
+            self.current_block_mode = mode
 
     def use_delete_mode(self, vtk_picker):
         any_intersection = (vtk_picker.GetCellId() != -1)
         if not any_intersection:
-            self.selector.actor.VisibilityOff()
+            self.selector.hide()
             return
 
         intersections = self.compute_intersection_table(vtk_picker)
@@ -328,23 +300,22 @@ class Builder(object):
         coords = np.floor(grid_ipoint / self.unit)
         coords[2] = self.grid.origin[2] / self.unit
 
-        selector_origin = coords * self.unit
-        self.selector.mesh.SetOrigin(selector_origin)
-        self.selector.actor.VisibilityOn()
+        # put coords in cache to minimize render calls
+        if not np.allclose(coords - self.cached_coords, 0):
+            self.selector.select(coords)
+            self.selector.show()
+            self.graphics.render()
+            self.cached_coords = coords
 
-        coords = coords.astype(np.int)
-        cell_id = _coords_to_cell(coords, self.dimensions)
+        coords = coords.astype(self.coords_type)
         if self.button_pressed:
+            self.block.remove(coords)
             self.button_released = False
-            if intersections[Element.BLOCK.value] is not None and self.cgrid.IsCellVisible(cell_id):
-                self.cgrid.BlankCell(cell_id)
-                self.cgrid.Modified()
-        self.plotter.render()
 
     def use_build_mode(self, vtk_picker):
         any_intersection = (vtk_picker.GetCellId() != -1)
         if not any_intersection:
-            self.selector.actor.VisibilityOff()
+            self.selector.hide()
             return
 
         intersections = self.compute_intersection_table(vtk_picker)
@@ -358,31 +329,21 @@ class Builder(object):
         coords = np.floor(grid_ipoint / self.unit)
         coords[2] = self.grid.origin[2] / self.unit
 
-        selector_origin = coords * self.unit
-        self.selector.mesh.SetOrigin(selector_origin)
-        self.selector.actor.VisibilityOn()
+        # put coords in cache to minimize render calls
+        if not np.allclose(coords - self.cached_coords, 0):
+            self.selector.select(coords)
+            self.selector.show()
+            self.graphics.render()
+            self.cached_coords = coords
 
-        coords = coords.astype(np.int)
-        cell_id = _coords_to_cell(coords, self.dimensions)
+        coords = coords.astype(self.coords_type)
         if self.button_pressed:
+            self.block.add(coords)
             self.button_released = False
-            if intersections[Element.BLOCK.value] is not None and self.cgrid.IsCellVisible(cell_id):
-                pass
-            else:
-                self.cgrid.UnBlankCell(cell_id)
-                self.cgrid.Modified()
-        self.plotter.render()
 
     def compute_intersection_table(self, vtk_picker):
         picked_actors = vtk_picker.GetActors()
         intersections = [None for element in Element]
         for idx, actor in enumerate(picked_actors):
-            intersections[actor._metadata.element_id.value] = idx
+            intersections[actor.element_id.value] = idx
         return intersections
-
-
-def _coords_to_cell(coords, dimensions):
-    cell_id = coords[0] + \
-        coords[1] * (dimensions[0] - 1) + \
-        coords[2] * (dimensions[0] - 1) * (dimensions[1] - 1)
-    return cell_id

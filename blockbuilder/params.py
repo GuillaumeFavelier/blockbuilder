@@ -13,28 +13,34 @@ rcParams = {
         "background_top_color": (0.05, 0.05, 0.05),
         "background_bottom_color": (0., 0., .35),
     },
-    "block": {
-        "color": (1., 1., 1.),
-        "show_edges": True,
-        "edge_color": (.1, .1, .1),
-        "opacity": 1.,
-    },
-    "selector": {
-        "build_color": (.3, .3, .8),
-        "delete_color": (.8, .3, .3),
-        "opacity": .7,
-    },
     "grid": {
         "color": (.1, .1, .5),
+        "show_edges": True,
         "edge_color": (.2, .2, .7),
         "opacity": .7,
     },
     "plane": {
         "color": (0.4, 0.4, 0.4),
         "show_edges": False,
+        "opacity": 1.,
+    },
+    "selector": {
+        "dimensions": (2, 2, 2),
+        "build_color": (.3, .3, .8),
+        "delete_color": (.8, .3, .3),
+    },
+    "block": {
+        "color_array": "color",
+        "color": (1., 1., 1.),
+        "edge_color": (.0, .0, .0),
+        "show_edges": True,
     },
     "builder": {
         "dimensions": (15, 15, 15),
-        "benchmark": False,
+        "benchmark": {
+            "enabled": False,
+            "dimensions": (50, 50, 50),
+            "number_of_runs": 10,
+        },
     }
 }

@@ -34,39 +34,41 @@ class Graphics(object):
         self.window = None
 
         # configuration
-        self.configure_plotter()
-        self.configure_graphic_quality()
-        self.configure_fps()
+        self.load_plotter()
+        self.load_graphic_quality()
+        self.load_fps()
 
     def render(self):
+        # fix the clipping planes being too small
         rng = [0] * 6
         self.plotter.renderer.ComputeVisiblePropBounds(rng)
         self.plotter.renderer.ResetCameraClippingRange(rng)
-        self.plotter.ren_win.Render()
+        if hasattr(self.plotter, "ren_win"):
+            self.plotter.ren_win.Render()
 
-    def configure_plotter(self):
+    def load_plotter(self):
         self.plotter = pv.BackgroundPlotter(
             window_size=self.window_size,
             menu_bar=self.pyvista_menu_bar,
             toolbar=self.pyvista_toolbar,
         )
-        # fix the clipping planes being too small
-        self.plotter.render = self.render
         self.window = self.plotter.app_window
         self.plotter.set_background(
             color=self.background_bottom_color,
             top=self.background_top_color,
         )
 
-    def configure_graphic_quality(self):
+    def load_graphic_quality(self):
         if self.advanced:
             self.plotter.enable_anti_aliasing()
             self.plotter.ren_win.LineSmoothingOn()
+            self.plotter.ren_win.PolygonSmoothingOn()
         else:
             self.plotter.disable_anti_aliasing()
             self.plotter.ren_win.LineSmoothingOff()
+            self.plotter.ren_win.PolygonSmoothingOff()
 
-    def configure_fps(self):
+    def load_fps(self):
         if self.show_fps:
             self.fps = 0
             self.fps_actor = self.plotter.add_text(
