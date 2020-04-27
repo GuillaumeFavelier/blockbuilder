@@ -28,3 +28,4 @@
 - Fix dependency with plotter (all over the place)
 - Add property/setter functions (i.e. Block.origin)
 - Add support for symmetry
+- Add an option to decrease opacity on blocks located in other floors

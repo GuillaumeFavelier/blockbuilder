@@ -5,6 +5,7 @@ rcParams = {
         "pyvista_menu_bar": False,
         "pyvista_toolbar": False,
         "window_size": (1280, 720),
+        "show_edges": True,
         "line_width": 2,
         "advanced": True,
         "show_fps": True,
@@ -18,12 +19,10 @@ rcParams = {
             "build": (.05, .05, .35),
             "delete": (.35, .05, .05),
         },
-        "show_edges": True,
         "opacity": .7,
     },
     "plane": {
         "color": (0.4, 0.4, 0.4),
-        "show_edges": False,
         "opacity": 1.,
     },
     "selector": {
@@ -31,13 +30,12 @@ rcParams = {
             "build": (.3, .3, .8),
             "delete": (.8, .3, .3),
         },
-        "dimensions": (2, 2, 2),
+        "opacity": .7,
     },
     "block": {
         "color_array": "color",
-        "color": (1., 1., 1.),
+        "color": (1., 1., 1., 1.),
         "edge_color": (.0, .0, .0),
-        "show_edges": True,
     },
     "builder": {
         "dimensions": (15, 15, 15),

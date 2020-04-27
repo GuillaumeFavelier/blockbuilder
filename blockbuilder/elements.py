@@ -14,43 +14,35 @@ class Element(enum.Enum):
     BLOCK = 3
 
 
-class Grid(object):
-    def __init__(self, plotter, dimensions, origin=None, color=None,
-                 show_edges=None, edge_color=None, opacity=None):
+class Base(object):
+    def __init__(self, plotter, element_id, dimensions, color,
+                 opacity, origin=None, spacing=None):
         self.unit = rcParams["unit"]
-        self.color_array = rcParams["block"]["color_array"]
         if origin is None:
             origin = rcParams["origin"]
-        if color is None:
-            color = rcParams["grid"]["color"]["build"]
-        if show_edges is None:
-            show_edges = rcParams["grid"]["show_edges"]
-        if opacity is None:
-            opacity = rcParams["grid"]["opacity"]
+        if spacing is None:
+            spacing = [self.unit, self.unit, self.unit]
         self.plotter = plotter
         self.dimensions = np.asarray(dimensions)
         self.origin = np.asarray(origin)
         self.color = color
-        self.show_edges = show_edges
         self.edge_color = self.color + np.array([.15, .15, .15])
         self.opacity = opacity
-        self.spacing = [self.unit, self.unit, self.unit]
-        self.length = self.dimensions * self.spacing
+        self.spacing = np.asarray(spacing)
         self.center = self.origin + np.multiply(self.dimensions / 2.,
                                                 self.spacing)
         self.mesh = pv.UniformGrid(self.dimensions, self.spacing, self.origin)
         self.actor = self.plotter.add_mesh(
             mesh=self.mesh,
             color=self.color,
-            show_scalar_bar=False,
-            show_edges=self.show_edges,
             edge_color=self.edge_color,
+            show_edges=rcParams["graphics"]["show_edges"],
             line_width=rcParams["graphics"]["line_width"],
             opacity=self.opacity,
             reset_camera=False,
         )
         # add data for picking
-        self.actor.element_id = Element.GRID
+        self.actor.element_id = element_id
 
     def set_block_mode(self, mode):
         element_name = self.actor.element_id.name.lower()
@@ -72,37 +64,62 @@ class Grid(object):
                                                 self.spacing)
 
 
-class Plane(Grid):
-    def __init__(self, plotter, dimensions, color=None, show_edges=None):
-        unit = rcParams["unit"]
-        origin = rcParams["origin"] - np.array([0, 0, unit])
-        opacity = rcParams["plane"]["opacity"]
-        if color is None:
-            color = rcParams["plane"]["color"]
-        if show_edges is None:
-            show_edges = rcParams["plane"]["show_edges"]
+class Grid(Base):
+    def __init__(self, plotter, dimensions):
+        color = rcParams["grid"]["color"]["build"]
+        opacity = rcParams["grid"]["opacity"]
+        dimensions = [
+            dimensions[0],
+            dimensions[1],
+            1
+        ]
         super().__init__(
             plotter=plotter,
+            element_id=Element.GRID,
             dimensions=dimensions,
-            origin=origin,
             color=color,
-            show_edges=show_edges,
             opacity=opacity,
         )
-        # add data for picking
-        self.actor.element_id = Element.PLANE
 
 
-class Selector(Grid):
-    def __init__(self, plotter, color=None):
-        dimensions = rcParams["selector"]["dimensions"]
+class Plane(Base):
+    def __init__(self, plotter, dimensions):
+        unit = rcParams["unit"]
+        origin = rcParams["origin"] - np.array([0, 0, unit])
+        color = rcParams["plane"]["color"]
+        opacity = rcParams["plane"]["opacity"]
+        spacing = [
+            (dimensions[0] - 1) * unit,
+            (dimensions[1] - 1) * unit,
+            unit,
+        ]
+        dimensions = [2, 2, 2]
         super().__init__(
             plotter=plotter,
-            color=color,
+            element_id=Element.PLANE,
             dimensions=dimensions,
+            color=color,
+            opacity=opacity,
+            origin=origin,
+            spacing=spacing,
         )
-        # add data for picking
-        self.actor.element_id = Element.SELECTOR
+        mapper = self.actor.GetMapper()
+        mapper.SetResolveCoincidentTopologyToPolygonOffset()
+        mapper.SetRelativeCoincidentTopologyPolygonOffsetParameters(+1., +1.)
+
+
+class Selector(Base):
+    def __init__(self, plotter):
+        dimensions = [2, 2, 2]
+        color = rcParams["selector"]["color"]["build"]
+        opacity = rcParams["selector"]["opacity"]
+        super().__init__(
+            plotter=plotter,
+            element_id=Element.SELECTOR,
+            dimensions=dimensions,
+            color=color,
+            opacity=opacity,
+        )
 
     def select(self, coords):
         origin = coords * self.unit
@@ -116,17 +133,15 @@ class Selector(Grid):
 
 
 class Block(object):
-    def __init__(self, plotter, dimensions, color=None, edge_color=None):
-        self.show_edges = rcParams["block"]["show_edges"]
+    def __init__(self, plotter, dimensions):
+        self.unit = rcParams["unit"]
+        self.origin = rcParams["origin"]
         self.color_array = rcParams["block"]["color_array"]
-        if color is None:
-            color = rcParams["block"]["color"]
-        if edge_color is None:
-            edge_color = rcParams["block"]["edge_color"]
+        self.color = rcParams["block"]["color"]
+        self.edge_color = rcParams["block"]["edge_color"]
         self.plotter = plotter
         self.dimensions = np.asarray(dimensions)
-        self.color = color
-        self.edge_color = edge_color
+        self.spacing = np.asarray([self.unit, self.unit, self.unit])
 
         counter = 0
         self.number_of_points = np.prod(self.dimensions)
@@ -136,7 +151,8 @@ class Block(object):
         for k in range(self.dimensions[0]):
             for j in range(self.dimensions[1]):
                 for i in range(self.dimensions[2]):
-                    points.SetPoint(counter, i, j, k)
+                    point = self.origin + np.multiply([i, j, k], self.spacing)
+                    points.SetPoint(counter, point)
                     counter += 1
 
         self.mesh = pv.StructuredGrid()
@@ -150,10 +166,10 @@ class Block(object):
         actor = self.plotter.add_mesh(
             self.mesh,
             scalars=self.color_array,
-            rgb=True,
+            rgba=True,
             show_scalar_bar=False,
-            show_edges=self.show_edges,
             edge_color=self.edge_color,
+            show_edges=rcParams["graphics"]["show_edges"],
             line_width=rcParams["graphics"]["line_width"],
             reset_camera=False,
         )
@@ -168,6 +184,7 @@ class Block(object):
     def add_all(self):
         for cell_id in range(self.number_of_cells):
             self.mesh.UnBlankCell(cell_id)
+        self.mesh.Modified()
 
     def remove(self, coords):
         cell_id = _coords_to_cell(coords, self.dimensions)
@@ -178,6 +195,7 @@ class Block(object):
     def remove_all(self):
         for cell_id in range(self.number_of_cells):
             self.mesh.BlankCell(cell_id)
+        self.mesh.Modified()
 
 
 def _coords_to_cell(coords, dimensions):
@@ -186,3 +204,12 @@ def _coords_to_cell(coords, dimensions):
         coords[1] * (dimensions[0] - 1) + \
         coords[2] * (dimensions[0] - 1) * (dimensions[1] - 1)
     return cell_id
+
+
+def _cell_to_coords(cell_id, dimensions):
+    coords = np.empty(3)
+    coords[2] = np.floor(cell_id / ((dimensions[0] - 1) * (dimensions[1] - 1)))
+    coords[1] = cell_id % ((dimensions[0] - 1) * (dimensions[1] - 1))
+    coords[1] = np.floor(coords[1] / dimensions[0] - 1)
+    coords[0] = (cell_id % ((dimensions[0] - 1) * (dimensions[1] - 1))) % (dimensions[0] - 1)
+    return coords

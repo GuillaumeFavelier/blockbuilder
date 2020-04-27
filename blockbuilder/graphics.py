@@ -31,6 +31,7 @@ class Graphics(object):
         self.pyvista_toolbar = rcParams["graphics"]["pyvista_toolbar"]
         self.fps_position = rcParams["graphics"]["fps_position"]
         self.font_size = rcParams["graphics"]["font_size"]
+        self.plotter = None
         self.window = None
 
         # configuration

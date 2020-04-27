@@ -132,32 +132,11 @@ class Builder(object):
             show_fps = None
         self.graphics = Graphics(show_fps=show_fps)
         self.plotter = self.graphics.plotter
-        self.block = Block(
-            plotter=self.plotter,
-            dimensions=self.dimensions,
-        )
-        grid_dimensions = [
-            self.dimensions[0],
-            self.dimensions[1],
-            1
-        ]
-        self.grid = Grid(
-            plotter=self.plotter,
-            dimensions=grid_dimensions,
-        )
+        self.block = Block(self.plotter, self.dimensions)
+        self.grid = Grid(self.plotter, self.dimensions)
+        self.plane = Plane(self.plotter, self.dimensions)
         if not self.benchmark:
-            plane_dimensions = [
-                self.dimensions[0],
-                self.dimensions[1],
-                2
-            ]
-            self.plane = Plane(
-                plotter=self.plotter,
-                dimensions=plane_dimensions,
-            )
-            self.selector = Selector(
-                plotter=self.plotter,
-            )
+            self.selector = Selector(self.plotter)
             self.selector.hide()
         self.plotter.camera.SetFocalPoint(self.grid.center)
         self.plotter.reset_camera()
