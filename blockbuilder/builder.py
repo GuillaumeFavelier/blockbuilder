@@ -267,47 +267,22 @@ class Builder(object):
                 self.selector.set_block_mode(mode)
 
     def use_delete_mode(self, vtk_picker):
-        any_intersection = (vtk_picker.GetCellId() != -1)
-        if not any_intersection:
-            self.selector.hide()
-            return
-
-        intersections = self.compute_intersection_table(vtk_picker)
-        if intersections[Element.GRID.value] is None:
-            return
-
-        picked_points = vtk_picker.GetPickedPositions()
-        grid_idata = intersections[Element.GRID.value]
-        grid_ipoint = np.asarray(picked_points.GetPoint(grid_idata))
-
-        coords = np.floor(grid_ipoint / self.unit)
-        coords[2] = self.grid.origin[2] / self.unit
-
-        # put coords in cache to minimize render calls
-        if not np.allclose(coords - self.cached_coords, 0):
-            self.selector.select(coords)
-            self.selector.show()
-            self.graphics.render()
-            self.cached_coords = coords
-
-        coords = coords.astype(self.coords_type)
-        if self.button_pressed:
-            self.block.remove(coords)
-            self.button_released = False
+        self.build_or_delete(vtk_picker, self.block.remove)
 
     def use_build_mode(self, vtk_picker):
-        any_intersection = (vtk_picker.GetCellId() != -1)
-        if not any_intersection:
+        self.build_or_delete(vtk_picker, self.block.add)
+
+    def build_or_delete(self, vtk_picker, operation):
+        intersection = Intersection(vtk_picker)
+        if not intersection.exist():
             self.selector.hide()
+            self.graphics.render()
             return
 
-        intersections = self.compute_intersection_table(vtk_picker)
-        if intersections[Element.GRID.value] is None:
+        if not intersection.element(Element.GRID):
             return
 
-        picked_points = vtk_picker.GetPickedPositions()
-        grid_idata = intersections[Element.GRID.value]
-        grid_ipoint = np.asarray(picked_points.GetPoint(grid_idata))
+        grid_ipoint = intersection.point(Element.GRID)
 
         coords = np.floor(grid_ipoint / self.unit)
         coords[2] = self.grid.origin[2] / self.unit
@@ -321,12 +296,26 @@ class Builder(object):
 
         coords = coords.astype(self.coords_type)
         if self.button_pressed:
-            self.block.add(coords)
+            operation(coords)
             self.button_released = False
 
-    def compute_intersection_table(self, vtk_picker):
-        picked_actors = vtk_picker.GetActors()
-        intersections = [None for element in Element]
-        for idx, actor in enumerate(picked_actors):
-            intersections[actor.element_id.value] = idx
-        return intersections
+
+class Intersection(object):
+    def __init__(self, picker):
+        self.any_intersection = (picker.GetCellId() != -1)
+        if self.any_intersection:
+            self.intersections = [None for element in Element]
+            self.picked_points = picker.GetPickedPositions()
+            self.picked_actors = picker.GetActors()
+            for idx, actor in enumerate(self.picked_actors):
+                self.intersections[actor.element_id.value] = idx
+
+    def exist(self):
+        return self.any_intersection
+
+    def element(self, element_id):
+        return self.intersections[element_id.value] is not None
+
+    def point(self, element_id):
+        idx = self.intersections[element_id.value]
+        return np.asarray(self.picked_points.GetPoint(idx))

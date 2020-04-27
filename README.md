@@ -8,8 +8,9 @@
 
 - [ ] Fix bug with last floor (no block added)
 - [ ] Fix `move_camera`: use unit circle coordinates (cos, sin)
-- [ ] Refactor intersections management, code duplication between build and delete
 - [ ] Refactor selector/grid mode color
+- [x] Refactor intersections management
+- [x] Remove code duplication between build and delete
 
 ### Toolbar
 
