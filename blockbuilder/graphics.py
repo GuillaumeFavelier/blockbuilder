@@ -48,10 +48,12 @@ class Graphics(object):
             self.plotter.ren_win.Render()
 
     def load_plotter(self):
+        # we disable auto_update to minimize the number of render calls
         self.plotter = pv.BackgroundPlotter(
             window_size=self.window_size,
             menu_bar=self.pyvista_menu_bar,
             toolbar=self.pyvista_toolbar,
+            auto_update=0,
         )
         self.window = self.plotter.app_window
         self.plotter.set_background(

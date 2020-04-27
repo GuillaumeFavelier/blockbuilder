@@ -207,9 +207,14 @@ def _coords_to_cell(coords, dimensions):
 
 
 def _cell_to_coords(cell_id, dimensions):
+    offset = [
+        0,
+        (dimensions[0] - 1),
+        (dimensions[0] - 1) * (dimensions[1] - 1),
+    ]
     coords = np.empty(3)
-    coords[2] = np.floor(cell_id / ((dimensions[0] - 1) * (dimensions[1] - 1)))
-    coords[1] = cell_id % ((dimensions[0] - 1) * (dimensions[1] - 1))
-    coords[1] = np.floor(coords[1] / dimensions[0] - 1)
-    coords[0] = (cell_id % ((dimensions[0] - 1) * (dimensions[1] - 1))) % (dimensions[0] - 1)
+    coords[2] = np.floor(cell_id / offset[2])
+    coords[1] = cell_id % offset[2]
+    coords[1] = np.floor(coords[1] / offset[1])
+    coords[0] = (cell_id % offset[2]) % offset[1]
     return coords
