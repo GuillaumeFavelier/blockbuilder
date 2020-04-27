@@ -21,6 +21,14 @@ class BlockMode(enum.Enum):
     HELP = enum.auto()
 
 
+@enum.unique
+class Symmetry(enum.Enum):
+    SYMMETRY_NONE = enum.auto()
+    SYMMETRY_X = enum.auto()
+    SYMMETRY_Y = enum.auto()
+    SYMMETRY_XY = enum.auto()
+
+
 class Builder(object):
     def __init__(self, dimensions=None, benchmark=None):
         self.unit = rcParams["unit"]
@@ -45,6 +53,9 @@ class Builder(object):
         self.plotter = None
         self.toolbar = None
         self.picker = None
+        self.symmetry_x = False
+        self.symmetry_y = False
+        self.symmetry_xy = False
         self.current_block_mode = None
         self.mode_functions = None
         self.cached_coords = [-1, -1, -1]
@@ -138,6 +149,8 @@ class Builder(object):
         if not self.benchmark:
             self.selector = Selector(self.plotter)
             self.selector.hide()
+            self.sym_selector = Selector(self.plotter)
+            self.sym_selector.hide()
         self.plotter.camera.SetFocalPoint(self.grid.center)
         self.plotter.reset_camera()
 
@@ -215,23 +228,43 @@ class Builder(object):
                 icon_path = "icons/{}.svg".format(mode.name.lower())
                 if op.isfile(icon_path):
                     self.icons[mode] = QIcon(icon_path)
+            for sym in Symmetry:
+                icon_path = "icons/{}.svg".format(sym.name.lower())
+                if op.isfile(icon_path):
+                    self.icons[sym] = QIcon(icon_path)
 
     def load_toolbar(self):
         from PyQt5.QtWidgets import QToolButton, QButtonGroup
         if not self.benchmark:
             self.toolbar = self.graphics.window.addToolBar("toolbar")
             self.mode_buttons = QButtonGroup()
+            self.sym_buttons = QButtonGroup()
             for mode in BlockMode:
                 icon = self.icons.get(mode, None)
                 if icon is not None:
                     button = QToolButton()
                     button.setIcon(icon)
                     button.setCheckable(True)
-                    if mode is self.current_block_mode:
+                    if mode is BlockMode.BUILD:
                         button.setChecked(True)
                     button.toggled.connect(
                         partial(self.set_block_mode, mode=mode))
                     self.mode_buttons.addButton(button)
+                    self.toolbar.addWidget(button)
+            self.toolbar.addSeparator()
+            for sym in Symmetry:
+                icon = self.icons.get(sym, None)
+                if icon is not None:
+                    button = QToolButton()
+                    button.setIcon(icon)
+                    button.setCheckable(True)
+                    if sym is Symmetry.SYMMETRY_NONE:
+                        button.setChecked(True)
+                    func_name = "toggle_{}".format(sym.name.lower())
+                    func = getattr(self, func_name, None)
+                    if func is not None:
+                        button.toggled.connect(func)
+                    self.sym_buttons.addButton(button)
                     self.toolbar.addWidget(button)
 
     def load_benchmark(self):
@@ -265,6 +298,9 @@ class Builder(object):
                 self.grid.set_block_mode(mode)
             if self.selector is not None:
                 self.selector.set_block_mode(mode)
+            if self.sym_selector is not None:
+                self.sym_selector.set_block_mode(mode)
+        self.graphics.render()
 
     def use_delete_mode(self, vtk_picker):
         self.build_or_delete(vtk_picker, self.block.remove)
@@ -276,6 +312,7 @@ class Builder(object):
         intersection = Intersection(vtk_picker)
         if not intersection.exist():
             self.selector.hide()
+            self.sym_selector.hide()
             self.graphics.render()
             return
 
@@ -287,17 +324,44 @@ class Builder(object):
         coords = np.floor(grid_ipoint / self.unit)
         coords[2] = self.grid.origin[2] / self.unit
 
-        # put coords in cache to minimize render calls
-        if not np.allclose(coords - self.cached_coords, 0):
-            self.selector.select(coords)
-            self.selector.show()
-            self.graphics.render()
-            self.cached_coords = coords
+        sym = False
+
+        self.selector.select(coords)
+        if self.symmetry_x:
+            new_coords = coords.copy()
+            new_coords[0] = self.dimensions[0] - coords[0] - 2
+            new_coords = new_coords.astype(self.coords_type)
+            self.sym_selector.select(new_coords)
+            self.sym_selector.show()
+            sym = True
+        elif self.symmetry_y:
+            new_coords = coords.copy()
+            new_coords[1] = self.dimensions[1] - coords[1] - 2
+            new_coords = new_coords.astype(self.coords_type)
+            self.sym_selector.select(new_coords)
+            self.sym_selector.show()
+            sym = True
+        self.selector.show()
+        self.graphics.render()
 
         coords = coords.astype(self.coords_type)
         if self.button_pressed:
             operation(coords)
+            if sym:
+                operation(new_coords)
             self.button_released = False
+
+    def toggle_symmetry_none(self, unused):
+        del unused
+
+    def toggle_symmetry_x(self, state):
+        self.symmetry_x = state
+
+    def toggle_symmetry_y(self, state):
+        self.symmetry_y = state
+
+    def toggle_symmetry_xy(self, state):
+        self.symmetry_xy = state
 
 
 class Intersection(object):

@@ -38,7 +38,7 @@ rcParams = {
         "edge_color": (.0, .0, .0),
     },
     "builder": {
-        "dimensions": (15, 15, 15),
+        "dimensions": (16, 16, 16),
         "benchmark": {
             "enabled": False,
             "dimensions": (50, 50, 50),
