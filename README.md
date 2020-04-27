@@ -4,18 +4,12 @@
 
         *The oldest video games had crude, blocky graphics.*
 
-### Experimental branch
+# Release 0.02
 
-The build mode rely on a set of vtkPoints sent to a glyph
-filter that computes the output blocks. One actor for all
-the blocks. Adding blocks is really fast. Removing is
-challenging (not done yet):
-
-* Detecting the intersection with a particular block of the
-set of blocks is not trivial
-* Removing a point from the list of points requires data
-copy
-
+- [ ] Fix bug with last floor (no block added)
+- [ ] Fix `move_camera`: use unit circle coordinates (cos, sin)
+- [ ] Refactor intersections management, code duplication between build and delete
+- [ ] Refactor selector/grid mode color
 
 ### Toolbar
 
@@ -28,18 +22,9 @@ copy
 - [ ] settings
 - [ ] help
 
-### PRIORITY
-
-- Refactor intersections management, code duplication between build and delete
-- Fix dependency with plotter (all over the place)
-
 ### ToDo
 
+- Release `master` to `0.01` version
+- Fix dependency with plotter (all over the place)
 - Add property/setter functions (i.e. Block.origin)
-- Refactor selector/grid mode color
 - Add support for symmetry
-
-### Bug
-
-- Fix bug with last floor (no block added)
-- Fix `move_camera`: use unit circle coordinates (cos, sin)
