@@ -51,8 +51,8 @@ class Builder(object):
         self.coords_type = np.int
 
         # configuration
-        self.load_block_modes()
         self.load_elements()
+        self.load_block_modes()
         self.load_interaction()
         self.load_icons()
         self.load_toolbar()
@@ -282,6 +282,8 @@ class Builder(object):
     def set_block_mode(self, mode):
         if mode in BlockMode:
             self.current_block_mode = mode
+            self.grid.set_block_mode(mode, BlockMode)
+            self.selector.set_block_mode(mode, BlockMode)
 
     def use_delete_mode(self, vtk_picker):
         any_intersection = (vtk_picker.GetCellId() != -1)

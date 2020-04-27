@@ -18,14 +18,13 @@ class Grid(object):
     def __init__(self, plotter, dimensions, origin=None, color=None,
                  show_edges=None, edge_color=None, opacity=None):
         self.unit = rcParams["unit"]
+        self.color_array = rcParams["block"]["color_array"]
         if origin is None:
             origin = rcParams["origin"]
         if color is None:
-            color = rcParams["grid"]["color"]
+            color = rcParams["grid"]["build_color"]
         if show_edges is None:
             show_edges = rcParams["grid"]["show_edges"]
-        if edge_color is None:
-            edge_color = rcParams["grid"]["edge_color"]
         if opacity is None:
             opacity = rcParams["grid"]["opacity"]
         self.plotter = plotter
@@ -33,16 +32,23 @@ class Grid(object):
         self.origin = np.asarray(origin)
         self.color = color
         self.show_edges = show_edges
-        self.edge_color = edge_color
+        self.edge_color = self.color + np.array([.15, .15, .15])
         self.opacity = opacity
         self.spacing = [self.unit, self.unit, self.unit]
         self.length = self.dimensions * self.spacing
         self.center = self.origin + np.multiply(self.dimensions / 2.,
                                                 self.spacing)
         self.mesh = pv.UniformGrid(self.dimensions, self.spacing, self.origin)
+        self.number_of_cells = self.mesh.GetNumberOfCells()
+        self.mesh.cell_arrays[self.color_array] = np.tile(
+           self.color,
+           (self.number_of_cells, 1),
+        )
         self.actor = self.plotter.add_mesh(
             mesh=self.mesh,
-            color=self.color,
+            scalars=self.color_array,
+            rgb=True,
+            show_scalar_bar=False,
             show_edges=self.show_edges,
             edge_color=self.edge_color,
             line_width=rcParams["graphics"]["line_width"],
@@ -51,6 +57,20 @@ class Grid(object):
         )
         # add data for picking
         self.actor.element_id = Element.GRID
+
+    def set_block_mode(self, mode, mode_list):
+        element_name = self.actor.element_id.name.lower()
+        if mode is mode_list.BUILD:
+            self.color = rcParams[element_name]["build_color"]
+        elif mode is mode_list.DELETE:
+            self.color = rcParams[element_name]["delete_color"]
+        self.mesh.cell_arrays[self.color_array] = np.tile(
+           self.color,
+           (self.number_of_cells, 1),
+        )
+        # update edge_color
+        self.edge_color = self.color + np.array([.15, .15, .15])
+        self.actor.GetProperty().SetEdgeColor(self.edge_color)
 
     def translate(self, tr, update_camera=False):
         # update origin
@@ -86,14 +106,9 @@ class Plane(Grid):
 class Selector(Grid):
     def __init__(self, plotter, color=None):
         dimensions = rcParams["selector"]["dimensions"]
-        if color is None:
-            color = rcParams["selector"]["build_color"]
-        edge_color = color + np.array([.15, .15, .15])
         super().__init__(
             plotter=plotter,
             dimensions=dimensions,
-            color=color,
-            edge_color=edge_color,
         )
         # add data for picking
         self.actor.element_id = Element.SELECTOR
@@ -143,7 +158,7 @@ class Block(object):
         self.remove_all()
         actor = self.plotter.add_mesh(
             self.mesh,
-            scalars="color",
+            scalars=self.color_array,
             rgb=True,
             show_scalar_bar=False,
             show_edges=self.show_edges,

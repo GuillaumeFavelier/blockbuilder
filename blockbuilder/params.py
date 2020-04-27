@@ -14,9 +14,10 @@ rcParams = {
         "background_bottom_color": (0., 0., .35),
     },
     "grid": {
-        "color": (.1, .1, .5),
+        "color_array": "color",
+        "build_color": (.1, .1, .4),
+        "delete_color": (.4, .1, .1),
         "show_edges": True,
-        "edge_color": (.2, .2, .7),
         "opacity": .7,
     },
     "plane": {
