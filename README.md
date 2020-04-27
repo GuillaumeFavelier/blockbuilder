@@ -10,6 +10,7 @@
 - [ ] Fix `move_camera`: use unit circle coordinates (cos, sin)
 - [ ] Refactor selector/grid mode color
 - [ ] Refactor symmetry processing
+- [ ] Refactor `load_toolbar` (the function is big and full of duplicated code)
 - [x] Refactor intersections management
 - [x] Remove code duplication between build and delete
 
@@ -26,8 +27,8 @@
 
 ### ToDo
 
+- Add key bindings to rcParams
+- The selector are duplicated in the middle when symmetry is on
 - Fix dependency with plotter (all over the place)
 - Add property/setter functions (i.e. Block.origin)
 - Add an option to decrease opacity on blocks located in other floors
-- Add key bindings to rcParams
-- The selector are duplicated in the middle when symmetry is on

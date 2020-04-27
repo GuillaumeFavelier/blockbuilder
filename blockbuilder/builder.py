@@ -22,6 +22,11 @@ class BlockMode(enum.Enum):
 
 
 @enum.unique
+class Action(enum.Enum):
+    RESET = enum.auto
+
+
+@enum.unique
 class Symmetry(enum.Enum):
     SYMMETRY_NONE = enum.auto()
     SYMMETRY_X = enum.auto()
@@ -151,8 +156,8 @@ class Builder(object):
             self.selector.hide()
             self.sym_selector = Selector(self.plotter)
             self.sym_selector.hide()
-        self.plotter.camera.SetFocalPoint(self.grid.center)
         self.plotter.reset_camera()
+        self.plotter.camera.SetFocalPoint(self.grid.center)
 
     def load_interaction(self):
         # allow flexible interactions
@@ -224,14 +229,11 @@ class Builder(object):
         from PyQt5.Qt import QIcon
         if not self.benchmark:
             self.icons = dict()
-            for mode in BlockMode:
-                icon_path = "icons/{}.svg".format(mode.name.lower())
-                if op.isfile(icon_path):
-                    self.icons[mode] = QIcon(icon_path)
-            for sym in Symmetry:
-                icon_path = "icons/{}.svg".format(sym.name.lower())
-                if op.isfile(icon_path):
-                    self.icons[sym] = QIcon(icon_path)
+            for category in (BlockMode, Action, Symmetry):
+                for element in category:
+                    icon_path = "icons/{}.svg".format(element.name.lower())
+                    if op.isfile(icon_path):
+                        self.icons[element] = QIcon(icon_path)
 
     def load_toolbar(self):
         from PyQt5.QtWidgets import QToolButton, QButtonGroup
@@ -250,6 +252,17 @@ class Builder(object):
                     button.toggled.connect(
                         partial(self.set_block_mode, mode=mode))
                     self.mode_buttons.addButton(button)
+                    self.toolbar.addWidget(button)
+            self.toolbar.addSeparator()
+            for action in Action:
+                icon = self.icons.get(action, None)
+                if icon is not None:
+                    button = QToolButton()
+                    button.setIcon(icon)
+                    func_name = "action_{}".format(action.name.lower())
+                    func = getattr(self, func_name, None)
+                    if func is not None:
+                        button.clicked.connect(func)
                     self.toolbar.addWidget(button)
             self.toolbar.addSeparator()
             for sym in Symmetry:
@@ -362,6 +375,10 @@ class Builder(object):
 
     def toggle_symmetry_xy(self, state):
         self.symmetry_xy = state
+
+    def action_reset(self, unused):
+        del unused
+        self.block.remove_all()
 
 
 class Intersection(object):

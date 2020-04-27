@@ -18,6 +18,7 @@ rcParams = {
         "color": {
             "build": (.05, .05, .35),
             "delete": (.35, .05, .05),
+            "select": (.05, .35, .05),
         },
         "opacity": .7,
     },
@@ -29,6 +30,7 @@ rcParams = {
         "color": {
             "build": (.3, .3, .8),
             "delete": (.8, .3, .3),
+            "select": (.3, .8, .3),
         },
         "opacity": .7,
     },
@@ -38,7 +40,7 @@ rcParams = {
         "edge_color": (.0, .0, .0),
     },
     "builder": {
-        "dimensions": (16, 16, 16),
+        "dimensions": (32, 32, 32),
         "benchmark": {
             "enabled": False,
             "dimensions": (50, 50, 50),
