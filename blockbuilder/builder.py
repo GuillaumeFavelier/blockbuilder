@@ -52,7 +52,7 @@ class Builder(object):
         self.benchmark = benchmark
         self.button_pressed = False
         self.floor = 0.
-        self.ceiling = (self.dimensions[2] - 1) * self.unit
+        self.ceiling = (self.dimensions[2] - 2) * self.unit
         self.icons = None
         self.graphics = None
         self.plotter = None
