@@ -37,6 +37,10 @@ class Symmetry(enum.Enum):
 class Builder(object):
     def __init__(self, dimensions=None, benchmark=None):
         self.unit = rcParams["unit"]
+        self.azimuth = rcParams["builder"]["azimuth"]
+        self.azimuth_rng = rcParams["builder"]["azimuth_rng"]
+        self.elevation_rng = rcParams["builder"]["elevation_rng"]
+        self.elevation = rcParams["builder"]["elevation"]
         self.benchmark_dimensions = np.asarray(
             rcParams["builder"]["benchmark"]["dimensions"])
         self.benchmark_number_of_runs = \
@@ -65,6 +69,8 @@ class Builder(object):
         self.mode_functions = None
         self.cached_coords = [-1, -1, -1]
         self.coords_type = np.int
+        self.distance = np.max(self.dimensions) * 2 * self.unit
+        self.distance_rng = [4 * self.unit, 2 * self.distance]
 
         # configuration
         self.load_elements()
@@ -74,24 +80,39 @@ class Builder(object):
         self.load_toolbar()
         self.load_benchmark()
 
-    def move_camera(self, move_factor, tangential=False, inverse=False):
-        position = np.array(self.plotter.camera.GetPosition())
-        focal_point = np.array(self.plotter.camera.GetFocalPoint())
-        move_vector = focal_point - position
-        move_vector /= np.linalg.norm(move_vector)
-        if tangential:
-            viewup = np.array(self.plotter.camera.GetViewUp())
-            viewup /= np.linalg.norm(viewup)
-            tangent_vector = np.cross(viewup, move_vector)
-            tangent_vector /= np.linalg.norm(tangent_vector)
-            if inverse:
-                move_vector = np.cross(move_vector, tangent_vector)
-            else:
-                move_vector = tangent_vector
+        # set initial frame
+        self.plotter.reset_camera()
+        self.update_camera()
+        self.graphics.render()
 
-        move_vector *= move_factor
-        position += move_vector
+    def update_camera(self):
+        rad_azimuth = _deg2rad(self.azimuth)
+        rad_elevation = _deg2rad(self.elevation)
+
+        position = self.grid.center + [
+            self.distance * np.cos(rad_azimuth) * np.sin(rad_elevation),
+            self.distance * np.sin(rad_azimuth) * np.sin(rad_elevation),
+            self.distance * np.cos(rad_elevation)]
         self.plotter.camera.SetPosition(position)
+        self.plotter.camera.SetFocalPoint(self.grid.center)
+
+    def move_camera(self, update, inverse=False):
+        if inverse:
+            delta = -2
+        else:
+            delta = 2
+        if update == "azimuth":
+            self.azimuth += delta
+            self.azimuth = _clamp(self.azimuth, self.azimuth_rng)
+        elif update == "elevation":
+            self.elevation += delta
+            self.elevation = _clamp(self.elevation, self.elevation_rng)
+        elif update == "distance":
+            self.distance += delta
+            self.distance = _clamp(self.distance, self.distance_rng)
+
+        self.update_camera()
+
         # update pick
         x, y = self.plotter.iren.GetEventPosition()
         self.picker.Pick(x, y, 0, self.plotter.renderer)
@@ -156,8 +177,6 @@ class Builder(object):
             self.selector.hide()
             self.sym_selector = Selector(self.plotter)
             self.sym_selector.hide()
-        self.plotter.reset_camera()
-        self.plotter.camera.SetFocalPoint(self.grid.center)
 
     def load_interaction(self):
         # allow flexible interactions
@@ -198,31 +217,27 @@ class Builder(object):
             )
             self.plotter.add_key_event(
                 'Up',
-                lambda: self.move_camera(self.unit)
+                lambda: self.move_camera(update="distance", inverse=True)
             )
             self.plotter.add_key_event(
                 'Down',
-                lambda: self.move_camera(-self.unit)
+                lambda: self.move_camera(update="distance")
             )
             self.plotter.add_key_event(
                 'q',
-                lambda: self.move_camera(self.unit,
-                                         tangential=True)
+                lambda: self.move_camera(update="azimuth", inverse=True)
             )
             self.plotter.add_key_event(
                 'd',
-                lambda: self.move_camera(-self.unit,
-                                         tangential=True)
+                lambda: self.move_camera(update="azimuth")
             )
             self.plotter.add_key_event(
                 'z',
-                lambda: self.move_camera(self.unit,
-                                         tangential=True, inverse=True)
+                lambda: self.move_camera(update="elevation", inverse=True)
             )
             self.plotter.add_key_event(
                 's',
-                lambda: self.move_camera(-self.unit,
-                                         tangential=True, inverse=True)
+                lambda: self.move_camera(update="elevation")
             )
 
     def load_icons(self):
@@ -400,3 +415,17 @@ class Intersection(object):
     def point(self, element_id):
         idx = self.intersections[element_id.value]
         return np.asarray(self.picked_points.GetPoint(idx))
+
+
+def _clamp(value, rng):
+    value = rng[1] if value > rng[1] else value
+    value = rng[0] if value < rng[0] else value
+    return value
+
+
+def _deg2rad(deg):
+    return deg * np.pi / 180.
+
+
+def _rad2deg(rad):
+    return rad * 180. / np.pi

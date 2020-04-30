@@ -41,6 +41,10 @@ rcParams = {
     },
     "builder": {
         "dimensions": (32, 32, 32),
+        "azimuth": 0,
+        "azimuth_rng": (0, 360),
+        "elevation": 45,
+        "elevation_rng": (15, 165),
         "benchmark": {
             "enabled": False,
             "dimensions": (50, 50, 50),

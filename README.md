@@ -6,10 +6,10 @@
 
 # Release 0.02
 
-- [ ] Fix `move_camera`: use unit circle coordinates (cos, sin)
 - [ ] Refactor selector/grid mode color
 - [ ] Refactor symmetry processing
 - [ ] Refactor `load_toolbar` (the function is big and full of duplicated code)
+- [x] Fix `move_camera`: use unit circle coordinates (cos, sin)
 - [x] Fix bug with last floor (no block added)
 - [x] Refactor intersections management
 - [x] Remove code duplication between build and delete
