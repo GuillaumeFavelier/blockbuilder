@@ -1,4 +1,4 @@
-²**blocky** (comparative blockier, superlative blockiest)
+**blocky** (comparative blockier, superlative blockiest)
 
     Resembling a block in shape.
 
