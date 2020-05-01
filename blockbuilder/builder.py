@@ -91,7 +91,10 @@ class Builder(object):
             delta = 2
         if update == "azimuth":
             self.azimuth += delta
-            self.azimuth = _clamp(self.azimuth, self.azimuth_rng)
+            if self.azimuth < self.azimuth_rng[0]:
+                self.azimuth = self.azimuth + self.azimuth_rng[1]
+            if self.azimuth > self.azimuth_rng[1]:
+                self.azimuth = self.azimuth % self.azimuth_rng[1]
         elif update == "elevation":
             self.elevation += delta
             self.elevation = _clamp(self.elevation, self.elevation_rng)

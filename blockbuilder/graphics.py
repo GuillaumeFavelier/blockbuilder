@@ -60,6 +60,7 @@ class Graphics(object):
             color=self.background_bottom_color,
             top=self.background_top_color,
         )
+        self.plotter.show_axes()
 
     def load_graphic_quality(self):
         if self.advanced:

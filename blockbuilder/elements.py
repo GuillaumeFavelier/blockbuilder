@@ -166,11 +166,11 @@ class SymmetrySelector(Selector):
         super().select(coords)
         if self.symmetry in (Symmetry.SYMMETRY_X, Symmetry.SYMMETRY_XY):
             new_coords = coords.copy()
-            new_coords[0] = self.dimensions[0] - coords[0] - 2
+            new_coords[1] = self.dimensions[1] - coords[1] - 2
             self.selector_x.select(new_coords)
         if self.symmetry in (Symmetry.SYMMETRY_Y, Symmetry.SYMMETRY_XY):
             new_coords = coords.copy()
-            new_coords[1] = self.dimensions[1] - coords[1] - 2
+            new_coords[0] = self.dimensions[0] - coords[0] - 2
             self.selector_y.select(new_coords)
         if self.symmetry is Symmetry.SYMMETRY_XY:
             new_coords = coords.copy()
