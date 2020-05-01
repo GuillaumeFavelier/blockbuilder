@@ -34,3 +34,4 @@
 - Add an area selection toggle (square selection or free selection)
 - Add a way to change the geometry of a block (deletion of block vertices)
 - Add a way to control the camera with the mouse right-click
+- Add directory `changes` and use one changelog for each release
