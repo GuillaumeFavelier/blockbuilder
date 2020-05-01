@@ -18,6 +18,7 @@ class Base(object):
     def __init__(self, plotter, element_id, dimensions, color,
                  opacity, origin=None, spacing=None):
         self.unit = rcParams["unit"]
+        self.edge_color_offset = rcParams["base"]["edge_color_offset"]
         if origin is None:
             origin = rcParams["origin"]
         if spacing is None:
@@ -26,7 +27,7 @@ class Base(object):
         self.dimensions = np.asarray(dimensions)
         self.origin = np.asarray(origin)
         self.color = color
-        self.edge_color = self.color + np.array([.15, .15, .15])
+        self.edge_color = np.asarray(self.color) + self.edge_color_offset
         self.opacity = opacity
         self.spacing = np.asarray(spacing)
         self.center = self.origin + np.multiply(self.dimensions / 2.,
@@ -48,7 +49,7 @@ class Base(object):
         element_name = self.actor.element_id.name.lower()
         mode_name = mode.name.lower()
         self.color = rcParams[element_name]["color"][mode_name]
-        self.edge_color = self.color + np.array([.15, .15, .15])
+        self.edge_color = np.asarray(self.color) + self.edge_color_offset
         # update colors
         prop = self.actor.GetProperty()
         prop.SetColor(self.color)

@@ -23,7 +23,7 @@ class BlockMode(enum.Enum):
 
 @enum.unique
 class Action(enum.Enum):
-    RESET = enum.auto
+    RESET = enum.auto()
 
 
 @enum.unique
