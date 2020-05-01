@@ -203,8 +203,8 @@ class SymmetrySelector(Selector):
             coords.append(self.selector_xy.coords)
         return coords
 
-    def set_symmetry(self, sym):
-        self.symmetry = sym
+    def set_symmetry(self, value):
+        self.symmetry = value
 
 
 class Block(object):

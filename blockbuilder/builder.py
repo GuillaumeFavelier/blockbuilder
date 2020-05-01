@@ -236,48 +236,51 @@ class Builder(object):
                     if op.isfile(icon_path):
                         self.icons[element] = QIcon(icon_path)
 
-    def load_toolbar(self):
+    def _add_toolbar_group(self, group, func, default_value):
         from PyQt5.QtWidgets import QToolButton, QButtonGroup
+        button_group = QButtonGroup(parent=self.toolbar)
+        for element in group:
+            icon = self.icons.get(element, None)
+            if icon is not None:
+                button = QToolButton()
+                button.setIcon(icon)
+                button.setCheckable(True)
+                if default_value is not None and element is default_value:
+                    button.setChecked(True)
+                button.toggled.connect(
+                    partial(func, value=element))
+                button_group.addButton(button)
+                self.toolbar.addWidget(button)
+
+    def _add_toolbar_actions(self):
+        from PyQt5.QtWidgets import QToolButton
+        for action in Action:
+            icon = self.icons.get(action, None)
+            if icon is not None:
+                button = QToolButton()
+                button.setIcon(icon)
+                func_name = "action_{}".format(action.name.lower())
+                func = getattr(self, func_name, None)
+                if func is not None:
+                    button.clicked.connect(func)
+                self.toolbar.addWidget(button)
+
+    def load_toolbar(self):
         if not self.benchmark:
             self.toolbar = self.graphics.window.addToolBar("toolbar")
-            self.mode_buttons = QButtonGroup()
-            self.sym_buttons = QButtonGroup()
-            for mode in BlockMode:
-                icon = self.icons.get(mode, None)
-                if icon is not None:
-                    button = QToolButton()
-                    button.setIcon(icon)
-                    button.setCheckable(True)
-                    if mode is BlockMode.BUILD:
-                        button.setChecked(True)
-                    button.toggled.connect(
-                        partial(self.set_block_mode, mode=mode))
-                    self.mode_buttons.addButton(button)
-                    self.toolbar.addWidget(button)
+            self._add_toolbar_group(
+                group=BlockMode,
+                func=self.set_block_mode,
+                default_value=BlockMode.BUILD,
+            )
             self.toolbar.addSeparator()
-            for action in Action:
-                icon = self.icons.get(action, None)
-                if icon is not None:
-                    button = QToolButton()
-                    button.setIcon(icon)
-                    func_name = "action_{}".format(action.name.lower())
-                    func = getattr(self, func_name, None)
-                    if func is not None:
-                        button.clicked.connect(func)
-                    self.toolbar.addWidget(button)
+            self._add_toolbar_actions()
             self.toolbar.addSeparator()
-            for sym in Symmetry:
-                icon = self.icons.get(sym, None)
-                if icon is not None:
-                    button = QToolButton()
-                    button.setIcon(icon)
-                    button.setCheckable(True)
-                    if sym is Symmetry.SYMMETRY_NONE:
-                        button.setChecked(True)
-                    button.toggled.connect(
-                        partial(self.selector.set_symmetry, sym=sym))
-                    self.sym_buttons.addButton(button)
-                    self.toolbar.addWidget(button)
+            self._add_toolbar_group(
+                group=Symmetry,
+                func=self.selector.set_symmetry,
+                default_value=Symmetry.SYMMETRY_NONE,
+            )
 
     def load_benchmark(self):
         if self.benchmark:
@@ -303,13 +306,13 @@ class Builder(object):
                                                 np.mean(timings)))
             self.plotter.close()
 
-    def set_block_mode(self, mode):
-        if mode in BlockMode:
-            self.current_block_mode = mode
+    def set_block_mode(self, value):
+        if value in BlockMode:
+            self.current_block_mode = value
             if self.grid is not None:
-                self.grid.set_block_mode(mode)
+                self.grid.set_block_mode(value)
             if self.selector is not None:
-                self.selector.set_block_mode(mode)
+                self.selector.set_block_mode(value)
         self.graphics.render()
 
     def use_delete_mode(self, vtk_picker):

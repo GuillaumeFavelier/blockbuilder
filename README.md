@@ -6,7 +6,7 @@
 
 # Release 0.02
 
-- [ ] Refactor `load_toolbar` (the function is big and full of duplicated code)
+- [x] Refactor `load_toolbar` (the function is big and full of duplicated code)
 - [x] Refactor symmetry processing
 - [x] Fix `move_camera`: use unit circle coordinates (cos, sin)
 - [x] Fix bug with last floor (no block added)
