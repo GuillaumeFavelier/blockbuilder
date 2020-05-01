@@ -14,6 +14,14 @@ class Element(enum.Enum):
     BLOCK = 3
 
 
+@enum.unique
+class Symmetry(enum.Enum):
+    SYMMETRY_NONE = enum.auto()
+    SYMMETRY_X = enum.auto()
+    SYMMETRY_Y = enum.auto()
+    SYMMETRY_XY = enum.auto()
+
+
 class Base(object):
     def __init__(self, plotter, element_id, dimensions, color,
                  opacity, origin=None, spacing=None):
@@ -121,8 +129,11 @@ class Selector(Base):
             color=color,
             opacity=opacity,
         )
+        self.coords = None
+        self.coords_type = np.int
 
     def select(self, coords):
+        self.coords = coords.astype(self.coords_type)
         origin = coords * self.unit
         self.mesh.SetOrigin(origin)
 
@@ -131,6 +142,79 @@ class Selector(Base):
 
     def hide(self):
         self.actor.VisibilityOff()
+
+    def selection(self):
+        return self.coords
+
+
+class SymmetrySelector(Selector):
+    def __init__(self, plotter, dimensions):
+        super().__init__(plotter)
+        self.selector_x = Selector(plotter)
+        self.selector_y = Selector(plotter)
+        self.selector_xy = Selector(plotter)
+        self.symmetry = Symmetry.SYMMETRY_NONE
+        self.dimensions = dimensions
+
+    def set_block_mode(self, mode):
+        super().set_block_mode(mode)
+        self.selector_x.set_block_mode(mode)
+        self.selector_y.set_block_mode(mode)
+        self.selector_xy.set_block_mode(mode)
+
+    def select(self, coords):
+        super().select(coords)
+        if self.symmetry in (Symmetry.SYMMETRY_X, Symmetry.SYMMETRY_XY):
+            new_coords = coords.copy()
+            new_coords[0] = self.dimensions[0] - coords[0] - 2
+            self.selector_x.select(new_coords)
+        if self.symmetry in (Symmetry.SYMMETRY_Y, Symmetry.SYMMETRY_XY):
+            new_coords = coords.copy()
+            new_coords[1] = self.dimensions[1] - coords[1] - 2
+            self.selector_y.select(new_coords)
+        if self.symmetry is Symmetry.SYMMETRY_XY:
+            new_coords = coords.copy()
+            new_coords[0] = self.dimensions[0] - coords[0] - 2
+            new_coords[1] = self.dimensions[1] - coords[1] - 2
+            self.selector_xy.select(new_coords)
+
+    def show(self):
+        super().show()
+        if self.symmetry in (Symmetry.SYMMETRY_X, Symmetry.SYMMETRY_XY):
+            self.selector_x.actor.VisibilityOn()
+        if self.symmetry in (Symmetry.SYMMETRY_Y, Symmetry.SYMMETRY_XY):
+            self.selector_y.actor.VisibilityOn()
+        if self.symmetry is Symmetry.SYMMETRY_XY:
+            self.selector_xy.actor.VisibilityOn()
+
+    def hide(self):
+        super().hide()
+        self.selector_x.actor.VisibilityOff()
+        self.selector_y.actor.VisibilityOff()
+        self.selector_xy.actor.VisibilityOff()
+
+    def selection(self):
+        coords = [self.coords]
+        if self.symmetry in (Symmetry.SYMMETRY_X, Symmetry.SYMMETRY_XY):
+            coords.append(self.selector_x.coords)
+        if self.symmetry in (Symmetry.SYMMETRY_Y, Symmetry.SYMMETRY_XY):
+            coords.append(self.selector_y.coords)
+        if self.symmetry is Symmetry.SYMMETRY_XY:
+            coords.append(self.selector_xy.coords)
+        return coords
+
+    def toggle_symmetry_none(self, unused):
+        del unused
+        self.symmetry = Symmetry.SYMMETRY_NONE
+
+    def toggle_symmetry_x(self, state):
+        self.symmetry = Symmetry.SYMMETRY_X
+
+    def toggle_symmetry_y(self, state):
+        self.symmetry = Symmetry.SYMMETRY_Y
+
+    def toggle_symmetry_xy(self, state):
+        self.symmetry = Symmetry.SYMMETRY_XY
 
 
 class Block(object):

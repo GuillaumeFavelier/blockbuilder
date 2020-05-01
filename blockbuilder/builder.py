@@ -7,7 +7,7 @@ import vtk
 
 from .params import rcParams
 from .graphics import Graphics
-from .elements import Element, Selector, Grid, Plane, Block
+from .elements import Element, Symmetry, SymmetrySelector, Grid, Plane, Block
 
 
 @enum.unique
@@ -24,14 +24,6 @@ class BlockMode(enum.Enum):
 @enum.unique
 class Action(enum.Enum):
     RESET = enum.auto()
-
-
-@enum.unique
-class Symmetry(enum.Enum):
-    SYMMETRY_NONE = enum.auto()
-    SYMMETRY_X = enum.auto()
-    SYMMETRY_Y = enum.auto()
-    SYMMETRY_XY = enum.auto()
 
 
 class Builder(object):
@@ -62,13 +54,9 @@ class Builder(object):
         self.plotter = None
         self.toolbar = None
         self.picker = None
-        self.symmetry_x = False
-        self.symmetry_y = False
-        self.symmetry_xy = False
         self.current_block_mode = None
         self.mode_functions = None
         self.cached_coords = [-1, -1, -1]
-        self.coords_type = np.int
         self.distance = np.max(self.dimensions) * 2 * self.unit
         self.distance_rng = [4 * self.unit, 2 * self.distance]
 
@@ -173,10 +161,8 @@ class Builder(object):
         self.grid = Grid(self.plotter, self.dimensions)
         self.plane = Plane(self.plotter, self.dimensions)
         if not self.benchmark:
-            self.selector = Selector(self.plotter)
+            self.selector = SymmetrySelector(self.plotter, self.dimensions)
             self.selector.hide()
-            self.sym_selector = Selector(self.plotter)
-            self.sym_selector.hide()
 
     def load_interaction(self):
         # allow flexible interactions
@@ -289,7 +275,7 @@ class Builder(object):
                     if sym is Symmetry.SYMMETRY_NONE:
                         button.setChecked(True)
                     func_name = "toggle_{}".format(sym.name.lower())
-                    func = getattr(self, func_name, None)
+                    func = getattr(self.selector, func_name, None)
                     if func is not None:
                         button.toggled.connect(func)
                     self.sym_buttons.addButton(button)
@@ -326,8 +312,6 @@ class Builder(object):
                 self.grid.set_block_mode(mode)
             if self.selector is not None:
                 self.selector.set_block_mode(mode)
-            if self.sym_selector is not None:
-                self.sym_selector.set_block_mode(mode)
         self.graphics.render()
 
     def use_delete_mode(self, vtk_picker):
@@ -340,7 +324,6 @@ class Builder(object):
         intersection = Intersection(vtk_picker)
         if not intersection.exist():
             self.selector.hide()
-            self.sym_selector.hide()
             self.graphics.render()
             return
 
@@ -352,44 +335,14 @@ class Builder(object):
         coords = np.floor(grid_ipoint / self.unit)
         coords[2] = self.grid.origin[2] / self.unit
 
-        sym = False
-
         self.selector.select(coords)
-        if self.symmetry_x:
-            new_coords = coords.copy()
-            new_coords[0] = self.dimensions[0] - coords[0] - 2
-            new_coords = new_coords.astype(self.coords_type)
-            self.sym_selector.select(new_coords)
-            self.sym_selector.show()
-            sym = True
-        elif self.symmetry_y:
-            new_coords = coords.copy()
-            new_coords[1] = self.dimensions[1] - coords[1] - 2
-            new_coords = new_coords.astype(self.coords_type)
-            self.sym_selector.select(new_coords)
-            self.sym_selector.show()
-            sym = True
         self.selector.show()
         self.graphics.render()
 
-        coords = coords.astype(self.coords_type)
         if self.button_pressed:
-            operation(coords)
-            if sym:
-                operation(new_coords)
+            for coords in self.selector.selection():
+                operation(coords)
             self.button_released = False
-
-    def toggle_symmetry_none(self, unused):
-        del unused
-
-    def toggle_symmetry_x(self, state):
-        self.symmetry_x = state
-
-    def toggle_symmetry_y(self, state):
-        self.symmetry_y = state
-
-    def toggle_symmetry_xy(self, state):
-        self.symmetry_xy = state
 
     def action_reset(self, unused):
         del unused
