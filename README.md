@@ -30,7 +30,6 @@
 - The selector are duplicated in the middle when symmetry is on
 - Fix dependency with plotter (all over the place)
 - Add property/setter functions (i.e. Block.origin)
-- Add an option to decrease opacity on blocks located in other floors
 - ReDo/UnDo action buttons
 - Show only the current floor (with subgrid/subsample)
 - Paint mode (default painting color to build mode)
