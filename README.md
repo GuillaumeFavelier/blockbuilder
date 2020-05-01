@@ -1,10 +1,12 @@
-**blocky** (comparative blockier, superlative blockiest)
+²**blocky** (comparative blockier, superlative blockiest)
 
     Resembling a block in shape.
 
         *The oldest video games had crude, blocky graphics.*
 
-# Release 0.02
+<details open>
+
+<summary><b>Milestone 0.02</b></summary>
 
 - [x] Refactor `load_toolbar` (the function is big and full of duplicated code)
 - [x] Refactor symmetry processing
@@ -12,6 +14,8 @@
 - [x] Fix bug with last floor (no block added)
 - [x] Refactor intersections management
 - [x] Remove code duplication between build and delete
+
+</details>
 
 ### Toolbar
 
