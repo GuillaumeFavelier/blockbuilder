@@ -274,10 +274,8 @@ class Builder(object):
                     button.setCheckable(True)
                     if sym is Symmetry.SYMMETRY_NONE:
                         button.setChecked(True)
-                    func_name = "toggle_{}".format(sym.name.lower())
-                    func = getattr(self.selector, func_name, None)
-                    if func is not None:
-                        button.toggled.connect(func)
+                    button.toggled.connect(
+                        partial(self.selector.set_symmetry, sym=sym))
                     self.sym_buttons.addButton(button)
                     self.toolbar.addWidget(button)
 
@@ -347,6 +345,7 @@ class Builder(object):
     def action_reset(self, unused):
         del unused
         self.block.remove_all()
+        self.graphics.render()
 
 
 class Intersection(object):

@@ -203,18 +203,8 @@ class SymmetrySelector(Selector):
             coords.append(self.selector_xy.coords)
         return coords
 
-    def toggle_symmetry_none(self, unused):
-        del unused
-        self.symmetry = Symmetry.SYMMETRY_NONE
-
-    def toggle_symmetry_x(self, state):
-        self.symmetry = Symmetry.SYMMETRY_X
-
-    def toggle_symmetry_y(self, state):
-        self.symmetry = Symmetry.SYMMETRY_Y
-
-    def toggle_symmetry_xy(self, state):
-        self.symmetry = Symmetry.SYMMETRY_XY
+    def set_symmetry(self, sym):
+        self.symmetry = sym
 
 
 class Block(object):
