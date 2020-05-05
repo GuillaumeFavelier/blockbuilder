@@ -1,6 +1,6 @@
 trigger:
 - master
-- develop
+- stable
 
 pr:
   branches:
