@@ -18,7 +18,6 @@ class BlockMode(enum.Enum):
 
     BUILD = enum.auto()
     DELETE = enum.auto()
-    SELECT = enum.auto()
     CAMERA = enum.auto()
     LIBRARY = enum.auto()
     SETTINGS = enum.auto()
@@ -30,6 +29,13 @@ class Action(enum.Enum):
     """List the actions available in Builder."""
 
     RESET = enum.auto()
+
+
+@enum.unique
+class Toggle(enum.Enum):
+    """List the toggles available in Builder."""
+
+    SELECT = enum.auto()
 
 
 class Builder(object):
@@ -268,7 +274,7 @@ class Builder(object):
         from PyQt5.Qt import QIcon
         if not self.benchmark:
             self.icons = dict()
-            for category in (BlockMode, Action, Symmetry):
+            for category in (BlockMode, Action, Toggle, Symmetry):
                 for element in category:
                     icon_path = "icons/{}.svg".format(element.name.lower())
                     if op.isfile(icon_path):
@@ -303,6 +309,20 @@ class Builder(object):
                     button.clicked.connect(func)
                 self.toolbar.addWidget(button)
 
+    def _add_toolbar_toggles(self):
+        from PyQt5.QtWidgets import QToolButton
+        for toggle in Toggle:
+            icon = self.icons.get(toggle, None)
+            if icon is not None:
+                button = QToolButton()
+                button.setIcon(icon)
+                button.setCheckable(True)
+                func_name = "toggle_{}".format(toggle.name.lower())
+                func = getattr(self, func_name, None)
+                if func is not None:
+                    button.toggled.connect(func)
+                self.toolbar.addWidget(button)
+
     def load_toolbar(self):
         """Initialize the toolbar."""
         if not self.benchmark:
@@ -313,13 +333,15 @@ class Builder(object):
                 default_value=BlockMode.BUILD,
             )
             self.toolbar.addSeparator()
-            self._add_toolbar_actions()
+            self._add_toolbar_toggles()
             self.toolbar.addSeparator()
             self._add_toolbar_group(
                 group=Symmetry,
                 func=self.selector.set_symmetry,
                 default_value=Symmetry.SYMMETRY_NONE,
             )
+            self.toolbar.addSeparator()
+            self._add_toolbar_actions()
 
     def load_benchmark(self):
         """Run the default benchmark."""
@@ -403,6 +425,10 @@ class Builder(object):
         del unused
         self.block.remove_all()
         self.graphics.render()
+
+    def toggle_select(self, value):
+        """Toggle area selection."""
+        self.area_selection = value
 
 
 class Intersection(object):
