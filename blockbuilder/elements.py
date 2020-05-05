@@ -1,3 +1,5 @@
+"""Module to describe the elements of the scene."""
+
 import enum
 import numpy as np
 import pyvista as pv
@@ -8,6 +10,8 @@ from .params import rcParams
 
 @enum.unique
 class Element(enum.Enum):
+    """List the different elements of the scene."""
+
     GRID = 0
     PLANE = 1
     SELECTOR = 2
@@ -16,6 +20,8 @@ class Element(enum.Enum):
 
 @enum.unique
 class Symmetry(enum.Enum):
+    """List the available kind of symmetry."""
+
     SYMMETRY_NONE = enum.auto()
     SYMMETRY_X = enum.auto()
     SYMMETRY_Y = enum.auto()
@@ -23,8 +29,11 @@ class Symmetry(enum.Enum):
 
 
 class Base(object):
+    """."""
+
     def __init__(self, plotter, element_id, dimensions, color,
                  opacity, origin=None, spacing=None):
+        """Initialize the Base."""
         self.unit = rcParams["unit"]
         self.edge_color_offset = rcParams["base"]["edge_color_offset"]
         if origin is None:
@@ -54,6 +63,7 @@ class Base(object):
         self.actor.element_id = element_id
 
     def set_block_mode(self, mode):
+        """Set the block mode."""
         element_name = self.actor.element_id.name.lower()
         mode_name = mode.name.lower()
         self.color = rcParams[element_name]["color"][mode_name]
@@ -64,6 +74,7 @@ class Base(object):
         prop.SetEdgeColor(self.edge_color)
 
     def translate(self, tr, update_camera=False):
+        """Translate the Base."""
         # update origin
         self.origin += tr
         self.mesh.SetOrigin(self.origin)
@@ -74,7 +85,10 @@ class Base(object):
 
 
 class Grid(Base):
+    """Grid element of the scene."""
+
     def __init__(self, plotter, dimensions):
+        """Initialize the Grid."""
         color = rcParams["grid"]["color"]["build"]
         opacity = rcParams["grid"]["opacity"]
         dimensions = [
@@ -92,7 +106,10 @@ class Grid(Base):
 
 
 class Plane(Base):
+    """Plane element of the scene."""
+
     def __init__(self, plotter, dimensions):
+        """Initialize the Plane."""
         unit = rcParams["unit"]
         origin = rcParams["origin"] - np.array([0, 0, unit])
         color = rcParams["plane"]["color"]
@@ -118,7 +135,10 @@ class Plane(Base):
 
 
 class Selector(Base):
+    """Selector element of the scene."""
+
     def __init__(self, plotter):
+        """Initialize the Selector."""
         dimensions = [2, 2, 2]
         color = rcParams["selector"]["color"]["build"]
         opacity = rcParams["selector"]["opacity"]
@@ -133,22 +153,29 @@ class Selector(Base):
         self.coords_type = np.int
 
     def select(self, coords):
+        """Select a block of the grid."""
         self.coords = coords.astype(self.coords_type)
         origin = coords * self.unit
         self.mesh.SetOrigin(origin)
 
     def show(self):
+        """Show the selector."""
         self.actor.VisibilityOn()
 
     def hide(self):
+        """Hide the selector."""
         self.actor.VisibilityOff()
 
     def selection(self):
+        """Return the current selection."""
         return self.coords
 
 
 class SymmetrySelector(Selector):
+    """Selector that supports symmetry."""
+
     def __init__(self, plotter, dimensions):
+        """Initialize the selector."""
         super().__init__(plotter)
         self.selector_x = Selector(plotter)
         self.selector_y = Selector(plotter)
@@ -157,12 +184,14 @@ class SymmetrySelector(Selector):
         self.dimensions = dimensions
 
     def set_block_mode(self, mode):
+        """Set the block mode."""
         super().set_block_mode(mode)
         self.selector_x.set_block_mode(mode)
         self.selector_y.set_block_mode(mode)
         self.selector_xy.set_block_mode(mode)
 
     def select(self, coords):
+        """Select a block of the grid."""
         super().select(coords)
         if self.symmetry in (Symmetry.SYMMETRY_X, Symmetry.SYMMETRY_XY):
             new_coords = coords.copy()
@@ -179,6 +208,7 @@ class SymmetrySelector(Selector):
             self.selector_xy.select(new_coords)
 
     def show(self):
+        """Show the selector."""
         super().show()
         if self.symmetry in (Symmetry.SYMMETRY_X, Symmetry.SYMMETRY_XY):
             self.selector_x.actor.VisibilityOn()
@@ -188,12 +218,14 @@ class SymmetrySelector(Selector):
             self.selector_xy.actor.VisibilityOn()
 
     def hide(self):
+        """Hide the selector."""
         super().hide()
         self.selector_x.actor.VisibilityOff()
         self.selector_y.actor.VisibilityOff()
         self.selector_xy.actor.VisibilityOff()
 
     def selection(self):
+        """Return the current selection."""
         coords = [self.coords]
         if self.symmetry in (Symmetry.SYMMETRY_X, Symmetry.SYMMETRY_XY):
             coords.append(self.selector_x.coords)
@@ -204,11 +236,15 @@ class SymmetrySelector(Selector):
         return coords
 
     def set_symmetry(self, value):
+        """Set the symmetry."""
         self.symmetry = value
 
 
 class Block(object):
+    """Main block manager."""
+
     def __init__(self, plotter, dimensions):
+        """Initialize the block manager."""
         self.unit = rcParams["unit"]
         self.origin = rcParams["origin"]
         self.color_array = rcParams["block"]["color_array"]
@@ -251,23 +287,27 @@ class Block(object):
         actor.element_id = Element.BLOCK
 
     def add(self, coords):
+        """Add the block at the given coords."""
         cell_id = _coords_to_cell(coords, self.dimensions)
         if not self.mesh.IsCellVisible(cell_id):
             self.mesh.UnBlankCell(cell_id)
             self.mesh.Modified()
 
     def add_all(self):
+        """Add all the blocks."""
         for cell_id in range(self.number_of_cells):
             self.mesh.UnBlankCell(cell_id)
         self.mesh.Modified()
 
     def remove(self, coords):
+        """Remove the block at the given coords."""
         cell_id = _coords_to_cell(coords, self.dimensions)
         if self.mesh.IsCellVisible(cell_id):
             self.mesh.BlankCell(cell_id)
             self.mesh.Modified()
 
     def remove_all(self):
+        """Remove all the blocks."""
         for cell_id in range(self.number_of_cells):
             self.mesh.BlankCell(cell_id)
         self.mesh.Modified()

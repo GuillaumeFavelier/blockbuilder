@@ -1,3 +1,5 @@
+"""Module about the main application."""
+
 import os.path as op
 import enum
 import time
@@ -12,6 +14,8 @@ from .elements import Element, Symmetry, SymmetrySelector, Grid, Plane, Block
 
 @enum.unique
 class BlockMode(enum.Enum):
+    """List the modes available in Builder."""
+
     BUILD = enum.auto()
     DELETE = enum.auto()
     SELECT = enum.auto()
@@ -23,11 +27,16 @@ class BlockMode(enum.Enum):
 
 @enum.unique
 class Action(enum.Enum):
+    """List the actions available in Builder."""
+
     RESET = enum.auto()
 
 
 class Builder(object):
+    """Main application."""
+
     def __init__(self, dimensions=None, benchmark=None):
+        """Initialize the Builder."""
         self.unit = rcParams["unit"]
         self.azimuth = rcParams["builder"]["azimuth"]
         self.azimuth_rng = rcParams["builder"]["azimuth_rng"]
@@ -74,6 +83,7 @@ class Builder(object):
         self.graphics.render()
 
     def update_camera(self):
+        """Update the internal camera."""
         rad_azimuth = _deg2rad(self.azimuth)
         rad_elevation = _deg2rad(self.elevation)
 
@@ -85,6 +95,7 @@ class Builder(object):
         self.plotter.camera.SetFocalPoint(self.grid.center)
 
     def move_camera(self, update, inverse=False):
+        """Move the camera depending on the given update property."""
         if inverse:
             delta = -2
         else:
@@ -110,10 +121,12 @@ class Builder(object):
         self.graphics.render()
 
     def on_mouse_move(self, vtk_picker, event):
+        """Process mouse move events."""
         x, y = vtk_picker.GetEventPosition()
         self.picker.Pick(x, y, 0, self.plotter.renderer)
 
     def on_mouse_wheel_forward(self, vtk_picker, event):
+        """Process mouse wheel forward events."""
         tr = np.array([0., 0., self.unit])
         if self.grid.origin[2] < self.ceiling:
             self.grid.translate(tr)
@@ -123,6 +136,7 @@ class Builder(object):
         self.graphics.render()
 
     def on_mouse_wheel_backward(self, vtk_picker, event):
+        """Process mouse wheel backward events."""
         tr = np.array([0., 0., -self.unit])
         if self.grid.origin[2] > self.floor:
             self.grid.translate(tr)
@@ -132,19 +146,23 @@ class Builder(object):
         self.graphics.render()
 
     def on_mouse_left_press(self, vtk_picker, event):
+        """Process mouse left button press events."""
         self.button_pressed = True
 
     def on_mouse_left_release(self, vtk_picker, event):
+        """Process mouse left button release events."""
         x, y = vtk_picker.GetEventPosition()
         self.picker.Pick(x, y, 0, self.plotter.renderer)
         self.button_pressed = False
 
     def on_pick(self, vtk_picker, event):
+        """Process pick events."""
         func = self.mode_functions.get(self.current_block_mode, None)
         if func is not None:
             func(vtk_picker)
 
     def load_block_modes(self):
+        """Load the block modes."""
         if not self.benchmark:
             self.set_block_mode(BlockMode.BUILD)
             self.mode_functions = dict()
@@ -154,6 +172,7 @@ class Builder(object):
                     self.mode_functions[mode] = getattr(self, func_name)
 
     def load_elements(self):
+        """Process the elements of the scene."""
         if self.benchmark:
             show_fps = True
         else:
@@ -168,6 +187,7 @@ class Builder(object):
             self.selector.hide()
 
     def load_interaction(self):
+        """Load interactions."""
         # allow flexible interactions
         self.plotter._style = vtk.vtkInteractorStyleUser()
         self.plotter.update_style()
@@ -230,6 +250,7 @@ class Builder(object):
             )
 
     def load_icons(self):
+        """Load the icons."""
         from PyQt5.Qt import QIcon
         if not self.benchmark:
             self.icons = dict()
@@ -269,6 +290,7 @@ class Builder(object):
                 self.toolbar.addWidget(button)
 
     def load_toolbar(self):
+        """Initialize the toolbar."""
         if not self.benchmark:
             self.toolbar = self.graphics.window.addToolBar("toolbar")
             self._add_toolbar_group(
@@ -286,6 +308,7 @@ class Builder(object):
             )
 
     def load_benchmark(self):
+        """Run the default benchmark."""
         if self.benchmark:
             timings = np.empty(self.benchmark_number_of_runs)
             number_of_blocks = np.prod(self.dimensions - 1)
@@ -310,6 +333,7 @@ class Builder(object):
             self.plotter.close()
 
     def set_block_mode(self, value):
+        """Set the current block mode."""
         if value in BlockMode:
             self.current_block_mode = value
             if self.grid is not None:
@@ -319,12 +343,14 @@ class Builder(object):
         self.graphics.render()
 
     def use_delete_mode(self, vtk_picker):
-        self.build_or_delete(vtk_picker, self.block.remove)
+        """Use the delete mode."""
+        self._build_or_delete(vtk_picker, self.block.remove)
 
     def use_build_mode(self, vtk_picker):
-        self.build_or_delete(vtk_picker, self.block.add)
+        """Use the build mode."""
+        self._build_or_delete(vtk_picker, self.block.add)
 
-    def build_or_delete(self, vtk_picker, operation):
+    def _build_or_delete(self, vtk_picker, operation):
         intersection = Intersection(vtk_picker)
         if not intersection.exist():
             self.selector.hide()
@@ -341,21 +367,25 @@ class Builder(object):
 
         self.selector.select(coords)
         self.selector.show()
-        self.graphics.render()
 
         if self.button_pressed:
             for coords in self.selector.selection():
                 operation(coords)
             self.button_released = False
+        self.graphics.render()
 
     def action_reset(self, unused):
+        """Reset the block properties."""
         del unused
         self.block.remove_all()
         self.graphics.render()
 
 
 class Intersection(object):
+    """Manage the intersections."""
+
     def __init__(self, picker):
+        """Initialize the Intersection manager."""
         self.any_intersection = (picker.GetCellId() != -1)
         if self.any_intersection:
             self.intersections = [None for element in Element]
@@ -365,12 +395,15 @@ class Intersection(object):
                 self.intersections[actor.element_id.value] = idx
 
     def exist(self):
+        """Return True is there is any intersection."""
         return self.any_intersection
 
     def element(self, element_id):
+        """Return True is there is any intersection with element_id."""
         return self.intersections[element_id.value] is not None
 
     def point(self, element_id):
+        """Return the intersection point of element_id."""
         idx = self.intersections[element_id.value]
         return np.asarray(self.picked_points.GetPoint(idx))
 

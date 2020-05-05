@@ -1,3 +1,5 @@
+"""Module about visual properties."""
+
 import numpy as np
 import pyvista as pv
 
@@ -5,9 +7,12 @@ from .params import rcParams
 
 
 class Graphics(object):
+    """Manage the visual properties."""
+
     def __init__(self, window_size=None, line_width=None, advanced=None,
                  show_fps=None, background_top_color=None,
                  background_bottom_color=None):
+        """Initialize the default visual properties."""
         if window_size is None:
             window_size = rcParams["graphics"]["window_size"]
         if line_width is None:
@@ -40,6 +45,7 @@ class Graphics(object):
         self.load_fps()
 
     def render(self):
+        """Render the scene."""
         # fix the clipping planes being too small
         rng = [0] * 6
         self.plotter.renderer.ComputeVisiblePropBounds(rng)
@@ -48,6 +54,7 @@ class Graphics(object):
             self.plotter.ren_win.Render()
 
     def load_plotter(self):
+        """Configure the internal plotter."""
         # we disable auto_update to minimize the number of render calls
         self.plotter = pv.BackgroundPlotter(
             window_size=self.window_size,
@@ -63,6 +70,7 @@ class Graphics(object):
         self.plotter.show_axes()
 
     def load_graphic_quality(self):
+        """Configure the visual quality."""
         if self.advanced:
             self.plotter.enable_anti_aliasing()
             self.plotter.ren_win.LineSmoothingOn()
@@ -73,6 +81,7 @@ class Graphics(object):
             self.plotter.ren_win.PolygonSmoothingOff()
 
     def load_fps(self):
+        """Configure fps management."""
         if self.show_fps:
             self.fps = 0
             self.fps_actor = self.plotter.add_text(
@@ -80,7 +89,10 @@ class Graphics(object):
             self.plotter.add_callback(self.compute_fps)
 
     def compute_fps(self):
+        """Compute the frames per second."""
         fps = 1.0 / self.plotter.renderer.GetLastRenderTimeInSeconds()
-        self.fps = np.round(fps).astype(np.int)
-        self.fps_actor.SetInput("fps: {}".format(self.fps))
-        self.fps_actor.SetPosition(self.fps_position)
+        if self.show_fps:
+            self.fps = np.round(fps).astype(np.int)
+            self.fps_actor.SetInput("fps: {}".format(self.fps))
+            self.fps_actor.SetPosition(self.fps_position)
+        return fps

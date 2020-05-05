@@ -1,3 +1,5 @@
+"""Module about the default values."""
+
 rcParams = {
     "unit": 1.,
     "origin": (0., 0., 0.),
