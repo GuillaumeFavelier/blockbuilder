@@ -1,35 +1,45 @@
-# Python package
-# Create and test a Python package on multiple Python versions.
-# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/python
-
 trigger:
 - master
 
-pool:
-  vmImage: 'ubuntu-latest'
-strategy:
-  matrix:
-    Python36:
-      python.version: '3.6'
-    Python37:
-      python.version: '3.7'
-    Python38:
-      python.version: '3.8'
+pr:
+  branches:
+    include:
+      - '*'  # must quote since "*" is a YAML reserved character; we want a string
 
-steps:
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '$(python.version)'
-  displayName: 'Use Python $(python.version)'
+jobs:
 
-- script: |
-    python -m pip install --upgrade pip
-    pip install -r requirements.txt
-  displayName: 'Install dependencies'
-
-- script: |
-    pip install codespell pydocstyle
-    codespell blockbuilder
-    pydocstyle blockbuilder
-  displayName: 'Check code style'
+- job: Style
+  pool:
+    vmImage: 'ubuntu-18.04'
+  strategy:
+    matrix:
+      Python37-64bit:
+        PYTHON_VERSION: '3.7'
+        PYTHON_ARCH: 'x64'
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: $(PYTHON_VERSION)
+      architecture: $(PYTHON_ARCH)
+      addToPath: true
+    displayName: 'Setup Python $(PYTHON_VERSION)'
+  - bash: |
+      python -m pip install --upgrade pip setuptools
+    displayName: 'Install dependencies'
+    condition: always()
+  - bash: |
+      pip install codespell
+    displayName: 'Install codespell'
+    condition: always()
+  - bash: |
+      make codespell
+    displayName: 'Run codespell'
+    condition: always()
+  - bash: |
+      pip install pydocstyle
+    displayName: 'Install pydocstyle'
+    condition: always()
+  - bash: |
+      make pydocstyle
+    displayName: 'Run pydocstyle'
+    condition: always()
