@@ -9,7 +9,7 @@ pr:
 
 jobs:
 
-- job: Code style
+- job: 'Style'
   pool:
     vmImage: 'ubuntu-18.04'
   strategy:
