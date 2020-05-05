@@ -1,5 +1,6 @@
 trigger:
 - master
+- develop
 
 pr:
   branches:
@@ -8,7 +9,7 @@ pr:
 
 jobs:
 
-- job: Style
+- job: 'Code style'
   pool:
     vmImage: 'ubuntu-18.04'
   strategy:
