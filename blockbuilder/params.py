@@ -23,7 +23,6 @@ rcParams = {
         "color": {
             "build": (.05, .05, .35),
             "delete": (.35, .05, .05),
-            "select": (.05, .35, .05),
         },
         "opacity": .7,
     },
@@ -35,7 +34,6 @@ rcParams = {
         "color": {
             "build": (.3, .3, .8),
             "delete": (.8, .3, .3),
-            "select": (.3, .8, .3),
         },
         "opacity": .7,
     },

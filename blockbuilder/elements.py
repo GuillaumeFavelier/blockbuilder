@@ -171,15 +171,46 @@ class Selector(Base):
         return self.coords
 
 
-class SymmetrySelector(Selector):
+class AreaSelector(Selector):
+    """Selector that supports area."""
+
+    def __init__(self, plotter):
+        """Initialize the selector."""
+        super().__init__(plotter)
+        self.area = None
+
+    def select_area(self, area):
+        """Select the area."""
+        area = np.asarray(area).astype(self.coords_type)
+        self.area = (
+            np.min(area, axis=0),
+            np.max(area, axis=0),
+        )
+        coords_diff = self.area[1] - self.area[0] + 2
+        self.select(self.area[0])
+        self.mesh.SetDimensions(coords_diff)
+        self.mesh.Modified()
+
+    def reset_area(self):
+        """Reset the selector."""
+        dimensions = [2, 2, 2]
+        self.mesh.SetDimensions(dimensions)
+        self.mesh.Modified()
+
+    def selection_area(self):
+        """Return the current area selection."""
+        return self.area
+
+
+class SymmetrySelector(AreaSelector):
     """Selector that supports symmetry."""
 
     def __init__(self, plotter, dimensions):
         """Initialize the selector."""
         super().__init__(plotter)
-        self.selector_x = Selector(plotter)
-        self.selector_y = Selector(plotter)
-        self.selector_xy = Selector(plotter)
+        self.selector_x = AreaSelector(plotter)
+        self.selector_y = AreaSelector(plotter)
+        self.selector_xy = AreaSelector(plotter)
         self.symmetry = Symmetry.SYMMETRY_NONE
         self.dimensions = dimensions
 
@@ -189,6 +220,34 @@ class SymmetrySelector(Selector):
         self.selector_x.set_block_mode(mode)
         self.selector_y.set_block_mode(mode)
         self.selector_xy.set_block_mode(mode)
+
+    def select_area(self, area):
+        """Select the area."""
+        super().select_area(area)
+        area = np.asarray(area).astype(self.coords_type)
+        if self.symmetry in (Symmetry.SYMMETRY_X, Symmetry.SYMMETRY_XY):
+            new_area = area.copy()
+            new_area[0][1] = self.dimensions[1] - area[0][1] - 2
+            new_area[1][1] = self.dimensions[1] - area[1][1] - 2
+            self.selector_x.select_area(new_area)
+        if self.symmetry in (Symmetry.SYMMETRY_Y, Symmetry.SYMMETRY_XY):
+            new_area = area.copy()
+            new_area[0][0] = self.dimensions[0] - area[0][0] - 2
+            new_area[1][0] = self.dimensions[0] - area[1][0] - 2
+            self.selector_y.select_area(new_area)
+        if self.symmetry is Symmetry.SYMMETRY_XY:
+            new_area[0][1] = self.dimensions[1] - area[0][1] - 2
+            new_area[1][1] = self.dimensions[1] - area[1][1] - 2
+            new_area[0][0] = self.dimensions[0] - area[0][0] - 2
+            new_area[1][0] = self.dimensions[0] - area[1][0] - 2
+            self.selector_xy.select_area(new_area)
+
+    def reset_area(self):
+        """Reset the selector."""
+        super().reset_area()
+        self.selector_x.reset_area()
+        self.selector_y.reset_area()
+        self.selector_xy.reset_area()
 
     def select(self, coords):
         """Select a block of the grid."""
@@ -203,8 +262,8 @@ class SymmetrySelector(Selector):
             self.selector_y.select(new_coords)
         if self.symmetry is Symmetry.SYMMETRY_XY:
             new_coords = coords.copy()
-            new_coords[0] = self.dimensions[0] - coords[0] - 2
             new_coords[1] = self.dimensions[1] - coords[1] - 2
+            new_coords[0] = self.dimensions[0] - coords[0] - 2
             self.selector_xy.select(new_coords)
 
     def show(self):
@@ -234,6 +293,17 @@ class SymmetrySelector(Selector):
         if self.symmetry is Symmetry.SYMMETRY_XY:
             coords.append(self.selector_xy.coords)
         return coords
+
+    def selection_area(self):
+        """Return the current area selection."""
+        area = [self.area]
+        if self.symmetry in (Symmetry.SYMMETRY_X, Symmetry.SYMMETRY_XY):
+            area.append(self.selector_x.area)
+        if self.symmetry in (Symmetry.SYMMETRY_Y, Symmetry.SYMMETRY_XY):
+            area.append(self.selector_y.area)
+        if self.symmetry is Symmetry.SYMMETRY_XY:
+            area.append(self.selector_xy.area)
+        return area
 
     def set_symmetry(self, value):
         """Set the symmetry."""
@@ -288,10 +358,20 @@ class Block(object):
 
     def add(self, coords):
         """Add the block at the given coords."""
-        cell_id = _coords_to_cell(coords, self.dimensions)
-        if not self.mesh.IsCellVisible(cell_id):
-            self.mesh.UnBlankCell(cell_id)
-            self.mesh.Modified()
+        if isinstance(coords, tuple):
+            area = coords
+            for x in np.arange(area[0][0], area[1][0] + 1):
+                for y in np.arange(area[0][1], area[1][1] + 1):
+                    _coords = [x, y, area[0][2]]
+                    cell_id = _coords_to_cell(_coords, self.dimensions)
+                    if not self.mesh.IsCellVisible(cell_id):
+                        self.mesh.UnBlankCell(cell_id)
+                        self.mesh.Modified()
+        else:
+            cell_id = _coords_to_cell(coords, self.dimensions)
+            if not self.mesh.IsCellVisible(cell_id):
+                self.mesh.UnBlankCell(cell_id)
+                self.mesh.Modified()
 
     def add_all(self):
         """Add all the blocks."""
@@ -301,10 +381,20 @@ class Block(object):
 
     def remove(self, coords):
         """Remove the block at the given coords."""
-        cell_id = _coords_to_cell(coords, self.dimensions)
-        if self.mesh.IsCellVisible(cell_id):
-            self.mesh.BlankCell(cell_id)
-            self.mesh.Modified()
+        if isinstance(coords, tuple):
+            area = coords
+            for x in np.arange(area[0][0], area[1][0] + 1):
+                for y in np.arange(area[0][1], area[1][1] + 1):
+                    _coords = [x, y, area[0][2]]
+                    cell_id = _coords_to_cell(_coords, self.dimensions)
+                    if self.mesh.IsCellVisible(cell_id):
+                        self.mesh.BlankCell(cell_id)
+                        self.mesh.Modified()
+        else:
+            cell_id = _coords_to_cell(coords, self.dimensions)
+            if self.mesh.IsCellVisible(cell_id):
+                self.mesh.BlankCell(cell_id)
+                self.mesh.Modified()
 
     def remove_all(self):
         """Remove all the blocks."""

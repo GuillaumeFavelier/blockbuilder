@@ -71,6 +71,13 @@ class Builder(object):
 
         # configuration
         self.load_elements()
+
+        # XXX: experiment
+        self.area_selection = True
+        self.area_first_coords = None
+        self.area_last_coords = None
+        self.current_coords = None
+
         self.load_block_modes()
         self.load_interaction()
         self.load_icons()
@@ -154,6 +161,13 @@ class Builder(object):
         x, y = vtk_picker.GetEventPosition()
         self.picker.Pick(x, y, 0, self.plotter.renderer)
         self.button_pressed = False
+        if self.area_selection:
+            self.area_first_coords = None
+            self.area_last_coords = None
+            for area in self.selector.selection_area():
+                self.operation(area)
+            self.selector.reset_area()
+        self.graphics.render()
 
     def on_pick(self, vtk_picker, event):
         """Process pick events."""
@@ -364,14 +378,24 @@ class Builder(object):
 
         coords = np.floor(grid_ipoint / self.unit)
         coords[2] = self.grid.origin[2] / self.unit
+        self.coords = coords
 
         self.selector.select(coords)
         self.selector.show()
 
         if self.button_pressed:
-            for coords in self.selector.selection():
-                operation(coords)
-            self.button_released = False
+            if self.area_selection:
+                self.operation = operation
+                if self.area_first_coords is None:
+                    self.area_first_coords = self.coords
+                else:
+                    self.area_last_coords = self.coords
+                    area = (self.area_first_coords, self.area_last_coords)
+                    self.selector.select_area(area)
+            else:
+                for coords in self.selector.selection():
+                    operation(coords)
+                self.button_released = False
         self.graphics.render()
 
     def action_reset(self, unused):
