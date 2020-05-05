@@ -1,0 +1,2 @@
+pyvista
+pyqt5>=5.14
