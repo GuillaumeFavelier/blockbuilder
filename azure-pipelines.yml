@@ -29,6 +29,7 @@ steps:
   displayName: 'Install dependencies'
 
 - script: |
-    pip install pytest pytest-azurepipelines
-    pytest
-  displayName: 'pytest'
+    pip install codespell pydocstyle
+    codespell blockbuilder
+    pydocstyle blockbuilder
+  displayName: 'Check code style'
