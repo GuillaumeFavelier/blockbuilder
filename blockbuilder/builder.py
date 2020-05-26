@@ -206,9 +206,8 @@ class Builder(object):
 
     def load_interaction(self):
         """Load interactions."""
-        # allow flexible interactions
-        style = vtk.vtkInteractorStyleUser()
-        self.plotter.set_style(style)
+        # disable default interactions
+        self.plotter.set_style(None)
 
         # enable cell picking
         self.picker = vtk.vtkCellPicker()
