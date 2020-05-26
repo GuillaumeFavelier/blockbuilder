@@ -1,1 +1,3 @@
-pyvista
+numpy
+PyQt5
+vtk

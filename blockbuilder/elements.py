@@ -2,7 +2,6 @@
 
 import enum
 import numpy as np
-import pyvista as pv
 import vtk
 
 from .params import rcParams
@@ -49,7 +48,10 @@ class Base(object):
         self.spacing = np.asarray(spacing)
         self.center = self.origin + np.multiply(self.dimensions / 2.,
                                                 self.spacing)
-        self.mesh = pv.UniformGrid(self.dimensions, self.spacing, self.origin)
+        self.mesh = vtk.vtkUniformGrid()
+        self.mesh.SetDimensions(self.dimensions)
+        self.mesh.SetSpacing(self.spacing)
+        self.mesh.SetOrigin(self.origin)
         self.actor = self.plotter.add_mesh(
             mesh=self.mesh,
             color=self.color,
@@ -336,12 +338,13 @@ class Block(object):
                     points.SetPoint(counter, point)
                     counter += 1
 
-        self.mesh = pv.StructuredGrid()
+        self.mesh = vtk.vtkStructuredGrid()
         self.mesh.SetDimensions(self.dimensions)
         self.mesh.SetPoints(points)
-        self.mesh.cell_arrays[self.color_array] = np.tile(
-           self.color,
-           (self.number_of_cells, 1),
+        _set_mesh_cell_array(
+            self.mesh,
+            self.color_array,
+            np.tile(self.color, (self.number_of_cells, 1)),
         )
         self.remove_all()
         actor = self.plotter.add_mesh(
@@ -366,12 +369,11 @@ class Block(object):
                     cell_id = _coords_to_cell(_coords, self.dimensions)
                     if not self.mesh.IsCellVisible(cell_id):
                         self.mesh.UnBlankCell(cell_id)
-                        self.mesh.Modified()
         else:
             cell_id = _coords_to_cell(coords, self.dimensions)
             if not self.mesh.IsCellVisible(cell_id):
                 self.mesh.UnBlankCell(cell_id)
-                self.mesh.Modified()
+        self.mesh.Modified()
 
     def add_all(self):
         """Add all the blocks."""
@@ -423,3 +425,12 @@ def _cell_to_coords(cell_id, dimensions):
     coords[1] = np.floor(coords[1] / offset[1])
     coords[0] = (cell_id % offset[2]) % offset[1]
     return coords
+
+
+def _set_mesh_cell_array(mesh, array_name, array):
+    from vtk.util.numpy_support import numpy_to_vtk
+    cell_data = mesh.GetCellData()
+    vtk_array = numpy_to_vtk(array)
+    vtk_array.SetName(array_name)
+    cell_data.AddArray(vtk_array)
+    cell_data.SetActiveScalars(array_name)

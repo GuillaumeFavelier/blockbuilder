@@ -2,7 +2,6 @@
 
 import os.path as op
 import enum
-import time
 from functools import partial
 import numpy as np
 import vtk
@@ -41,26 +40,16 @@ class Toggle(enum.Enum):
 class Builder(object):
     """Main application."""
 
-    def __init__(self, dimensions=None, benchmark=None):
+    def __init__(self, dimensions=None):
         """Initialize the Builder."""
         self.unit = rcParams["unit"]
         self.azimuth = rcParams["builder"]["azimuth"]
         self.azimuth_rng = rcParams["builder"]["azimuth_rng"]
         self.elevation_rng = rcParams["builder"]["elevation_rng"]
         self.elevation = rcParams["builder"]["elevation"]
-        self.benchmark_dimensions = np.asarray(
-            rcParams["builder"]["benchmark"]["dimensions"])
-        self.benchmark_number_of_runs = \
-            rcParams["builder"]["benchmark"]["number_of_runs"]
         if dimensions is None:
             dimensions = rcParams["builder"]["dimensions"]
-        if benchmark is None:
-            benchmark = rcParams["builder"]["benchmark"]["enabled"]
-        if benchmark:
-            self.dimensions = np.asarray(self.benchmark_dimensions)
-        else:
-            self.dimensions = np.asarray(dimensions)
-        self.benchmark = benchmark
+        self.dimensions = np.asarray(dimensions)
         self.button_pressed = False
         self.floor = 0.
         self.ceiling = (self.dimensions[2] - 2) * self.unit
@@ -79,7 +68,7 @@ class Builder(object):
         self.load_elements()
 
         # XXX: experiment
-        self.area_selection = True
+        self.area_selection = False
         self.area_first_coords = None
         self.area_last_coords = None
         self.current_coords = None
@@ -88,7 +77,6 @@ class Builder(object):
         self.load_interaction()
         self.load_icons()
         self.load_toolbar()
-        self.load_benchmark()
 
         # set initial frame
         self.plotter.reset_camera()
@@ -104,6 +92,7 @@ class Builder(object):
             self.distance * np.cos(rad_azimuth) * np.sin(rad_elevation),
             self.distance * np.sin(rad_azimuth) * np.sin(rad_elevation),
             self.distance * np.cos(rad_elevation)]
+        self.plotter.camera.SetViewUp((0., 0., 1.))
         self.plotter.camera.SetPosition(position)
         self.plotter.camera.SetFocalPoint(self.grid.center)
 
@@ -129,7 +118,7 @@ class Builder(object):
         self.update_camera()
 
         # update pick
-        x, y = self.plotter.iren.GetEventPosition()
+        x, y = self.plotter.interactor.GetEventPosition()
         self.picker.Pick(x, y, 0, self.plotter.renderer)
         self.graphics.render()
 
@@ -181,104 +170,88 @@ class Builder(object):
         if func is not None:
             func(vtk_picker)
 
+    def on_key_press(self, vtk_picker, event):
+        key = self.plotter.interactor.GetKeySym()
+        if key == 'Up':
+            self.move_camera(update="distance", inverse=True)
+        if key == 'Down':
+            self.move_camera(update="distance")
+        if key == 'q':
+            self.move_camera(update="azimuth", inverse=True)
+        if key == 'd':
+            self.move_camera(update="azimuth")
+        if key == 'z':
+            self.move_camera(update="elevation", inverse=True)
+        if key == 's':
+            self.move_camera(update="elevation")
+
     def load_block_modes(self):
         """Load the block modes."""
-        if not self.benchmark:
-            self.set_block_mode(BlockMode.BUILD)
-            self.mode_functions = dict()
-            for mode in BlockMode:
-                func_name = "use_{}_mode".format(mode.name.lower())
-                if hasattr(self, func_name):
-                    self.mode_functions[mode] = getattr(self, func_name)
+        self.set_block_mode(BlockMode.BUILD)
+        self.mode_functions = dict()
+        for mode in BlockMode:
+            func_name = "use_{}_mode".format(mode.name.lower())
+            if hasattr(self, func_name):
+                self.mode_functions[mode] = getattr(self, func_name)
 
     def load_elements(self):
         """Process the elements of the scene."""
-        if self.benchmark:
-            show_fps = True
-        else:
-            show_fps = None
-        self.graphics = Graphics(show_fps=show_fps)
+        self.graphics = Graphics()
         self.plotter = self.graphics.plotter
         self.block = Block(self.plotter, self.dimensions)
         self.grid = Grid(self.plotter, self.dimensions)
         self.plane = Plane(self.plotter, self.dimensions)
-        if not self.benchmark:
-            self.selector = SymmetrySelector(self.plotter, self.dimensions)
-            self.selector.hide()
+        self.selector = SymmetrySelector(self.plotter, self.dimensions)
+        self.selector.hide()
 
     def load_interaction(self):
         """Load interactions."""
         # allow flexible interactions
-        self.plotter._style = vtk.vtkInteractorStyleUser()
-        self.plotter.update_style()
+        style = vtk.vtkInteractorStyleUser()
+        self.plotter.set_style(style)
 
-        # remove all default key bindings
-        self.plotter._key_press_event_callbacks.clear()
+        # enable cell picking
+        self.picker = vtk.vtkCellPicker()
+        self.picker.AddObserver(
+            vtk.vtkCommand.EndPickEvent,
+            self.on_pick
+        )
 
-        if not self.benchmark:
-            # enable cell picking
-            self.picker = vtk.vtkCellPicker()
-            self.picker.AddObserver(
-                vtk.vtkCommand.EndPickEvent,
-                self.on_pick
-            )
-
-            # setup the key bindings
-            self.plotter.iren.AddObserver(
-                vtk.vtkCommand.MouseMoveEvent,
-                self.on_mouse_move
-            )
-            self.plotter.iren.AddObserver(
-                vtk.vtkCommand.MouseWheelForwardEvent,
-                self.on_mouse_wheel_forward
-            )
-            self.plotter.iren.AddObserver(
-                vtk.vtkCommand.MouseWheelBackwardEvent,
-                self.on_mouse_wheel_backward
-            )
-            self.plotter.iren.AddObserver(
-                vtk.vtkCommand.LeftButtonPressEvent,
-                self.on_mouse_left_press
-            )
-            self.plotter.iren.AddObserver(
-                vtk.vtkCommand.LeftButtonReleaseEvent,
-                self.on_mouse_left_release
-            )
-            self.plotter.add_key_event(
-                'Up',
-                lambda: self.move_camera(update="distance", inverse=True)
-            )
-            self.plotter.add_key_event(
-                'Down',
-                lambda: self.move_camera(update="distance")
-            )
-            self.plotter.add_key_event(
-                'q',
-                lambda: self.move_camera(update="azimuth", inverse=True)
-            )
-            self.plotter.add_key_event(
-                'd',
-                lambda: self.move_camera(update="azimuth")
-            )
-            self.plotter.add_key_event(
-                'z',
-                lambda: self.move_camera(update="elevation", inverse=True)
-            )
-            self.plotter.add_key_event(
-                's',
-                lambda: self.move_camera(update="elevation")
-            )
+        # setup the key bindings
+        self.plotter.interactor.AddObserver(
+            vtk.vtkCommand.MouseMoveEvent,
+            self.on_mouse_move
+        )
+        self.plotter.interactor.AddObserver(
+            vtk.vtkCommand.MouseWheelForwardEvent,
+            self.on_mouse_wheel_forward
+        )
+        self.plotter.interactor.AddObserver(
+            vtk.vtkCommand.MouseWheelBackwardEvent,
+            self.on_mouse_wheel_backward
+        )
+        self.plotter.interactor.AddObserver(
+            vtk.vtkCommand.LeftButtonPressEvent,
+            self.on_mouse_left_press
+        )
+        self.plotter.interactor.AddObserver(
+            vtk.vtkCommand.LeftButtonReleaseEvent,
+            self.on_mouse_left_release
+        )
+        self.plotter.interactor.AddObserver(
+            vtk.vtkCommand.KeyPressEvent,
+            self.on_key_press
+        )
 
     def load_icons(self):
         """Load the icons."""
         from PyQt5.Qt import QIcon
-        if not self.benchmark:
-            self.icons = dict()
-            for category in (BlockMode, Action, Toggle, Symmetry):
-                for element in category:
-                    icon_path = "icons/{}.svg".format(element.name.lower())
-                    if op.isfile(icon_path):
-                        self.icons[element] = QIcon(icon_path)
+        self.icons = dict()
+        for category in (BlockMode, Action, Toggle, Symmetry):
+            for element in category:
+                icon_path = "icons/{}.svg".format(element.name.lower())
+                if op.isfile(icon_path):
+                    self.icons[element] = QIcon(icon_path)
 
     def _add_toolbar_group(self, group, func, default_value):
         from PyQt5.QtWidgets import QToolButton, QButtonGroup
@@ -325,48 +298,22 @@ class Builder(object):
 
     def load_toolbar(self):
         """Initialize the toolbar."""
-        if not self.benchmark:
-            self.toolbar = self.graphics.window.addToolBar("toolbar")
-            self._add_toolbar_group(
-                group=BlockMode,
-                func=self.set_block_mode,
-                default_value=BlockMode.BUILD,
-            )
-            self.toolbar.addSeparator()
-            self._add_toolbar_toggles()
-            self.toolbar.addSeparator()
-            self._add_toolbar_group(
-                group=Symmetry,
-                func=self.selector.set_symmetry,
-                default_value=Symmetry.SYMMETRY_NONE,
-            )
-            self.toolbar.addSeparator()
-            self._add_toolbar_actions()
-
-    def load_benchmark(self):
-        """Run the default benchmark."""
-        if self.benchmark:
-            timings = np.empty(self.benchmark_number_of_runs)
-            number_of_blocks = np.prod(self.dimensions - 1)
-            for operation in (self.block.add, self.block.remove):
-                for run in range(self.benchmark_number_of_runs):
-                    start_time = time.perf_counter()
-                    for z in range(self.dimensions[2] - 1):
-                        for y in range(self.dimensions[1] - 1):
-                            for x in range(self.dimensions[0] - 1):
-                                # Allow Qt events during benchmark loop
-                                self.plotter.app.processEvents()
-                                operation([x, y, z])
-                    end_time = time.perf_counter()
-                    timings[run] = end_time - start_time
-                    if operation == self.block.add:
-                        self.block.remove_all()
-                    else:
-                        self.block.add_all()
-                print("{}: {:.2f} blk/s".format(operation.__name__,
-                                                number_of_blocks /
-                                                np.mean(timings)))
-            self.plotter.close()
+        self.toolbar = self.graphics.window.addToolBar("toolbar")
+        self._add_toolbar_group(
+            group=BlockMode,
+            func=self.set_block_mode,
+            default_value=BlockMode.BUILD,
+        )
+        self.toolbar.addSeparator()
+        self._add_toolbar_toggles()
+        self.toolbar.addSeparator()
+        self._add_toolbar_group(
+            group=Symmetry,
+            func=self.selector.set_symmetry,
+            default_value=Symmetry.SYMMETRY_NONE,
+        )
+        self.toolbar.addSeparator()
+        self._add_toolbar_actions()
 
     def set_block_mode(self, value):
         """Set the current block mode."""
