@@ -68,8 +68,10 @@ class MinimalPlotter(QObject):
 
 
 class Plotter(MinimalPlotter):
-    """."""
+    """Main plotter."""
+
     def __init__(self, window_size):
+        """Initialize the Plotter."""
         super().__init__()
         self.resize(window_size)
 
@@ -107,6 +109,7 @@ class Plotter(MinimalPlotter):
         self.renderer.ResetCamera()
 
     def add_mesh(self, mesh, **kwargs):
+        """Add a mesh to the scene."""
         mapper = vtkDataSetMapper()
         mapper.SetInputData(mesh)
         actor = vtkActor()

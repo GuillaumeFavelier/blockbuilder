@@ -171,6 +171,7 @@ class Builder(object):
             func(vtk_picker)
 
     def on_key_press(self, vtk_picker, event):
+        """Process key press events."""
         key = self.plotter.interactor.GetKeySym()
         if key == 'Up':
             self.move_camera(update="distance", inverse=True)
