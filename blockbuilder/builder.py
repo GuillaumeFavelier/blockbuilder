@@ -82,6 +82,7 @@ class Builder(object):
         self.plotter.reset_camera()
         self.update_camera()
         self.plotter.render()
+        self.plotter.start()
 
     def update_camera(self):
         """Update the internal camera."""

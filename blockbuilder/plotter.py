@@ -43,8 +43,6 @@ class MinimalPlotter(QObject):
         self.main_window = MainWindow()
         self.main_window.signal_close.connect(self._delete)
         self.render_widget = QVTKRenderWindowInteractor()
-        self.render_widget.Initialize()
-        self.render_widget.Start()
         self.renderer = vtk.vtkRenderer()
         self.camera = self.renderer.GetActiveCamera()
         self.render_window = self.render_widget.GetRenderWindow()
@@ -52,8 +50,10 @@ class MinimalPlotter(QObject):
         self.interactor = self.render_window.GetInteractor()
         self.main_window.setCentralWidget(self.render_widget)
 
-    def show(self):
-        """Show the plotter."""
+    def start(self):
+        """Start the plotter."""
+        self.render_widget.Initialize()
+        self.render_widget.Start()
         self.main_window.show()
 
     def _delete(self):
@@ -167,7 +167,6 @@ class Plotter(CorePlotter):
             color=self.background_bottom_color,
             top=self.background_top_color,
         )
-        self.show()
 
         # configuration
         self.load_graphic_quality()
