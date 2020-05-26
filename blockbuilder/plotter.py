@@ -1,9 +1,10 @@
 """Module about visual properties."""
 
+import scooby
 from vtk import vtkRenderer, vtkDataSetMapper, vtkActor
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from PyQt5.QtCore import pyqtSignal, QObject
-from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow
 from .params import rcParams
 
 
@@ -27,17 +28,15 @@ class MinimalPlotter(QObject):
 
     def __init__(self):
         """Initialize the MinimalPlotter."""
-        import scooby
-        if scooby.in_ipython():  # pragma: no cover
+        super().__init__()
+        if scooby.in_ipython():
             from IPython import get_ipython
             ipython = get_ipython()
             ipython.magic('gui qt')
             from IPython.external.qt_for_kernel import QtGui
             QtGui.QApplication.instance()
-
-        from PyQt5.QtWidgets import QApplication
         app = QApplication.instance()
-        if not app:  # pragma: no cover
+        if not app:
             app = QApplication([''])
         self.app = app
 
@@ -59,7 +58,8 @@ class MinimalPlotter(QObject):
 
     def _delete(self):
         """Decrease reference count to avoid cycle."""
-        self.main_window = None
+        # XXX: Why main_window refcount cannot decrease?
+        # self.main_window = None
         self.render_widget = None
         self.render_window = None
         self.renderer = None
@@ -67,17 +67,17 @@ class MinimalPlotter(QObject):
         self.app = None
 
 
-class Plotter(MinimalPlotter):
-    """Main plotter."""
+class CorePlotter(MinimalPlotter):
+    """Plotter specialized in low-level operations."""
 
-    def __init__(self, window_size):
+    def __init__(self):
         """Initialize the Plotter."""
         super().__init__()
-        self.resize(window_size)
 
     def resize(self, window_size):
         """Resize the window."""
         self.main_window.resize(*window_size)
+        self.window_size = window_size
 
     def set_background(self, color, top=None):
         """Set the background color."""
@@ -91,14 +91,17 @@ class Plotter(MinimalPlotter):
     def set_anti_aliasing(self, value):
         """Enable/Disable anti-aliasing."""
         self.renderer.SetUseFXAA(value)
+        self.renderer.Modified()
 
     def set_line_smoothing(self, value):
         """Enable/Disable line smoothing."""
         self.render_window.SetLineSmoothing(value)
+        self.render_window.Modified()
 
     def set_polygon_smoothing(self, value):
         """Enable/Disable line smoothing."""
         self.render_window.SetPolygonSmoothing(value)
+        self.render_window.Modified()
 
     def set_style(self, style):
         """Set the interactor style."""
@@ -107,6 +110,14 @@ class Plotter(MinimalPlotter):
     def reset_camera(self):
         """Reset the camera."""
         self.renderer.ResetCamera()
+
+    def render(self):
+        """Render the scene."""
+        # fix the clipping planes being too small
+        rng = [0] * 6
+        self.renderer.ComputeVisiblePropBounds(rng)
+        self.renderer.ResetCameraClippingRange(rng)
+        self.render_window.Render()
 
     def add_mesh(self, mesh, **kwargs):
         """Add a mesh to the scene."""
@@ -118,64 +129,48 @@ class Plotter(MinimalPlotter):
         return actor
 
 
-class Graphics(object):
-    """Manage the visual properties."""
+class Plotter(CorePlotter):
+    """Main plotter."""
 
     def __init__(self, window_size=None, line_width=None, advanced=None,
                  background_top_color=None,
                  background_bottom_color=None):
         """Initialize the default visual properties."""
+        super().__init__()
         if window_size is None:
-            window_size = rcParams["graphics"]["window_size"]
+            window_size = rcParams["plotter"]["window_size"]
         if line_width is None:
-            line_width = rcParams["graphics"]["line_width"]
+            line_width = rcParams["plotter"]["line_width"]
         if advanced is None:
-            advanced = rcParams["graphics"]["advanced"]
+            advanced = rcParams["plotter"]["advanced"]
         if background_top_color is None:
-            background_top_color = rcParams["graphics"]["background_top_color"]
+            background_top_color = rcParams["plotter"]["background_top_color"]
         if background_bottom_color is None:
             background_bottom_color = \
-                rcParams["graphics"]["background_bottom_color"]
+                rcParams["plotter"]["background_bottom_color"]
         self.window_size = window_size
         self.line_width = line_width
         self.advanced = advanced
         self.background_top_color = background_top_color
         self.background_bottom_color = background_bottom_color
-        self.plotter = None
-        self.window = None
 
-        # configuration
-        self.load_plotter()
-        self.load_graphic_quality()
-
-    def render(self):
-        """Render the scene."""
-        # fix the clipping planes being too small
-        rng = [0] * 6
-        self.plotter.renderer.ComputeVisiblePropBounds(rng)
-        self.plotter.renderer.ResetCameraClippingRange(rng)
-        if hasattr(self.plotter, "render_window"):
-            self.plotter.render_window.Render()
-
-    def load_plotter(self):
-        """Configure the internal plotter."""
-        self.plotter = Plotter(window_size=self.window_size)
-        self.window = self.plotter.main_window
-        self.plotter.set_background(
+        self.resize(self.window_size)
+        self.set_background(
             color=self.background_bottom_color,
             top=self.background_top_color,
         )
-        self.plotter.show()
-        # XXX: Enable axes
-        # self.plotter.show_axes()
+        self.show()
+
+        # configuration
+        self.load_graphic_quality()
 
     def load_graphic_quality(self):
         """Configure the visual quality."""
         if self.advanced:
-            self.plotter.set_anti_aliasing(True)
-            self.plotter.set_line_smoothing(True)
-            self.plotter.set_polygon_smoothing(True)
+            self.set_anti_aliasing(True)
+            self.set_line_smoothing(True)
+            self.set_polygon_smoothing(True)
         else:
-            self.plotter.set_anti_aliasing(False)
-            self.plotter.set_line_smoothing(False)
-            self.plotter.set_polygon_smoothing(False)
+            self.set_anti_aliasing(False)
+            self.set_line_smoothing(False)
+            self.set_polygon_smoothing(False)

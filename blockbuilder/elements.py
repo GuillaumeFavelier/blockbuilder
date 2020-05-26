@@ -56,8 +56,6 @@ class Base(object):
             mesh=self.mesh,
             color=self.color,
             edge_color=self.edge_color,
-            show_edges=rcParams["graphics"]["show_edges"],
-            line_width=rcParams["graphics"]["line_width"],
             opacity=self.opacity,
             reset_camera=False,
         )
@@ -353,8 +351,6 @@ class Block(object):
             rgba=True,
             show_scalar_bar=False,
             edge_color=self.edge_color,
-            show_edges=rcParams["graphics"]["show_edges"],
-            line_width=rcParams["graphics"]["line_width"],
             reset_camera=False,
         )
         actor.element_id = Element.BLOCK

@@ -7,7 +7,7 @@ import numpy as np
 import vtk
 
 from .params import rcParams
-from .graphics import Graphics
+from .plotter import Plotter
 from .elements import Element, Symmetry, SymmetrySelector, Grid, Plane, Block
 
 
@@ -54,7 +54,7 @@ class Builder(object):
         self.floor = 0.
         self.ceiling = (self.dimensions[2] - 2) * self.unit
         self.icons = None
-        self.graphics = None
+        self.plotter = None
         self.plotter = None
         self.toolbar = None
         self.picker = None
@@ -81,7 +81,7 @@ class Builder(object):
         # set initial frame
         self.plotter.reset_camera()
         self.update_camera()
-        self.graphics.render()
+        self.plotter.render()
 
     def update_camera(self):
         """Update the internal camera."""
@@ -120,7 +120,7 @@ class Builder(object):
         # update pick
         x, y = self.plotter.interactor.GetEventPosition()
         self.picker.Pick(x, y, 0, self.plotter.renderer)
-        self.graphics.render()
+        self.plotter.render()
 
     def on_mouse_move(self, vtk_picker, event):
         """Process mouse move events."""
@@ -135,7 +135,7 @@ class Builder(object):
             position = np.array(self.plotter.camera.GetPosition())
             self.plotter.camera.SetPosition(position + tr)
             self.plotter.camera.SetFocalPoint(self.grid.center)
-        self.graphics.render()
+        self.plotter.render()
 
     def on_mouse_wheel_backward(self, vtk_picker, event):
         """Process mouse wheel backward events."""
@@ -145,7 +145,7 @@ class Builder(object):
             position = np.array(self.plotter.camera.GetPosition())
             self.plotter.camera.SetPosition(position + tr)
             self.plotter.camera.SetFocalPoint(self.grid.center)
-        self.graphics.render()
+        self.plotter.render()
 
     def on_mouse_left_press(self, vtk_picker, event):
         """Process mouse left button press events."""
@@ -162,7 +162,7 @@ class Builder(object):
             for area in self.selector.selection_area():
                 self.operation(area)
             self.selector.reset_area()
-        self.graphics.render()
+        self.plotter.render()
 
     def on_pick(self, vtk_picker, event):
         """Process pick events."""
@@ -197,8 +197,7 @@ class Builder(object):
 
     def load_elements(self):
         """Process the elements of the scene."""
-        self.graphics = Graphics()
-        self.plotter = self.graphics.plotter
+        self.plotter = Plotter()
         self.block = Block(self.plotter, self.dimensions)
         self.grid = Grid(self.plotter, self.dimensions)
         self.plane = Plane(self.plotter, self.dimensions)
@@ -299,7 +298,7 @@ class Builder(object):
 
     def load_toolbar(self):
         """Initialize the toolbar."""
-        self.toolbar = self.graphics.window.addToolBar("toolbar")
+        self.toolbar = self.plotter.main_window.addToolBar("toolbar")
         self._add_toolbar_group(
             group=BlockMode,
             func=self.set_block_mode,
@@ -324,7 +323,7 @@ class Builder(object):
                 self.grid.set_block_mode(value)
             if self.selector is not None:
                 self.selector.set_block_mode(value)
-        self.graphics.render()
+        self.plotter.render()
 
     def use_delete_mode(self, vtk_picker):
         """Use the delete mode."""
@@ -338,7 +337,7 @@ class Builder(object):
         intersection = Intersection(vtk_picker)
         if not intersection.exist():
             self.selector.hide()
-            self.graphics.render()
+            self.plotter.render()
             return
 
         if not intersection.element(Element.GRID):
@@ -366,13 +365,13 @@ class Builder(object):
                 for coords in self.selector.selection():
                     operation(coords)
                 self.button_released = False
-        self.graphics.render()
+        self.plotter.render()
 
     def action_reset(self, unused):
         """Reset the block properties."""
         del unused
         self.block.remove_all()
-        self.graphics.render()
+        self.plotter.render()
 
     def toggle_select(self, value):
         """Toggle area selection."""

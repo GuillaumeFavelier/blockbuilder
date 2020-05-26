@@ -3,7 +3,7 @@
 rcParams = {
     "unit": 1.,
     "origin": (0., 0., 0.),
-    "graphics": {
+    "plotter": {
         "window_size": (1280, 720),
         "show_edges": True,
         "line_width": 2,
