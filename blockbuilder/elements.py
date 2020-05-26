@@ -128,9 +128,7 @@ class Plane(Base):
             origin=origin,
             spacing=spacing,
         )
-        mapper = self.actor.GetMapper()
-        mapper.SetResolveCoincidentTopologyToPolygonOffset()
-        mapper.SetRelativeCoincidentTopologyPolygonOffsetParameters(+1., +1.)
+        _resolve_coincident_topology(self.actor)
 
 
 class Selector(Base):
@@ -344,13 +342,13 @@ class Block(object):
             np.tile(self.color, (self.number_of_cells, 1)),
         )
         self.remove_all()
-        actor = self.plotter.add_mesh(
+        self.actor = self.plotter.add_mesh(
             self.mesh,
             edge_color=self.edge_color,
-            scalars=self.color_array,
             rgba=True,
         )
-        actor.element_id = Element.BLOCK
+        _resolve_coincident_topology(self.actor)
+        self.actor.element_id = Element.BLOCK
 
     def add(self, coords):
         """Add the block at the given coords."""
@@ -427,3 +425,9 @@ def _set_mesh_cell_array(mesh, array_name, array):
     vtk_array.SetName(array_name)
     cell_data.AddArray(vtk_array)
     cell_data.SetActiveScalars(array_name)
+
+
+def _resolve_coincident_topology(actor):
+    mapper = actor.GetMapper()
+    mapper.SetResolveCoincidentTopologyToPolygonOffset()
+    mapper.SetRelativeCoincidentTopologyPolygonOffsetParameters(+1., +1.)

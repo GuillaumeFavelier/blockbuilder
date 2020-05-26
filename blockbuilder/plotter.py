@@ -1,7 +1,7 @@
 """Module about visual properties."""
 
 import scooby
-from vtk import vtkRenderer, vtkDataSetMapper, vtkActor
+import vtk
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from PyQt5.QtCore import pyqtSignal, QObject
 from PyQt5.QtWidgets import QApplication, QMainWindow
@@ -45,7 +45,7 @@ class MinimalPlotter(QObject):
         self.render_widget = QVTKRenderWindowInteractor()
         self.render_widget.Initialize()
         self.render_widget.Start()
-        self.renderer = vtkRenderer()
+        self.renderer = vtk.vtkRenderer()
         self.camera = self.renderer.GetActiveCamera()
         self.render_window = self.render_widget.GetRenderWindow()
         self.render_window.AddRenderer(self.renderer)
@@ -122,13 +122,15 @@ class CorePlotter(MinimalPlotter):
         self.renderer.ResetCameraClippingRange(rng)
         self.render_window.Render()
 
-    def add_mesh(self, mesh):
+    def add_mesh(self, mesh, rgba):
         """Add a mesh to the scene."""
-        mapper = vtkDataSetMapper()
+        mapper = vtk.vtkDataSetMapper()
         mapper.SetInputData(mesh)
-        actor = vtkActor()
+        actor = vtk.vtkActor()
         actor.SetMapper(mapper)
         self.renderer.AddActor(actor)
+        if rgba:
+            mapper.SetColorModeToDirectScalars()
         return actor
 
 
@@ -171,9 +173,9 @@ class Plotter(CorePlotter):
         self.load_graphic_quality()
 
     def add_mesh(self, mesh, color=(1., 1., 1.), opacity=1.,
-                 edge_color=(0., 0., 0.), **kwargs):
+                 edge_color=(0., 0., 0.), rgba=False):
         """Add a mesh to the scene."""
-        actor = super().add_mesh(mesh)
+        actor = super().add_mesh(mesh, rgba)
         prop = actor.GetProperty()
         prop.SetColor(color)
         prop.SetOpacity(opacity)

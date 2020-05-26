@@ -6,7 +6,7 @@ rcParams = {
     "plotter": {
         "window_size": (1280, 720),
         "show_edges": True,
-        "line_width": 2,
+        "line_width": 3,
         "advanced": True,
         "background_top_color": (0.05, 0.05, 0.05),
         "background_bottom_color": (0., 0., .35),
