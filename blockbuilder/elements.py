@@ -57,7 +57,6 @@ class Base(object):
             color=self.color,
             edge_color=self.edge_color,
             opacity=self.opacity,
-            reset_camera=False,
         )
         # add data for picking
         self.actor.element_id = element_id
@@ -347,11 +346,9 @@ class Block(object):
         self.remove_all()
         actor = self.plotter.add_mesh(
             self.mesh,
+            edge_color=self.edge_color,
             scalars=self.color_array,
             rgba=True,
-            show_scalar_bar=False,
-            edge_color=self.edge_color,
-            reset_camera=False,
         )
         actor.element_id = Element.BLOCK
 

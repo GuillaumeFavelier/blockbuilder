@@ -122,7 +122,7 @@ class CorePlotter(MinimalPlotter):
         self.renderer.ResetCameraClippingRange(rng)
         self.render_window.Render()
 
-    def add_mesh(self, mesh, **kwargs):
+    def add_mesh(self, mesh):
         """Add a mesh to the scene."""
         mapper = vtkDataSetMapper()
         mapper.SetInputData(mesh)
@@ -135,13 +135,15 @@ class CorePlotter(MinimalPlotter):
 class Plotter(CorePlotter):
     """Main plotter."""
 
-    def __init__(self, window_size=None, line_width=None, advanced=None,
-                 background_top_color=None,
+    def __init__(self, window_size=None, show_edges=None, line_width=None,
+                 advanced=None, background_top_color=None,
                  background_bottom_color=None):
         """Initialize the default visual properties."""
         super().__init__()
         if window_size is None:
             window_size = rcParams["plotter"]["window_size"]
+        if show_edges is None:
+            show_edges = rcParams["plotter"]["show_edges"]
         if line_width is None:
             line_width = rcParams["plotter"]["line_width"]
         if advanced is None:
@@ -152,6 +154,7 @@ class Plotter(CorePlotter):
             background_bottom_color = \
                 rcParams["plotter"]["background_bottom_color"]
         self.window_size = window_size
+        self.show_edges = show_edges
         self.line_width = line_width
         self.advanced = advanced
         self.background_top_color = background_top_color
@@ -166,6 +169,18 @@ class Plotter(CorePlotter):
 
         # configuration
         self.load_graphic_quality()
+
+    def add_mesh(self, mesh, color=(1., 1., 1.), opacity=1.,
+                 edge_color=(0., 0., 0.), **kwargs):
+        """Add a mesh to the scene."""
+        actor = super().add_mesh(mesh)
+        prop = actor.GetProperty()
+        prop.SetColor(color)
+        prop.SetOpacity(opacity)
+        prop.SetEdgeColor(edge_color)
+        prop.SetLineWidth(self.line_width)
+        prop.SetEdgeVisibility(self.show_edges)
+        return actor
 
     def load_graphic_quality(self):
         """Configure the visual quality."""
