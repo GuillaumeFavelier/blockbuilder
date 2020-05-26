@@ -87,6 +87,7 @@ class CorePlotter(MinimalPlotter):
         else:
             self.renderer.GradientBackgroundOn()
             self.renderer.SetBackground2(top)
+        self.renderer.Modified()
 
     def set_anti_aliasing(self, value):
         """Enable/Disable anti-aliasing."""
@@ -106,10 +107,12 @@ class CorePlotter(MinimalPlotter):
     def set_style(self, style):
         """Set the interactor style."""
         self.interactor.SetInteractorStyle(style)
+        self.interactor.Modified()
 
     def reset_camera(self):
         """Reset the camera."""
         self.renderer.ResetCamera()
+        self.renderer.Modified()
 
     def render(self):
         """Render the scene."""
