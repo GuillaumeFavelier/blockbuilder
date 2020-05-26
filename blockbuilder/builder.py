@@ -173,17 +173,17 @@ class Builder(object):
     def on_key_press(self, vtk_picker, event):
         """Process key press events."""
         key = self.plotter.interactor.GetKeySym()
-        if key == 'Up':
+        if key == rcParams["builder"]["bindings"]["distance_minus"]:
             self.move_camera(update="distance", inverse=True)
-        if key == 'Down':
+        if key == rcParams["builder"]["bindings"]["distance_plus"]:
             self.move_camera(update="distance")
-        if key == 'q':
+        if key == rcParams["builder"]["bindings"]["azimuth_minus"]:
             self.move_camera(update="azimuth", inverse=True)
-        if key == 'd':
+        if key == rcParams["builder"]["bindings"]["azimuth_plus"]:
             self.move_camera(update="azimuth")
-        if key == 'z':
+        if key == rcParams["builder"]["bindings"]["elevation_minus"]:
             self.move_camera(update="elevation", inverse=True)
-        if key == 's':
+        if key == rcParams["builder"]["bindings"]["elevation_plus"]:
             self.move_camera(update="elevation")
 
     def load_block_modes(self):

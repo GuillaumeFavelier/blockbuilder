@@ -43,5 +43,13 @@ rcParams = {
         "azimuth_rng": (0, 360),
         "elevation": 45,
         "elevation_rng": (15, 165),
+        "bindings": {
+            "distance_minus": "Up",
+            "distance_plus": "Down",
+            "azimuth_minus": "q",
+            "azimuth_plus": "d",
+            "elevation_minus": "z",
+            "elevation_plus": "s",
+        },
     }
 }
