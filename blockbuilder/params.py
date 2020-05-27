@@ -38,6 +38,7 @@ rcParams = {
         "edge_color": (.0, .0, .0),
     },
     "builder": {
+        "name": "BlockBuilder",
         "dimensions": (32, 32, 32),
         "azimuth": 0,
         "azimuth_rng": (0, 360),

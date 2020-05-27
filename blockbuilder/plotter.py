@@ -1,6 +1,5 @@
 """Module about visual properties."""
 
-import scooby
 import vtk
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from PyQt5.QtCore import pyqtSignal, QObject
@@ -29,17 +28,7 @@ class MinimalPlotter(QObject):
     def __init__(self):
         """Initialize the MinimalPlotter."""
         super().__init__()
-        if scooby.in_ipython():
-            from IPython import get_ipython
-            ipython = get_ipython()
-            ipython.magic('gui qt')
-            from IPython.external.qt_for_kernel import QtGui
-            QtGui.QApplication.instance()
-        app = QApplication.instance()
-        if not app:
-            app = QApplication([''])
-        self.app = app
-
+        self.app = QApplication([rcParams["builder"]["name"]])
         self.main_window = MainWindow()
         self.main_window.signal_close.connect(self._delete)
         self.render_widget = QVTKRenderWindowInteractor()
@@ -55,6 +44,7 @@ class MinimalPlotter(QObject):
         self.render_widget.Initialize()
         self.render_widget.Start()
         self.main_window.show()
+        self.app.exec_()
 
     def _delete(self):
         """Decrease reference count to avoid cycle."""
