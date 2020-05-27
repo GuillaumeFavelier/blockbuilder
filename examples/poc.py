@@ -1,3 +1,3 @@
 import blockbuilder as bb
 
-bb.Builder()
+builder = bb.Builder()

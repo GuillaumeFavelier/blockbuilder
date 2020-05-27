@@ -164,7 +164,6 @@ class Builder(object):
             for area in self.selector.selection_area():
                 self.operation(area)
             self.selector.reset_area()
-        self.plotter.render()
 
     def on_pick(self, vtk_picker, event):
         """Process pick events."""
