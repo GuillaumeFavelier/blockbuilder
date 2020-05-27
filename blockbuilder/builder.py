@@ -53,6 +53,7 @@ class Builder(object):
         self.dimensions = np.asarray(dimensions)
         self.button_pressed = False
         self.button_released = False
+        self.area_selection = False
         self.floor = 0.
         self.ceiling = (self.dimensions[2] - 2) * self.unit
         self.icons = None
@@ -65,8 +66,6 @@ class Builder(object):
         self.cached_coords = [-1, -1, -1]
         self.distance = np.max(self.dimensions) * 2 * self.unit
         self.distance_rng = [4 * self.unit, 2 * self.distance]
-
-        self.area_selection = False
 
         # configuration
         self.load_elements()
@@ -358,7 +357,10 @@ class Builder(object):
                     self.selector.select_first_coords(coords)
                 else:
                     self.selector.select_last_coords(coords)
-                    area = (self.selector.area_first_coords, self.selector.area_last_coords)
+                    area = (
+                        self.selector.area_first_coords,
+                        self.selector.area_last_coords
+                    )
                     self.selector.select_area(area)
             else:
                 for coords in self.selector.selection():
