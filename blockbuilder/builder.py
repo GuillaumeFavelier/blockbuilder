@@ -65,9 +65,8 @@ class Builder(object):
         self.cached_coords = [-1, -1, -1]
         self.distance = np.max(self.dimensions) * 2 * self.unit
         self.distance_rng = [4 * self.unit, 2 * self.distance]
+
         self.area_selection = False
-        self.area_first_coords = None
-        self.area_last_coords = None
 
         # configuration
         self.load_elements()
@@ -348,20 +347,18 @@ class Builder(object):
 
         if self.button_released:
             if self.area_selection:
-                self.area_first_coords = None
-                self.area_last_coords = None
-                for area in self.selector.selection_area():
-                    operation(area)
+                if self.selector.is_selection_active():
+                    for area in self.selector.selection_area():
+                        operation(area)
                 self.selector.reset_area()
-                self.plotter.render()
             self.button_released = False
         elif self.button_pressed:
             if self.area_selection:
-                if self.area_first_coords is None:
-                    self.area_first_coords = self.coords
+                if self.selector.area_first_coords is None:
+                    self.selector.select_first_coords(coords)
                 else:
-                    self.area_last_coords = self.coords
-                    area = (self.area_first_coords, self.area_last_coords)
+                    self.selector.select_last_coords(coords)
+                    area = (self.selector.area_first_coords, self.selector.area_last_coords)
                     self.selector.select_area(area)
             else:
                 for coords in self.selector.selection():
