@@ -52,6 +52,7 @@ class Builder(object):
             dimensions = rcParams["builder"]["dimensions"]
         self.dimensions = np.asarray(dimensions)
         self.button_pressed = False
+        self.button_released = False
         self.floor = 0.
         self.ceiling = (self.dimensions[2] - 2) * self.unit
         self.icons = None
@@ -64,16 +65,12 @@ class Builder(object):
         self.cached_coords = [-1, -1, -1]
         self.distance = np.max(self.dimensions) * 2 * self.unit
         self.distance_rng = [4 * self.unit, 2 * self.distance]
-
-        # configuration
-        self.load_elements()
-
-        # XXX: experiment
         self.area_selection = False
         self.area_first_coords = None
         self.area_last_coords = None
-        self.current_coords = None
 
+        # configuration
+        self.load_elements()
         self.load_block_modes()
         self.load_interaction()
         self.load_icons()
@@ -156,14 +153,9 @@ class Builder(object):
     def on_mouse_left_release(self, vtk_picker, event):
         """Process mouse left button release events."""
         x, y = vtk_picker.GetEventPosition()
+        self.button_released = True
         self.picker.Pick(x, y, 0, self.plotter.renderer)
         self.button_pressed = False
-        if self.area_selection:
-            self.area_first_coords = None
-            self.area_last_coords = None
-            for area in self.selector.selection_area():
-                self.operation(area)
-            self.selector.reset_area()
 
     def on_pick(self, vtk_picker, event):
         """Process pick events."""
@@ -354,9 +346,17 @@ class Builder(object):
         self.selector.select(coords)
         self.selector.show()
 
-        if self.button_pressed:
+        if self.button_released:
             if self.area_selection:
-                self.operation = operation
+                self.area_first_coords = None
+                self.area_last_coords = None
+                for area in self.selector.selection_area():
+                    operation(area)
+                self.selector.reset_area()
+                self.plotter.render()
+            self.button_released = False
+        elif self.button_pressed:
+            if self.area_selection:
                 if self.area_first_coords is None:
                     self.area_first_coords = self.coords
                 else:
@@ -366,7 +366,6 @@ class Builder(object):
             else:
                 for coords in self.selector.selection():
                     operation(coords)
-                self.button_released = False
         self.plotter.render()
 
     def action_reset(self, unused):
