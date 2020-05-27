@@ -51,5 +51,9 @@ rcParams = {
             "elevation_minus": "z",
             "elevation_plus": "s",
         },
+        "toggles": {
+            "select": False,
+            "edges": True,
+        },
     }
 }

@@ -35,6 +35,7 @@ class Toggle(enum.Enum):
     """List the toggles available in Builder."""
 
     SELECT = enum.auto()
+    EDGES = enum.auto()
 
 
 class Builder(object):
@@ -290,10 +291,12 @@ class Builder(object):
                 button = QToolButton()
                 button.setIcon(icon)
                 button.setCheckable(True)
-                func_name = "toggle_{}".format(toggle.name.lower())
+                toggle_name = toggle.name.lower()
+                func_name = "toggle_{}".format(toggle_name)
                 func = getattr(self, func_name, None)
                 if func is not None:
                     button.toggled.connect(func)
+                button.setChecked(rcParams["builder"]["toggles"][toggle_name])
                 self.toolbar.addWidget(button)
 
     def load_toolbar(self):
@@ -376,6 +379,11 @@ class Builder(object):
     def toggle_select(self, value):
         """Toggle area selection."""
         self.area_selection = value
+
+    def toggle_edges(self, value):
+        """Toggle area selection."""
+        self.block.toggle_edges(value)
+        self.plotter.render()
 
 
 class Intersection(object):

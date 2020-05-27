@@ -395,6 +395,15 @@ class Block(object):
             self.mesh.BlankCell(cell_id)
         self.mesh.Modified()
 
+    def toggle_edges(self, value=None):
+        """Toggle visibility of the block edges."""
+        if value is None:
+            self.show_edges = not self.show_edges
+        else:
+            self.show_edges = value
+        prop = self.actor.GetProperty()
+        prop.SetEdgeVisibility(self.show_edges)
+
 
 def _coords_to_cell(coords, dimensions):
     coords = np.asarray(coords)
