@@ -353,13 +353,13 @@ class Builder(object):
             self.button_released = False
         elif self.button_pressed:
             if self.area_selection:
-                if self.selector.area_first_coords is None:
-                    self.selector.select_first_coords(coords)
+                if self.selector.get_first_coords() is None:
+                    self.selector.set_first_coords(coords)
                 else:
-                    self.selector.select_last_coords(coords)
+                    self.selector.set_last_coords(coords)
                     area = (
-                        self.selector.area_first_coords,
-                        self.selector.area_last_coords
+                        self.selector.get_first_coords(),
+                        self.selector.get_last_coords(),
                     )
                     self.selector.select_area(area)
             else:

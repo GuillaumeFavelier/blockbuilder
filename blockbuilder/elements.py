@@ -201,10 +201,20 @@ class AreaSelector(Selector):
         self.area_first_coords = None
         self.area_last_coords = None
 
-    def select_first_coords(self, coords):
+    def get_first_coords(self):
+        """Get the first coordinates of the selection area."""
+        return self.area_first_coords
+
+    def get_last_coords(self):
+        """Get the last coordinates of the selection area."""
+        return self.area_last_coords
+
+    def set_first_coords(self, coords):
+        """Set the first coordinates of the selection area."""
         self.area_first_coords = coords
 
-    def select_last_coords(self, coords):
+    def set_last_coords(self, coords):
+        """Set the last coordinates of the selection area."""
         self.area_last_coords = coords
 
     def selection_area(self):
