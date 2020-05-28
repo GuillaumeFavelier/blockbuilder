@@ -292,7 +292,8 @@ class Builder(object):
                 button.setChecked(rcParams["builder"]["toggles"][toggle_name])
                 self.toolbar.addWidget(button)
 
-    def change_color(self, value=None, is_int=True):
+    def set_block_color(self, value=None, is_int=True):
+        """Set the current block color."""
         if isinstance(value, bool):
             color = QColorDialog.getColor()
             color = _qrgb2rgb(color)
@@ -305,7 +306,7 @@ class Builder(object):
 
     def _add_toolbar_color_button(self):
         self.color_button = QPushButton()
-        self.color_button.clicked.connect(self.change_color)
+        self.color_button.clicked.connect(self.set_block_color)
         self.toolbar.addWidget(self.color_button)
         self.change_color(self.default_block_color, is_int=False)
 
