@@ -175,7 +175,6 @@ class AreaSelector(Selector):
         """Initialize the selector."""
         super().__init__(plotter)
         self.area = None
-        self.active_selection = False
         self.area_first_coords = None
         self.area_last_coords = None
 
@@ -190,14 +189,12 @@ class AreaSelector(Selector):
         self.select(self.area[0])
         self.mesh.SetDimensions(coords_diff)
         self.mesh.Modified()
-        self.active_selection = True
 
     def reset_area(self):
         """Reset the selector."""
         dimensions = [2, 2, 2]
         self.mesh.SetDimensions(dimensions)
         self.mesh.Modified()
-        self.active_selection = False
         self.area_first_coords = None
         self.area_last_coords = None
 
@@ -220,10 +217,6 @@ class AreaSelector(Selector):
     def selection_area(self):
         """Return the current area selection."""
         return self.area
-
-    def is_selection_active(self):
-        """Return True if the selection is active."""
-        return self.active_selection
 
 
 class SymmetrySelector(AreaSelector):

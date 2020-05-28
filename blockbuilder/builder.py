@@ -146,7 +146,9 @@ class Builder(object):
 
     def on_mouse_left_press(self, vtk_picker, event):
         """Process mouse left button press events."""
+        x, y = vtk_picker.GetEventPosition()
         self.button_pressed = True
+        self.picker.Pick(x, y, 0, self.plotter.renderer)
 
     def on_mouse_left_release(self, vtk_picker, event):
         """Process mouse left button release events."""
@@ -344,15 +346,19 @@ class Builder(object):
         self.selector.select(coords)
         self.selector.show()
 
-        if self.button_released:
-            if self.area_selection:
-                if self.selector.is_selection_active():
+        if self.area_selection:
+            if self.button_released:
+                first_set = self.selector.get_first_coords() is not None
+                last_set = self.selector.get_last_coords() is not None
+                if first_set and last_set:
                     for area in self.selector.selection_area():
                         operation(area)
+                elif first_set and not last_set:
+                    for coords in self.selector.selection():
+                        operation(coords)
                 self.selector.reset_area()
-            self.button_released = False
-        elif self.button_pressed:
-            if self.area_selection:
+                self.button_released = False
+            elif self.button_pressed:
                 if self.selector.get_first_coords() is None:
                     self.selector.set_first_coords(coords)
                 else:
@@ -362,9 +368,11 @@ class Builder(object):
                         self.selector.get_last_coords(),
                     )
                     self.selector.select_area(area)
-            else:
+        else:
+            if self.button_pressed:
                 for coords in self.selector.selection():
                     operation(coords)
+
         self.plotter.render()
 
     def action_reset(self, unused):
