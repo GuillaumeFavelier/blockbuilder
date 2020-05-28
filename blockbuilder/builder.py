@@ -308,7 +308,7 @@ class Builder(object):
         self.color_button = QPushButton()
         self.color_button.clicked.connect(self.set_block_color)
         self.toolbar.addWidget(self.color_button)
-        self.change_color(self.default_block_color, is_int=False)
+        self.set_block_color(self.default_block_color, is_int=False)
 
     def load_toolbar(self):
         """Initialize the toolbar."""
@@ -401,7 +401,7 @@ class Builder(object):
         """Reset the block properties."""
         del unused
         self.block.remove_all()
-        self.change_color(self.default_block_color, is_int=False)
+        self.set_block_color(self.default_block_color, is_int=False)
         self.plotter.render()
 
     def toggle_select(self, value):
