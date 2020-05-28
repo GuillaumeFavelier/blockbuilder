@@ -10,6 +10,10 @@ from .params import rcParams
 from .plotter import Plotter
 from .elements import Element, Symmetry, SymmetrySelector, Grid, Plane, Block
 
+from PyQt5.Qt import QIcon
+from PyQt5.QtWidgets import (QPushButton, QToolButton, QButtonGroup,
+                             QColorDialog)
+
 
 @enum.unique
 class BlockMode(enum.Enum):
@@ -44,6 +48,7 @@ class Builder(object):
     def __init__(self, dimensions=None):
         """Initialize the Builder."""
         self.unit = rcParams["unit"]
+        self.default_block_color = rcParams["block"]["color"]
         self.azimuth = rcParams["builder"]["azimuth"]
         self.azimuth_rng = rcParams["builder"]["azimuth_rng"]
         self.elevation_rng = rcParams["builder"]["elevation_rng"]
@@ -237,7 +242,6 @@ class Builder(object):
 
     def load_icons(self):
         """Load the icons."""
-        from PyQt5.Qt import QIcon
         self.icons = dict()
         for category in (BlockMode, Action, Toggle, Symmetry):
             for element in category:
@@ -246,7 +250,6 @@ class Builder(object):
                     self.icons[element] = QIcon(icon_path)
 
     def _add_toolbar_group(self, group, func, default_value):
-        from PyQt5.QtWidgets import QToolButton, QButtonGroup
         button_group = QButtonGroup(parent=self.toolbar)
         for element in group:
             icon = self.icons.get(element, None)
@@ -262,7 +265,6 @@ class Builder(object):
                 self.toolbar.addWidget(button)
 
     def _add_toolbar_actions(self):
-        from PyQt5.QtWidgets import QToolButton
         for action in Action:
             icon = self.icons.get(action, None)
             if icon is not None:
@@ -290,9 +292,28 @@ class Builder(object):
                 button.setChecked(rcParams["builder"]["toggles"][toggle_name])
                 self.toolbar.addWidget(button)
 
+    def change_color(self, value=None, is_int=True):
+        if isinstance(value, bool):
+            color = QColorDialog.getColor()
+            color = _qrgb2rgb(color)
+        else:
+            color = value
+        color = np.asarray(color)
+        self.color_button.setStyleSheet(
+            "background-color: rgb" + _rgb2str(color, is_int))
+        self.block.set_color(color, is_int)
+
+    def _add_toolbar_color_button(self):
+        self.color_button = QPushButton()
+        self.color_button.clicked.connect(self.change_color)
+        self.toolbar.addWidget(self.color_button)
+        self.change_color(self.default_block_color, is_int=False)
+
     def load_toolbar(self):
         """Initialize the toolbar."""
         self.toolbar = self.plotter.main_window.addToolBar("toolbar")
+        self._add_toolbar_color_button()
+        self.toolbar.addSeparator()
         self._add_toolbar_group(
             group=BlockMode,
             func=self.set_block_mode,
@@ -379,6 +400,7 @@ class Builder(object):
         """Reset the block properties."""
         del unused
         self.block.remove_all()
+        self.change_color(self.default_block_color, is_int=False)
         self.plotter.render()
 
     def toggle_select(self, value):
@@ -430,3 +452,18 @@ def _deg2rad(deg):
 
 def _rad2deg(rad):
     return rad * 180. / np.pi
+
+
+def _rgb2str(color, is_int=False):
+    if not is_int:
+        color = np.asarray(color) * 255
+        color = color.astype(np.uint8)
+    return str(tuple(color))
+
+
+def _qrgb2rgb(color):
+    return (
+        color.red(),
+        color.green(),
+        color.blue()
+    )

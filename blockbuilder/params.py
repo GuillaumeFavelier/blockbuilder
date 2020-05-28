@@ -33,8 +33,8 @@ rcParams = {
         "opacity": .7,
     },
     "block": {
-        "color_array": "color",
-        "color": (1., 1., 1., 1.),
+        "color_array_name": "color",
+        "color": (.7, .7, .7),
         "edge_color": (.0, .0, .0),
     },
     "builder": {

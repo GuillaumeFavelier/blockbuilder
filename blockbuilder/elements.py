@@ -334,7 +334,7 @@ class Block(object):
         """Initialize the block manager."""
         self.unit = rcParams["unit"]
         self.origin = rcParams["origin"]
-        self.color_array = rcParams["block"]["color_array"]
+        self.color_array_name = rcParams["block"]["color_array_name"]
         self.color = rcParams["block"]["color"]
         self.edge_color = rcParams["block"]["edge_color"]
         self.plotter = plotter
@@ -356,9 +356,9 @@ class Block(object):
         self.mesh = vtk.vtkStructuredGrid()
         self.mesh.SetDimensions(self.dimensions)
         self.mesh.SetPoints(points)
-        _set_mesh_cell_array(
+        self.color_array = _add_mesh_cell_array(
             self.mesh,
-            self.color_array,
+            self.color_array_name,
             np.tile(self.color, (self.number_of_cells, 1)),
         )
         self.remove_all()
@@ -380,10 +380,14 @@ class Block(object):
                     cell_id = _coords_to_cell(_coords, self.dimensions)
                     if not self.mesh.IsCellVisible(cell_id):
                         self.mesh.UnBlankCell(cell_id)
+                    self.color_array.SetTuple3(
+                        cell_id, *self.color)
         else:
             cell_id = _coords_to_cell(coords, self.dimensions)
             if not self.mesh.IsCellVisible(cell_id):
                 self.mesh.UnBlankCell(cell_id)
+            self.color_array.SetTuple3(
+                cell_id, *self.color)
         self.mesh.Modified()
 
     def add_all(self):
@@ -424,6 +428,12 @@ class Block(object):
         prop = self.actor.GetProperty()
         prop.SetEdgeVisibility(self.show_edges)
 
+    def set_color(self, color, is_int=False):
+        """Set the current color."""
+        if is_int:
+            color = color / 255.
+        self.color = color
+
 
 def _coords_to_cell(coords, dimensions):
     coords = np.asarray(coords)
@@ -447,13 +457,14 @@ def _cell_to_coords(cell_id, dimensions):
     return coords
 
 
-def _set_mesh_cell_array(mesh, array_name, array):
+def _add_mesh_cell_array(mesh, array_name, array):
     from vtk.util.numpy_support import numpy_to_vtk
     cell_data = mesh.GetCellData()
     vtk_array = numpy_to_vtk(array)
     vtk_array.SetName(array_name)
     cell_data.AddArray(vtk_array)
     cell_data.SetActiveScalars(array_name)
+    return vtk_array
 
 
 def _resolve_coincident_topology(actor):
