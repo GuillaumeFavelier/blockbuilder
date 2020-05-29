@@ -394,12 +394,13 @@ class Block(object):
             area = coords
             for x in np.arange(area[0][0], area[1][0] + 1):
                 for y in np.arange(area[0][1], area[1][1] + 1):
-                    _coords = [x, y, area[0][2]]
-                    cell_id = _coords_to_cell(_coords, self.dimensions)
-                    if not self.mesh.IsCellVisible(cell_id):
-                        self.mesh.UnBlankCell(cell_id)
-                    self.color_array.SetTuple3(
-                        cell_id, *self.color)
+                    for z in np.arange(area[0][2], area[1][2] + 1):
+                        _coords = [x, y, z]
+                        cell_id = _coords_to_cell(_coords, self.dimensions)
+                        if not self.mesh.IsCellVisible(cell_id):
+                            self.mesh.UnBlankCell(cell_id)
+                        self.color_array.SetTuple3(
+                            cell_id, *self.color)
         else:
             cell_id = _coords_to_cell(coords, self.dimensions)
             if not self.mesh.IsCellVisible(cell_id):
@@ -420,11 +421,12 @@ class Block(object):
             area = coords
             for x in np.arange(area[0][0], area[1][0] + 1):
                 for y in np.arange(area[0][1], area[1][1] + 1):
-                    _coords = [x, y, area[0][2]]
-                    cell_id = _coords_to_cell(_coords, self.dimensions)
-                    if self.mesh.IsCellVisible(cell_id):
-                        self.mesh.BlankCell(cell_id)
-                        self.mesh.Modified()
+                    for z in np.arange(area[0][2], area[1][2] + 1):
+                        _coords = [x, y, z]
+                        cell_id = _coords_to_cell(_coords, self.dimensions)
+                        if self.mesh.IsCellVisible(cell_id):
+                            self.mesh.BlankCell(cell_id)
+                            self.mesh.Modified()
         else:
             cell_id = _coords_to_cell(coords, self.dimensions)
             if self.mesh.IsCellVisible(cell_id):
