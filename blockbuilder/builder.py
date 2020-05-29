@@ -12,7 +12,7 @@ from .elements import Element, Symmetry, SymmetrySelector, Grid, Plane, Block
 
 from PyQt5.Qt import QIcon, QSize
 from PyQt5.QtWidgets import (QPushButton, QToolButton, QButtonGroup,
-                             QColorDialog)
+                             QColorDialog, QFileDialog)
 
 
 @enum.unique
@@ -411,10 +411,38 @@ class Builder(object):
         self.set_block_color(self.default_block_color, is_int=False)
         self.plotter.render()
 
-    # def action_import(self, unused):
-    #     """Reset the block properties."""
-    #     del unused
-    #     filename = QFileDialog()
+    def action_import(self, unused):
+        """Import an external blockset."""
+        del unused
+        filename = QFileDialog.getOpenFileName(
+            None,
+            "Import Blockset",
+            filter="Blockset (*.vts *.vtk)",
+        )
+        filename = filename[0]
+        if len(filename) > 0:
+            reader = vtk.vtkXMLStructuredGridReader()
+            reader.SetFileName(filename)
+            reader.Update()
+            mesh = reader.GetOutput()
+            block = Block(self.plotter, self.dimensions, mesh)
+            self.block.merge(block)
+            self.plotter.render()
+
+    def action_export(self, unused):
+        """Export the internal blockset."""
+        filename = QFileDialog.getSaveFileName(
+            None,
+            "Export Blockset",
+            "Untitled.vts",
+            "Blockset (*.vts *.vtk)",
+        )
+        filename = filename[0]
+        if len(filename) > 0:
+            writer = vtk.vtkXMLStructuredGridWriter()
+            writer.SetFileName(filename)
+            writer.SetInputData(self.block.mesh)
+            writer.Write()
 
     def toggle_select(self, value):
         """Toggle area selection."""
@@ -423,25 +451,6 @@ class Builder(object):
     def toggle_edges(self, value):
         """Toggle area selection."""
         self.block.toggle_edges(value)
-        self.plotter.render()
-
-    def export_blockset(self, filename):
-        """Export the test blockset."""
-        # XXX: experiment
-        writer = vtk.vtkXMLStructuredGridWriter()
-        writer.SetFileName(filename)
-        writer.SetInputData(self.block.mesh)
-        writer.Write()
-
-    def import_blockset(self, filename):
-        """Load the test blockset."""
-        # XXX: experiment
-        reader = vtk.vtkXMLStructuredGridReader()
-        reader.SetFileName(filename)
-        reader.Update()
-        mesh = reader.GetOutput()
-        block = Block(self.plotter, self.dimensions, mesh)
-        self.block.merge(block)
         self.plotter.render()
 
 
