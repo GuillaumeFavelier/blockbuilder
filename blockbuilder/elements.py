@@ -330,7 +330,7 @@ class SymmetrySelector(AreaSelector):
 class Block(object):
     """Main block manager."""
 
-    def __init__(self, plotter, dimensions):
+    def __init__(self, plotter, dimensions, mesh=None):
         """Initialize the block manager."""
         self.unit = rcParams["unit"]
         self.origin = rcParams["origin"]
@@ -353,15 +353,18 @@ class Block(object):
                     points.SetPoint(counter, point)
                     counter += 1
 
-        self.mesh = vtk.vtkStructuredGrid()
-        self.mesh.SetDimensions(self.dimensions)
-        self.mesh.SetPoints(points)
-        self.color_array = _add_mesh_cell_array(
-            self.mesh,
-            self.color_array_name,
-            np.tile(self.color, (self.number_of_cells, 1)),
-        )
-        self.remove_all()
+        if mesh is None:
+            self.mesh = vtk.vtkStructuredGrid()
+            self.mesh.SetDimensions(self.dimensions)
+            self.mesh.SetPoints(points)
+            self.color_array = _add_mesh_cell_array(
+                self.mesh,
+                self.color_array_name,
+                np.tile(self.color, (self.number_of_cells, 1)),
+            )
+            self.remove_all()
+        else:
+            self.mesh = mesh
         self.actor = self.plotter.add_mesh(
             self.mesh,
             edge_color=self.edge_color,

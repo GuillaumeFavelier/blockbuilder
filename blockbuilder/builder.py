@@ -184,6 +184,12 @@ class Builder(object):
         if key == rcParams["builder"]["bindings"]["elevation_plus"]:
             self.move_camera(update="elevation")
 
+        # XXX: experiment
+        if key == "h":
+            self.save()
+        if key == "l":
+            self.load()
+
     def load_block_modes(self):
         """Load the block modes."""
         self.set_block_mode(BlockMode.BUILD)
@@ -411,6 +417,24 @@ class Builder(object):
     def toggle_edges(self, value):
         """Toggle area selection."""
         self.block.toggle_edges(value)
+        self.plotter.render()
+
+    def save(self):
+        """Export the test blockset."""
+        # XXX: experiment
+        writer = vtk.vtkXMLStructuredGridWriter()
+        writer.SetFileName("test.vts")
+        writer.SetInputData(self.block.mesh)
+        writer.Write()
+
+    def load(self):
+        """Load the test blockset."""
+        # XXX: experiment
+        reader = vtk.vtkXMLStructuredGridReader()
+        reader.SetFileName("test.vts")
+        reader.Update()
+        mesh = reader.GetOutput()
+        Block(self.plotter, self.dimensions, mesh)
         self.plotter.render()
 
 
