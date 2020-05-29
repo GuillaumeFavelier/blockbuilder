@@ -36,6 +36,8 @@ rcParams = {
         "color_array_name": "color",
         "color": (.7, .7, .7),
         "edge_color": (.0, .0, .0),
+        "merge_policies": ["external", "internal"],
+        "merge_policy": "external",
     },
     "builder": {
         "name": "BlockBuilder",

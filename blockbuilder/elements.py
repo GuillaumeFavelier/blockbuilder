@@ -337,6 +337,7 @@ class Block(object):
         self.color_array_name = rcParams["block"]["color_array_name"]
         self.color = rcParams["block"]["color"]
         self.edge_color = rcParams["block"]["edge_color"]
+        self.merge_policy = rcParams["block"]["merge_policy"]
         self.plotter = plotter
         self.dimensions = np.asarray(dimensions)
         self.spacing = np.asarray([self.unit, self.unit, self.unit])
@@ -363,15 +364,29 @@ class Block(object):
                 np.tile(self.color, (self.number_of_cells, 1)),
             )
             self.remove_all()
+            self.actor = self.plotter.add_mesh(
+                self.mesh,
+                edge_color=self.edge_color,
+                rgba=True,
+            )
+            _resolve_coincident_topology(self.actor)
+            self.actor.element_id = Element.BLOCK
         else:
             self.mesh = mesh
-        self.actor = self.plotter.add_mesh(
-            self.mesh,
-            edge_color=self.edge_color,
-            rgba=True,
-        )
-        _resolve_coincident_topology(self.actor)
-        self.actor.element_id = Element.BLOCK
+
+    def merge(self, block):
+        """Merge the input block properties."""
+        assert self.number_of_cells == block.number_of_cells
+        color_array = _get_mesh_cell_array(block.mesh, self.color_array_name)
+        for cell_id in range(self.number_of_cells):
+            if block.mesh.IsCellVisible(cell_id):
+                if self.merge_policy == "external" or \
+                   (self.merge_policy == "internal" and
+                        not self.mesh.IsCellVisible(cell_id)):
+                    self.mesh.UnBlankCell(cell_id)
+                    color = color_array.GetTuple3(cell_id)
+                    self.color_array.SetTuple3(cell_id, *color)
+        self.mesh.Modified()
 
     def add(self, coords):
         """Add the block at the given coords."""
@@ -468,6 +483,11 @@ def _add_mesh_cell_array(mesh, array_name, array):
     cell_data.AddArray(vtk_array)
     cell_data.SetActiveScalars(array_name)
     return vtk_array
+
+
+def _get_mesh_cell_array(mesh, array_name):
+    cell_data = mesh.GetCellData()
+    return cell_data.GetArray(array_name)
 
 
 def _resolve_coincident_topology(actor):

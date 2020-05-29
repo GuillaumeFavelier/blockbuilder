@@ -186,9 +186,9 @@ class Builder(object):
 
         # XXX: experiment
         if key == "h":
-            self.save()
+            self.export_blockset("test.vts")
         if key == "l":
-            self.load()
+            self.import_blockset("test.vts")
 
     def load_block_modes(self):
         """Load the block modes."""
@@ -419,22 +419,23 @@ class Builder(object):
         self.block.toggle_edges(value)
         self.plotter.render()
 
-    def save(self):
+    def export_blockset(self, filename):
         """Export the test blockset."""
         # XXX: experiment
         writer = vtk.vtkXMLStructuredGridWriter()
-        writer.SetFileName("test.vts")
+        writer.SetFileName(filename)
         writer.SetInputData(self.block.mesh)
         writer.Write()
 
-    def load(self):
+    def import_blockset(self, filename):
         """Load the test blockset."""
         # XXX: experiment
         reader = vtk.vtkXMLStructuredGridReader()
-        reader.SetFileName("test.vts")
+        reader.SetFileName(filename)
         reader.Update()
         mesh = reader.GetOutput()
-        Block(self.plotter, self.dimensions, mesh)
+        block = Block(self.plotter, self.dimensions, mesh)
+        self.block.merge(block)
         self.plotter.render()
 
 
