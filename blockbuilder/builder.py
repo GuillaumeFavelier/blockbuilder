@@ -10,6 +10,7 @@ from .params import rcParams
 from .plotter import Plotter
 from .elements import Element, Symmetry, SymmetrySelector, Grid, Plane, Block
 
+from PyQt5 import QtCore
 from PyQt5.Qt import QIcon, QSize
 from PyQt5.QtWidgets import (QPushButton, QToolButton, QButtonGroup,
                              QColorDialog, QFileDialog)
@@ -55,7 +56,8 @@ class Builder(object):
         self.azimuth_rng = rcParams["builder"]["azimuth_rng"]
         self.elevation_rng = rcParams["builder"]["elevation_rng"]
         self.elevation = rcParams["builder"]["elevation"]
-        self.icon_size = rcParams["app"]["icon_size"]
+        self.toolbar_area = rcParams["app"]["toolbar"]["area"]
+        self.icon_size = rcParams["app"]["toolbar"]["icon_size"]
         if dimensions is None:
             dimensions = rcParams["builder"]["dimensions"]
         self.dimensions = np.asarray(dimensions)
@@ -319,6 +321,10 @@ class Builder(object):
     def load_toolbar(self):
         """Initialize the toolbar."""
         self.toolbar = self.plotter.main_window.addToolBar("toolbar")
+        self.plotter.main_window.addToolBar(
+            _get_toolbar_area(self.toolbar_area),
+            self.toolbar,
+        )
         self.toolbar.setIconSize(QSize(*self.icon_size))
         self._add_toolbar_color_button()
         self.toolbar.addSeparator()
@@ -479,6 +485,17 @@ class Intersection(object):
         """Return the intersection point of element_id."""
         idx = self.intersections[element_id.value]
         return np.asarray(self.picked_points.GetPoint(idx))
+
+
+def _get_toolbar_area(area):
+    if area == "left":
+        return QtCore.Qt.LeftToolBarArea
+    if area == "right":
+        return QtCore.Qt.RightToolBarArea
+    if area == "top":
+        return QtCore.Qt.TopToolBarArea
+    if area == "bottom":
+        return QtCore.Qt.BottomToolBarArea
 
 
 def _clamp(value, rng):

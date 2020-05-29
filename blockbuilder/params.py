@@ -60,6 +60,10 @@ rcParams = {
     },
     "app": {
         "name": "BlockBuilder",
-        "icon_size": (36, 36),
+        "toolbar": {
+            "areas": ["left", "right", "top", "bottom"],
+            "area": "top",
+            "icon_size": (36, 36),
+        },
     },
 }
