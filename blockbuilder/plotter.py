@@ -28,7 +28,7 @@ class MinimalPlotter(QObject):
     def __init__(self):
         """Initialize the MinimalPlotter."""
         super().__init__()
-        self.app = QApplication([rcParams["builder"]["name"]])
+        self.app = QApplication([rcParams["app"]["name"]])
         self.main_window = MainWindow()
         self.main_window.signal_close.connect(self._delete)
         self.render_widget = QVTKRenderWindowInteractor()

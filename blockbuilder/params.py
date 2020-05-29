@@ -40,7 +40,6 @@ rcParams = {
         "merge_policy": "external",
     },
     "builder": {
-        "name": "BlockBuilder",
         "dimensions": (32, 32, 32),
         "azimuth": 0,
         "azimuth_rng": (0, 360),
@@ -58,5 +57,9 @@ rcParams = {
             "select": False,
             "edges": True,
         },
-    }
+    },
+    "app": {
+        "name": "BlockBuilder",
+        "icon_size": (36, 36),
+    },
 }

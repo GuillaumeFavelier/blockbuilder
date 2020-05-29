@@ -10,7 +10,7 @@ from .params import rcParams
 from .plotter import Plotter
 from .elements import Element, Symmetry, SymmetrySelector, Grid, Plane, Block
 
-from PyQt5.Qt import QIcon
+from PyQt5.Qt import QIcon, QSize
 from PyQt5.QtWidgets import (QPushButton, QToolButton, QButtonGroup,
                              QColorDialog)
 
@@ -32,6 +32,8 @@ class Action(enum.Enum):
     """List the actions available in Builder."""
 
     RESET = enum.auto()
+    IMPORT = enum.auto()
+    EXPORT = enum.auto()
 
 
 @enum.unique
@@ -53,6 +55,7 @@ class Builder(object):
         self.azimuth_rng = rcParams["builder"]["azimuth_rng"]
         self.elevation_rng = rcParams["builder"]["elevation_rng"]
         self.elevation = rcParams["builder"]["elevation"]
+        self.icon_size = rcParams["app"]["icon_size"]
         if dimensions is None:
             dimensions = rcParams["builder"]["dimensions"]
         self.dimensions = np.asarray(dimensions)
@@ -184,12 +187,6 @@ class Builder(object):
         if key == rcParams["builder"]["bindings"]["elevation_plus"]:
             self.move_camera(update="elevation")
 
-        # XXX: experiment
-        if key == "h":
-            self.export_blockset("test.vts")
-        if key == "l":
-            self.import_blockset("test.vts")
-
     def load_block_modes(self):
         """Load the block modes."""
         self.set_block_mode(BlockMode.BUILD)
@@ -261,6 +258,7 @@ class Builder(object):
             icon = self.icons.get(element, None)
             if icon is not None:
                 button = QToolButton()
+                button.setFixedSize(QSize(*self.icon_size))
                 button.setIcon(icon)
                 button.setCheckable(True)
                 if default_value is not None and element is default_value:
@@ -275,6 +273,7 @@ class Builder(object):
             icon = self.icons.get(action, None)
             if icon is not None:
                 button = QToolButton()
+                button.setFixedSize(QSize(*self.icon_size))
                 button.setIcon(icon)
                 func_name = "action_{}".format(action.name.lower())
                 func = getattr(self, func_name, None)
@@ -283,11 +282,11 @@ class Builder(object):
                 self.toolbar.addWidget(button)
 
     def _add_toolbar_toggles(self):
-        from PyQt5.QtWidgets import QToolButton
         for toggle in Toggle:
             icon = self.icons.get(toggle, None)
             if icon is not None:
                 button = QToolButton()
+                button.setFixedSize(QSize(*self.icon_size))
                 button.setIcon(icon)
                 button.setCheckable(True)
                 toggle_name = toggle.name.lower()
@@ -312,6 +311,7 @@ class Builder(object):
 
     def _add_toolbar_color_button(self):
         self.color_button = QPushButton()
+        self.color_button.setFixedSize(QSize(*self.icon_size))
         self.color_button.clicked.connect(self.set_block_color)
         self.toolbar.addWidget(self.color_button)
         self.set_block_color(self.default_block_color, is_int=False)
@@ -319,6 +319,7 @@ class Builder(object):
     def load_toolbar(self):
         """Initialize the toolbar."""
         self.toolbar = self.plotter.main_window.addToolBar("toolbar")
+        self.toolbar.setIconSize(QSize(*self.icon_size))
         self._add_toolbar_color_button()
         self.toolbar.addSeparator()
         self._add_toolbar_group(
@@ -409,6 +410,11 @@ class Builder(object):
         self.block.remove_all()
         self.set_block_color(self.default_block_color, is_int=False)
         self.plotter.render()
+
+    # def action_import(self, unused):
+    #     """Reset the block properties."""
+    #     del unused
+    #     filename = QFileDialog()
 
     def toggle_select(self, value):
         """Toggle area selection."""
