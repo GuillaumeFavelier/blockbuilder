@@ -43,9 +43,7 @@ def package_tree(pkgroot):
 # Adapted from Spyder
 with io.open('README.md', encoding='utf-8') as f:
     LONG_DESCRIPTION = f.read()
-SCRIPTS = list()
-if sys.platform.startswith('linux'):
-    SCRIPTS.append('blockbuilder')
+SCRIPTS = ['blockbuilder']
 if os.name == 'nt':
     SCRIPTS += ['blockbuilder.bat']
 
