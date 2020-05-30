@@ -1,6 +1,5 @@
 """Module about the main application."""
 
-import os.path as op
 import enum
 from functools import partial
 import numpy as np
@@ -22,10 +21,10 @@ class BlockMode(enum.Enum):
 
     BUILD = enum.auto()
     DELETE = enum.auto()
-    CAMERA = enum.auto()
-    LIBRARY = enum.auto()
-    SETTINGS = enum.auto()
-    HELP = enum.auto()
+    # CAMERA = enum.auto()
+    # LIBRARY = enum.auto()
+    # SETTINGS = enum.auto()
+    # HELP = enum.auto()
 
 
 @enum.unique
@@ -45,11 +44,12 @@ class Toggle(enum.Enum):
     EDGES = enum.auto()
 
 
-class Builder(object):
+class Builder(Plotter):
     """Main application."""
 
     def __init__(self, dimensions=None):
         """Initialize the Builder."""
+        super().__init__()
         self.unit = rcParams["unit"]
         self.default_block_color = rcParams["block"]["color"]
         self.azimuth = rcParams["builder"]["azimuth"]
@@ -67,8 +67,6 @@ class Builder(object):
         self.floor = 0.
         self.ceiling = (self.dimensions[2] - 2) * self.unit
         self.icons = None
-        self.plotter = None
-        self.plotter = None
         self.toolbar = None
         self.picker = None
         self.current_block_mode = None
@@ -85,10 +83,10 @@ class Builder(object):
         self.load_toolbar()
 
         # set initial frame
-        self.plotter.reset_camera()
+        self.reset_camera()
         self.update_camera()
-        self.plotter.render()
-        self.plotter.start()
+        self.render()
+        self.start()
 
     def update_camera(self):
         """Update the internal camera."""
@@ -99,9 +97,9 @@ class Builder(object):
             self.distance * np.cos(rad_azimuth) * np.sin(rad_elevation),
             self.distance * np.sin(rad_azimuth) * np.sin(rad_elevation),
             self.distance * np.cos(rad_elevation)]
-        self.plotter.camera.SetViewUp((0., 0., 1.))
-        self.plotter.camera.SetPosition(position)
-        self.plotter.camera.SetFocalPoint(self.grid.center)
+        self.camera.SetViewUp((0., 0., 1.))
+        self.camera.SetPosition(position)
+        self.camera.SetFocalPoint(self.grid.center)
 
     def move_camera(self, update, inverse=False):
         """Move the camera depending on the given update property."""
@@ -125,46 +123,46 @@ class Builder(object):
         self.update_camera()
 
         # update pick
-        x, y = self.plotter.interactor.GetEventPosition()
-        self.picker.Pick(x, y, 0, self.plotter.renderer)
-        self.plotter.render()
+        x, y = self.interactor.GetEventPosition()
+        self.picker.Pick(x, y, 0, self.renderer)
+        self.render()
 
     def on_mouse_move(self, vtk_picker, event):
         """Process mouse move events."""
         x, y = vtk_picker.GetEventPosition()
-        self.picker.Pick(x, y, 0, self.plotter.renderer)
+        self.picker.Pick(x, y, 0, self.renderer)
 
     def on_mouse_wheel_forward(self, vtk_picker, event):
         """Process mouse wheel forward events."""
         tr = np.array([0., 0., self.unit])
         if self.grid.origin[2] < self.ceiling:
             self.grid.translate(tr)
-            position = np.array(self.plotter.camera.GetPosition())
-            self.plotter.camera.SetPosition(position + tr)
-            self.plotter.camera.SetFocalPoint(self.grid.center)
-        self.plotter.render()
+            position = np.array(self.camera.GetPosition())
+            self.camera.SetPosition(position + tr)
+            self.camera.SetFocalPoint(self.grid.center)
+        self.render()
 
     def on_mouse_wheel_backward(self, vtk_picker, event):
         """Process mouse wheel backward events."""
         tr = np.array([0., 0., -self.unit])
         if self.grid.origin[2] > self.floor:
             self.grid.translate(tr)
-            position = np.array(self.plotter.camera.GetPosition())
-            self.plotter.camera.SetPosition(position + tr)
-            self.plotter.camera.SetFocalPoint(self.grid.center)
-        self.plotter.render()
+            position = np.array(self.camera.GetPosition())
+            self.camera.SetPosition(position + tr)
+            self.camera.SetFocalPoint(self.grid.center)
+        self.render()
 
     def on_mouse_left_press(self, vtk_picker, event):
         """Process mouse left button press events."""
         x, y = vtk_picker.GetEventPosition()
         self.button_pressed = True
-        self.picker.Pick(x, y, 0, self.plotter.renderer)
+        self.picker.Pick(x, y, 0, self.renderer)
 
     def on_mouse_left_release(self, vtk_picker, event):
         """Process mouse left button release events."""
         x, y = vtk_picker.GetEventPosition()
         self.button_released = True
-        self.picker.Pick(x, y, 0, self.plotter.renderer)
+        self.picker.Pick(x, y, 0, self.renderer)
         self.button_pressed = False
 
     def on_pick(self, vtk_picker, event):
@@ -175,7 +173,7 @@ class Builder(object):
 
     def on_key_press(self, vtk_picker, event):
         """Process key press events."""
-        key = self.plotter.interactor.GetKeySym()
+        key = self.interactor.GetKeySym()
         if key == rcParams["builder"]["bindings"]["distance_minus"]:
             self.move_camera(update="distance", inverse=True)
         if key == rcParams["builder"]["bindings"]["distance_plus"]:
@@ -200,17 +198,16 @@ class Builder(object):
 
     def load_elements(self):
         """Process the elements of the scene."""
-        self.plotter = Plotter()
-        self.block = Block(self.plotter, self.dimensions)
-        self.grid = Grid(self.plotter, self.dimensions)
-        self.plane = Plane(self.plotter, self.dimensions)
-        self.selector = SymmetrySelector(self.plotter, self.dimensions)
+        self.block = Block(self, self.dimensions)
+        self.grid = Grid(self, self.dimensions)
+        self.plane = Plane(self, self.dimensions)
+        self.selector = SymmetrySelector(self, self.dimensions)
         self.selector.hide()
 
     def load_interaction(self):
         """Load interactions."""
         # disable default interactions
-        self.plotter.set_style(None)
+        self.set_style(None)
 
         # enable cell picking
         self.picker = vtk.vtkCellPicker()
@@ -220,39 +217,48 @@ class Builder(object):
         )
 
         # setup the key bindings
-        self.plotter.interactor.AddObserver(
+        self.interactor.AddObserver(
             vtk.vtkCommand.MouseMoveEvent,
             self.on_mouse_move
         )
-        self.plotter.interactor.AddObserver(
+        self.interactor.AddObserver(
             vtk.vtkCommand.MouseWheelForwardEvent,
             self.on_mouse_wheel_forward
         )
-        self.plotter.interactor.AddObserver(
+        self.interactor.AddObserver(
             vtk.vtkCommand.MouseWheelBackwardEvent,
             self.on_mouse_wheel_backward
         )
-        self.plotter.interactor.AddObserver(
+        self.interactor.AddObserver(
             vtk.vtkCommand.LeftButtonPressEvent,
             self.on_mouse_left_press
         )
-        self.plotter.interactor.AddObserver(
+        self.interactor.AddObserver(
             vtk.vtkCommand.LeftButtonReleaseEvent,
             self.on_mouse_left_release
         )
-        self.plotter.interactor.AddObserver(
+        self.interactor.AddObserver(
             vtk.vtkCommand.KeyPressEvent,
             self.on_key_press
         )
 
     def load_icons(self):
-        """Load the icons."""
+        """Load the icons.
+
+        The resource configuration file ``blockbuilder/icons/blockbuilder.qrc``
+        describes the location of the resources in the filesystem and
+        also defines aliases for their use in the code.
+
+        To automatically generate the resource file in ``blockbuilder/icons``:
+        pyrcc5 -o blockbuilder/icons/resources.py blockbuilder/icons/mne.qrc
+        """
+        from .icons import resources
+        resources.qInitResources()
         self.icons = dict()
         for category in (BlockMode, Action, Toggle, Symmetry):
             for element in category:
-                icon_path = "icons/{}.svg".format(element.name.lower())
-                if op.isfile(icon_path):
-                    self.icons[element] = QIcon(icon_path)
+                icon_resource = ":/{}.svg".format(element.name.lower())
+                self.icons[element] = QIcon(icon_resource)
 
     def _add_toolbar_group(self, group, func, default_value):
         button_group = QButtonGroup(parent=self.toolbar)
@@ -320,8 +326,8 @@ class Builder(object):
 
     def load_toolbar(self):
         """Initialize the toolbar."""
-        self.toolbar = self.plotter.main_window.addToolBar("toolbar")
-        self.plotter.main_window.addToolBar(
+        self.toolbar = self.addToolBar("toolbar")
+        self.addToolBar(
             _get_toolbar_area(self.toolbar_area),
             self.toolbar,
         )
@@ -352,7 +358,7 @@ class Builder(object):
                 self.grid.set_block_mode(value)
             if self.selector is not None:
                 self.selector.set_block_mode(value)
-        self.plotter.render()
+        self.render()
 
     def use_delete_mode(self, vtk_picker):
         """Use the delete mode."""
@@ -366,7 +372,7 @@ class Builder(object):
         intersection = Intersection(vtk_picker)
         if not intersection.exist():
             self.selector.hide()
-            self.plotter.render()
+            self.render()
             return
 
         if not intersection.element(Element.GRID):
@@ -408,14 +414,14 @@ class Builder(object):
                 for coords in self.selector.selection():
                     operation(coords)
 
-        self.plotter.render()
+        self.render()
 
     def action_reset(self, unused):
         """Reset the block properties."""
         del unused
         self.block.remove_all()
         self.set_block_color(self.default_block_color, is_int=False)
-        self.plotter.render()
+        self.render()
 
     def action_import(self, unused):
         """Import an external blockset."""
@@ -431,9 +437,9 @@ class Builder(object):
             reader.SetFileName(filename)
             reader.Update()
             mesh = reader.GetOutput()
-            block = Block(self.plotter, self.dimensions, mesh)
+            block = Block(self, self.dimensions, mesh)
             self.block.merge(block)
-            self.plotter.render()
+            self.render()
 
     def action_export(self, unused):
         """Export the internal blockset."""
@@ -457,7 +463,7 @@ class Builder(object):
     def toggle_edges(self, value):
         """Toggle area selection."""
         self.block.toggle_edges(value)
-        self.plotter.render()
+        self.render()
 
 
 class Intersection(object):

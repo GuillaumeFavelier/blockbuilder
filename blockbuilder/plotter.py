@@ -2,59 +2,46 @@
 
 import vtk
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from PyQt5.QtCore import pyqtSignal, QObject
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import QMainWindow
 from .params import rcParams
 
 
-class MainWindow(QMainWindow):
-    """Simple window."""
+class MinimalPlotter(QMainWindow):
+    """Minimal plotter."""
 
     signal_close = pyqtSignal()
 
     def __init__(self, parent=None):
-        """Initialize the main window."""
-        super(MainWindow, self).__init__(parent)
-
-    def closeEvent(self, event):
-        """Manage the close event."""
-        self.signal_close.emit()
-        event.accept()
-
-
-class MinimalPlotter(QObject):
-    """Minimal plotter."""
-
-    def __init__(self):
         """Initialize the MinimalPlotter."""
-        super().__init__()
-        self.app = QApplication([rcParams["app"]["name"]])
-        self.main_window = MainWindow()
-        self.main_window.signal_close.connect(self._delete)
+        super().__init__(parent)
+        self.signal_close.connect(self._delete)
         self.render_widget = QVTKRenderWindowInteractor()
         self.renderer = vtk.vtkRenderer()
         self.camera = self.renderer.GetActiveCamera()
         self.render_window = self.render_widget.GetRenderWindow()
         self.render_window.AddRenderer(self.renderer)
         self.interactor = self.render_window.GetInteractor()
-        self.main_window.setCentralWidget(self.render_widget)
+        self.setCentralWidget(self.render_widget)
 
     def start(self):
         """Start the plotter."""
         self.render_widget.Initialize()
         self.render_widget.Start()
-        self.main_window.show()
-        self.app.exec_()
+        self.show()
+
+    def closeEvent(self, event):
+        """Manage the close event."""
+        self.signal_close.emit()
+        event.accept()
 
     def _delete(self):
         """Decrease reference count to avoid cycle."""
-        # XXX: Why main_window refcount cannot decrease?
-        # self.main_window = None
         self.render_widget = None
         self.render_window = None
         self.renderer = None
+        self.camera = None
         self.interactor = None
-        self.app = None
 
 
 class CorePlotter(MinimalPlotter):
@@ -63,11 +50,6 @@ class CorePlotter(MinimalPlotter):
     def __init__(self):
         """Initialize the Plotter."""
         super().__init__()
-
-    def resize(self, window_size):
-        """Resize the window."""
-        self.main_window.resize(*window_size)
-        self.window_size = window_size
 
     def set_background(self, color, top=None):
         """Set the background color."""
@@ -152,7 +134,7 @@ class Plotter(CorePlotter):
         self.background_top_color = background_top_color
         self.background_bottom_color = background_bottom_color
 
-        self.resize(self.window_size)
+        self.resize(*self.window_size)
         self.set_background(
             color=self.background_bottom_color,
             top=self.background_top_color,
