@@ -61,7 +61,7 @@ jobs:
       addToPath: true
     displayName: 'Setup Python $(PYTHON_VERSION)'
   - bash: |
-      python -m pip install --upgrade pip setuptools wheels
+      python -m pip install --upgrade pip setuptools wheel
     displayName: 'Install dependencies'
     condition: always()
   - bash: |
@@ -95,7 +95,7 @@ jobs:
       addToPath: true
     displayName: 'Setup Python $(PYTHON_VERSION)'
   - bash: |
-      python -m pip install --upgrade pip setuptools wheels
+      python -m pip install --upgrade pip setuptools wheel
     displayName: 'Install dependencies'
     condition: always()
   - bash: |
