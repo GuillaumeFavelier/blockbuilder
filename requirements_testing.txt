@@ -1,0 +1,6 @@
+numpy
+vtk
+PyQt5
+codespell
+pydocstyle
+pytest
