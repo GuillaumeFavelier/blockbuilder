@@ -15,7 +15,7 @@ jobs:
   strategy:
     matrix:
       Python37-64bit:
-        PYTHON_VERSION: '3.7'
+        PYTHON_VERSION: '3.8'
         PYTHON_ARCH: 'x64'
   steps:
   - task: UsePythonVersion@0
@@ -43,4 +43,35 @@ jobs:
   - bash: |
       make pydocstyle
     displayName: 'Run pydocstyle'
+    condition: always()
+
+- job: 'Ubuntu'
+  pool:
+    vmImage: 'ubuntu-18.04'
+  strategy:
+    matrix:
+      Python37-64bit:
+        PYTHON_VERSION: '3.7'
+        PYTHON_ARCH: 'x64'
+      Python38-64bit:
+        PYTHON_VERSION: '3.8'
+        PYTHON_ARCH: 'x64'
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: $(PYTHON_VERSION)
+      architecture: $(PYTHON_ARCH)
+      addToPath: true
+    displayName: 'Setup Python $(PYTHON_VERSION)'
+  - bash: |
+      python -m pip install --upgrade pip setuptools
+    displayName: 'Install dependencies'
+    condition: always()
+  - bash: |
+      pip install -r requirements_testing.txt
+    displayName: 'Install requirements'
+    condition: always()
+  - bash: |
+      pytest -v blockbuilder
+    displayName: 'Run tests'
     condition: always()
