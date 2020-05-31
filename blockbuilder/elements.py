@@ -30,16 +30,17 @@ class Symmetry(enum.Enum):
 class Base(object):
     """."""
 
-    def __init__(self, plotter, element_id, dimensions, color,
+    def __init__(self, element_id, dimensions, color,
                  opacity, origin=None, spacing=None):
         """Initialize the Base."""
+        self.actor = None
+        self.element_id = element_id
         self.unit = rcParams["unit"]
         self.edge_color_offset = rcParams["base"]["edge_color_offset"]
         if origin is None:
             origin = rcParams["origin"]
         if spacing is None:
             spacing = [self.unit, self.unit, self.unit]
-        self.plotter = plotter
         self.dimensions = np.asarray(dimensions)
         self.origin = np.asarray(origin)
         self.color = color
@@ -52,14 +53,12 @@ class Base(object):
         self.mesh.SetDimensions(self.dimensions)
         self.mesh.SetSpacing(self.spacing)
         self.mesh.SetOrigin(self.origin)
-        self.actor = self.plotter.add_mesh(
-            mesh=self.mesh,
-            color=self.color,
-            edge_color=self.edge_color,
-            opacity=self.opacity,
-        )
-        # add data for picking
-        self.actor.element_id = element_id
+        self.plotting = {
+            "mesh": self.mesh,
+            "color": self.color,
+            "edge_color": self.edge_color,
+            "opacity": self.opacity,
+        }
 
     def set_block_mode(self, mode):
         """Set the block mode."""
@@ -86,7 +85,7 @@ class Base(object):
 class Grid(Base):
     """Grid element of the scene."""
 
-    def __init__(self, plotter, dimensions):
+    def __init__(self, dimensions):
         """Initialize the Grid."""
         color = rcParams["grid"]["color"]["build"]
         opacity = rcParams["grid"]["opacity"]
@@ -96,7 +95,6 @@ class Grid(Base):
             1
         ]
         super().__init__(
-            plotter=plotter,
             element_id=Element.GRID,
             dimensions=dimensions,
             color=color,
@@ -107,7 +105,7 @@ class Grid(Base):
 class Plane(Base):
     """Plane element of the scene."""
 
-    def __init__(self, plotter, dimensions):
+    def __init__(self, dimensions):
         """Initialize the Plane."""
         unit = rcParams["unit"]
         origin = rcParams["origin"] - np.array([0, 0, unit])
@@ -120,7 +118,6 @@ class Plane(Base):
         ]
         dimensions = [2, 2, 2]
         super().__init__(
-            plotter=plotter,
             element_id=Element.PLANE,
             dimensions=dimensions,
             color=color,
@@ -128,19 +125,17 @@ class Plane(Base):
             origin=origin,
             spacing=spacing,
         )
-        _resolve_coincident_topology(self.actor)
 
 
 class Selector(Base):
     """Selector element of the scene."""
 
-    def __init__(self, plotter):
+    def __init__(self):
         """Initialize the Selector."""
         dimensions = [2, 2, 2]
         color = rcParams["selector"]["color"]["build"]
         opacity = rcParams["selector"]["opacity"]
         super().__init__(
-            plotter=plotter,
             element_id=Element.SELECTOR,
             dimensions=dimensions,
             color=color,
@@ -171,9 +166,9 @@ class Selector(Base):
 class AreaSelector(Selector):
     """Selector that supports area."""
 
-    def __init__(self, plotter):
+    def __init__(self):
         """Initialize the selector."""
-        super().__init__(plotter)
+        super().__init__()
         self.area = None
         self.area_first_coords = None
         self.area_last_coords = None
@@ -222,12 +217,12 @@ class AreaSelector(Selector):
 class SymmetrySelector(AreaSelector):
     """Selector that supports symmetry."""
 
-    def __init__(self, plotter, dimensions):
+    def __init__(self, dimensions):
         """Initialize the selector."""
-        super().__init__(plotter)
-        self.selector_x = AreaSelector(plotter)
-        self.selector_y = AreaSelector(plotter)
-        self.selector_xy = AreaSelector(plotter)
+        super().__init__()
+        self.selector_x = AreaSelector()
+        self.selector_y = AreaSelector()
+        self.selector_xy = AreaSelector()
         self.symmetry = Symmetry.SYMMETRY_NONE
         self.dimensions = dimensions
 
@@ -330,15 +325,16 @@ class SymmetrySelector(AreaSelector):
 class Block(object):
     """Main block manager."""
 
-    def __init__(self, plotter, dimensions, mesh=None):
+    def __init__(self, dimensions, mesh=None):
         """Initialize the block manager."""
+        self.actor = None
+        self.element_id = Element.BLOCK
         self.unit = rcParams["unit"]
         self.origin = rcParams["origin"]
         self.color_array_name = rcParams["block"]["color_array_name"]
         self.color = rcParams["block"]["color"]
         self.edge_color = rcParams["block"]["edge_color"]
         self.merge_policy = rcParams["block"]["merge_policy"]
-        self.plotter = plotter
         self.dimensions = np.asarray(dimensions)
         self.spacing = np.asarray([self.unit, self.unit, self.unit])
 
@@ -364,19 +360,17 @@ class Block(object):
                 np.tile(self.color, (self.number_of_cells, 1)),
             )
             self.remove_all()
-            self.actor = self.plotter.add_mesh(
-                self.mesh,
-                edge_color=self.edge_color,
-                rgba=True,
-            )
-            _resolve_coincident_topology(self.actor)
-            self.actor.element_id = Element.BLOCK
         else:
             self.mesh = mesh
             self.color_array = _get_mesh_cell_array(
                 mesh,
                 self.color_array_name
             )
+        self.plotting = {
+            "mesh": self.mesh,
+            "edge_color": self.edge_color,
+            "rgba": True,
+        }
 
     def merge(self, block):
         """Merge the input block properties."""

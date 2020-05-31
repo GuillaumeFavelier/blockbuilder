@@ -61,30 +61,28 @@ class Builder(Plotter):
         self.icon_size = rcParams["app"]["toolbar"]["icon_size"]
         if dimensions is None:
             dimensions = rcParams["builder"]["dimensions"]
-        self.dimensions = np.asarray(dimensions)
+        self.set_dimensions(dimensions)
         self.button_pressed = False
         self.button_released = False
         self.area_selection = False
         self.floor = 0.
-        self.ceiling = (self.dimensions[2] - 2) * self.unit
         self.icons = None
         self.toolbar = None
         self.picker = None
         self.current_block_mode = None
         self.mode_functions = None
         self.cached_coords = [-1, -1, -1]
-        self.distance = np.max(self.dimensions) * 2 * self.unit
-        self.distance_rng = [4 * self.unit, 2 * self.distance]
 
         # configuration
         self.load_elements()
+        self.add_elements()
         self.load_block_modes()
         self.load_interaction()
         self.load_icons()
         self.load_toolbar()
 
         # set initial frame
-        self.reset_camera()
+        self.selector.hide()
         self.update_camera()
         self.render()
         self.start()
@@ -197,13 +195,38 @@ class Builder(Plotter):
             if hasattr(self, func_name):
                 self.mode_functions[mode] = getattr(self, func_name)
 
+    def add_element(self, element):
+        """Add an element to the scene."""
+        actor = self.add_mesh(**element.plotting)
+        element.actor = actor
+        actor.element_id = element.element_id
+
+    def add_elements(self):
+        """Add all the default elements to the scene."""
+        self.add_element(self.block)
+        self.add_element(self.grid)
+        self.add_element(self.plane)
+        self.add_element(self.selector)
+        self.add_element(self.selector.selector_x)
+        self.add_element(self.selector.selector_y)
+        self.add_element(self.selector.selector_xy)
+
+    def remove_elements(self):
+        """Remove all the default elements of the scene."""
+        self.renderer.RemoveActor(self.block.actor)
+        self.renderer.RemoveActor(self.grid.actor)
+        self.renderer.RemoveActor(self.plane.actor)
+        self.renderer.RemoveActor(self.selector.actor)
+        self.renderer.RemoveActor(self.selector.selector_x.actor)
+        self.renderer.RemoveActor(self.selector.selector_y.actor)
+        self.renderer.RemoveActor(self.selector.selector_xy.actor)
+
     def load_elements(self):
-        """Process the elements of the scene."""
-        self.block = Block(self, self.dimensions)
-        self.grid = Grid(self, self.dimensions)
-        self.plane = Plane(self, self.dimensions)
-        self.selector = SymmetrySelector(self, self.dimensions)
-        self.selector.hide()
+        """Load the default elements."""
+        self.block = Block(self.dimensions)
+        self.grid = Grid(self.dimensions)
+        self.plane = Plane(self.dimensions)
+        self.selector = SymmetrySelector(self.dimensions)
 
     def load_interaction(self):
         """Load interactions."""
@@ -306,18 +329,6 @@ class Builder(Plotter):
                 button.setChecked(rcParams["builder"]["toggles"][toggle_name])
                 self.toolbar.addWidget(button)
 
-    def set_block_color(self, value=None, is_int=True):
-        """Set the current block color."""
-        if isinstance(value, bool):
-            color = QColorDialog.getColor()
-            color = _qrgb2rgb(color)
-        else:
-            color = value
-        color = np.asarray(color)
-        self.color_button.setStyleSheet(
-            "background-color: rgb" + _rgb2str(color, is_int))
-        self.block.set_color(color, is_int)
-
     def _add_toolbar_color_button(self):
         self.color_button = QPushButton()
         self.color_button.setFixedSize(QSize(*self.icon_size))
@@ -345,21 +356,47 @@ class Builder(Plotter):
         self.toolbar.addSeparator()
         self._add_toolbar_group(
             group=Symmetry,
-            func=self.selector.set_symmetry,
+            func=self.set_symmetry,
             default_value=Symmetry.SYMMETRY_NONE,
         )
         self.toolbar.addSeparator()
         self._add_toolbar_actions()
 
-    def set_block_mode(self, value):
+    def set_dimensions(self, dimensions):
+        """Set the current dimensions."""
+        self.dimensions = np.asarray(dimensions)
+        self.ceiling = (self.dimensions[2] - 2) * self.unit
+        self.distance = np.max(self.dimensions) * 2 * self.unit
+        self.distance_rng = [4 * self.unit, 2 * self.distance]
+
+    def set_symmetry(self, value):
+        """Set the current symmetry."""
+        self.selector.set_symmetry(value)
+
+    def set_block_mode(self, value=None):
         """Set the current block mode."""
-        if value in BlockMode:
+        if value is None:
+            value = self.current_block_mode
+        else:
             self.current_block_mode = value
+        if value in BlockMode:
             if self.grid is not None:
                 self.grid.set_block_mode(value)
             if self.selector is not None:
                 self.selector.set_block_mode(value)
         self.render()
+
+    def set_block_color(self, value=None, is_int=True):
+        """Set the current block color."""
+        if isinstance(value, bool):
+            color = QColorDialog.getColor()
+            color = _qrgb2rgb(color)
+        else:
+            color = value
+        color = np.asarray(color)
+        self.color_button.setStyleSheet(
+            "background-color: rgb" + _rgb2str(color, is_int))
+        self.block.set_color(color, is_int)
 
     def use_delete_mode(self, vtk_picker):
         """Use the delete mode."""
@@ -439,7 +476,7 @@ class Builder(Plotter):
             reader.Update()
             mesh = reader.GetOutput()
             dimensions = mesh.GetDimensions()
-            imported_block = Block(self, dimensions, mesh)
+            imported_block = Block(dimensions, mesh)
             if all(np.equal(dimensions, self.dimensions)):
                 self.block.merge(imported_block)
             else:
@@ -452,24 +489,17 @@ class Builder(Plotter):
                 if all(np.equal(self.dimensions, final_dimensions)):
                     self.block.merge(imported_block)
                 else:
-                    self.renderer.RemoveActor(self.block.actor)
-                    self.renderer.RemoveActor(self.grid.actor)
-                    self.renderer.RemoveActor(self.plane.actor)
-                    self.renderer.RemoveActor(self.selector.actor)
-
-                    self.grid = Grid(self, final_dimensions)
-                    self.plane = Plane(self, final_dimensions)
-                    self.selector = SymmetrySelector(self, final_dimensions)
-                    self.selector.hide()
+                    self.remove_elements()
 
                     old_block = self.block
-                    self.block = Block(self, final_dimensions)
+                    self.set_dimensions(final_dimensions)
+                    self.load_elements()
+                    self.add_elements()
+                    self.set_block_mode()
                     self.block.merge(old_block)
                     self.block.merge(imported_block)
 
-                    self.dimensions = final_dimensions
-                    # set initial frame
-                    self.reset_camera()
+                    self.selector.hide()
                     self.update_camera()
             self.render()
 
