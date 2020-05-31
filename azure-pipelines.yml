@@ -72,6 +72,10 @@ jobs:
     displayName: 'Install requirements'
     condition: always()
   - bash: |
+      pip install -e .
+    displayName: 'Install blockbuilder'
+    condition: always()
+  - bash: |
       pytest -v blockbuilder
     displayName: 'Run tests'
     condition: always()
