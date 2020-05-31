@@ -438,8 +438,27 @@ class Builder(Plotter):
             reader.SetFileName(filename)
             reader.Update()
             mesh = reader.GetOutput()
-            block = Block(self, self.dimensions, mesh)
-            self.block.merge(block)
+            dimensions = mesh.GetDimensions()
+            block = Block(self, dimensions, mesh)
+            if all(np.equal(dimensions, self.dimensions)):
+                self.block.merge(block)
+            else:
+                self.renderer.RemoveActor(self.block.actor)
+                self.renderer.RemoveActor(self.grid.actor)
+                self.renderer.RemoveActor(self.plane.actor)
+                self.renderer.RemoveActor(self.selector.actor)
+
+                self.block = block
+                self.block._add_mesh(self.block.mesh)
+                self.grid = Grid(self, dimensions)
+                self.plane = Plane(self, dimensions)
+                self.selector = SymmetrySelector(self, dimensions)
+                self.selector.hide()
+
+                self.dimensions = dimensions
+                # set initial frame
+                self.reset_camera()
+                self.update_camera()
             self.render()
 
     def action_export(self, unused):

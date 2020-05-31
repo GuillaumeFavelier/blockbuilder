@@ -364,15 +364,22 @@ class Block(object):
                 np.tile(self.color, (self.number_of_cells, 1)),
             )
             self.remove_all()
-            self.actor = self.plotter.add_mesh(
-                self.mesh,
-                edge_color=self.edge_color,
-                rgba=True,
-            )
-            _resolve_coincident_topology(self.actor)
-            self.actor.element_id = Element.BLOCK
+            self._add_mesh(self.mesh)
         else:
             self.mesh = mesh
+            self.color_array = _get_mesh_cell_array(
+                mesh,
+                self.color_array_name
+            )
+
+    def _add_mesh(self, mesh):
+        self.actor = self.plotter.add_mesh(
+            self.mesh,
+            edge_color=self.edge_color,
+            rgba=True,
+        )
+        _resolve_coincident_topology(self.actor)
+        self.actor.element_id = Element.BLOCK
 
     def merge(self, block):
         """Merge the input block properties."""
