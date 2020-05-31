@@ -364,7 +364,13 @@ class Block(object):
                 np.tile(self.color, (self.number_of_cells, 1)),
             )
             self.remove_all()
-            self._add_mesh(self.mesh)
+            self.actor = self.plotter.add_mesh(
+                self.mesh,
+                edge_color=self.edge_color,
+                rgba=True,
+            )
+            _resolve_coincident_topology(self.actor)
+            self.actor.element_id = Element.BLOCK
         else:
             self.mesh = mesh
             self.color_array = _get_mesh_cell_array(
@@ -372,24 +378,16 @@ class Block(object):
                 self.color_array_name
             )
 
-    def _add_mesh(self, mesh):
-        self.actor = self.plotter.add_mesh(
-            self.mesh,
-            edge_color=self.edge_color,
-            rgba=True,
-        )
-        _resolve_coincident_topology(self.actor)
-        self.actor.element_id = Element.BLOCK
-
     def merge(self, block):
         """Merge the input block properties."""
-        assert self.number_of_cells == block.number_of_cells
-        color_array = _get_mesh_cell_array(block.mesh, self.color_array_name)
-        for cell_id in range(self.number_of_cells):
+        color_array = block.color_array
+        for cell_id in range(block.number_of_cells):
             if block.mesh.IsCellVisible(cell_id):
                 if self.merge_policy == "external" or \
                    (self.merge_policy == "internal" and
                         not self.mesh.IsCellVisible(cell_id)):
+                    coords = _cell_to_coords(cell_id, block.dimensions)
+                    cell_id = _coords_to_cell(coords, self.dimensions)
                     self.mesh.UnBlankCell(cell_id)
                     color = color_array.GetTuple3(cell_id)
                     self.color_array.SetTuple3(cell_id, *color)
@@ -467,7 +465,7 @@ def _coords_to_cell(coords, dimensions):
     cell_id = coords[0] + \
         coords[1] * (dimensions[0] - 1) + \
         coords[2] * (dimensions[0] - 1) * (dimensions[1] - 1)
-    return cell_id
+    return int(cell_id)
 
 
 def _cell_to_coords(cell_id, dimensions):

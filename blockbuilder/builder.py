@@ -439,26 +439,38 @@ class Builder(Plotter):
             reader.Update()
             mesh = reader.GetOutput()
             dimensions = mesh.GetDimensions()
-            block = Block(self, dimensions, mesh)
+            imported_block = Block(self, dimensions, mesh)
             if all(np.equal(dimensions, self.dimensions)):
-                self.block.merge(block)
+                self.block.merge(imported_block)
             else:
-                self.renderer.RemoveActor(self.block.actor)
-                self.renderer.RemoveActor(self.grid.actor)
-                self.renderer.RemoveActor(self.plane.actor)
-                self.renderer.RemoveActor(self.selector.actor)
+                final_dimensions = [
+                    self.block.dimensions,
+                    imported_block.dimensions
+                ]
+                final_dimensions = np.max(final_dimensions, axis=0)
 
-                self.block = block
-                self.block._add_mesh(self.block.mesh)
-                self.grid = Grid(self, dimensions)
-                self.plane = Plane(self, dimensions)
-                self.selector = SymmetrySelector(self, dimensions)
-                self.selector.hide()
+                if all(np.equal(self.dimensions, final_dimensions)):
+                    self.block.merge(imported_block)
+                else:
+                    self.renderer.RemoveActor(self.block.actor)
+                    self.renderer.RemoveActor(self.grid.actor)
+                    self.renderer.RemoveActor(self.plane.actor)
+                    self.renderer.RemoveActor(self.selector.actor)
 
-                self.dimensions = dimensions
-                # set initial frame
-                self.reset_camera()
-                self.update_camera()
+                    self.grid = Grid(self, final_dimensions)
+                    self.plane = Plane(self, final_dimensions)
+                    self.selector = SymmetrySelector(self, final_dimensions)
+                    self.selector.hide()
+
+                    old_block = self.block
+                    self.block = Block(self, final_dimensions)
+                    self.block.merge(old_block)
+                    self.block.merge(imported_block)
+
+                    self.dimensions = final_dimensions
+                    # set initial frame
+                    self.reset_camera()
+                    self.update_camera()
             self.render()
 
     def action_export(self, unused):
