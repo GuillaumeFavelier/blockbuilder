@@ -4,4 +4,6 @@ PyQt5
 codespell
 pydocstyle
 pytest
+pytest-qt
 pytest-sugar
+coverage

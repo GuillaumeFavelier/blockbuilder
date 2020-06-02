@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QApplication
-from blockbuilder import Builder
+from blockbuilder.builder import Builder
 
 
 def main():

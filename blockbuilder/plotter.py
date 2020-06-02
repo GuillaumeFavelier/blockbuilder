@@ -94,7 +94,8 @@ class CorePlotter(MinimalPlotter):
         self.renderer.ResetCameraClippingRange(rng)
         self.render_window.Render()
 
-    def add_mesh(self, mesh, rgba):
+    def add_mesh(self, mesh, rgba=False, color=(1., 1., 1.), opacity=1.,
+                 edge_color=(0., 0., 0.)):
         """Add a mesh to the scene."""
         mapper = vtk.vtkDataSetMapper()
         mapper.SetInputData(mesh)
@@ -143,8 +144,8 @@ class Plotter(CorePlotter):
         # configuration
         self.load_graphic_quality()
 
-    def add_mesh(self, mesh, color=(1., 1., 1.), opacity=1.,
-                 edge_color=(0., 0., 0.), rgba=False):
+    def add_mesh(self, mesh, rgba=False, color=(1., 1., 1.), opacity=1.,
+                 edge_color=(0., 0., 0.)):
         """Add a mesh to the scene."""
         actor = super().add_mesh(mesh, rgba)
         prop = actor.GetProperty()
