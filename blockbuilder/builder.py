@@ -6,9 +6,9 @@ import numpy as np
 import vtk
 
 from .params import rcParams
-from .plotter import Plotter
 from .elements import Element, Symmetry, SymmetrySelector, Grid, Plane, Block
 from .intersection import Intersection
+from .interactive_plotter import InteractivePlotter
 
 from PyQt5 import QtCore
 from PyQt5.Qt import QIcon, QSize
@@ -45,7 +45,7 @@ class Toggle(enum.Enum):
     EDGES = enum.auto()
 
 
-class Builder(Plotter):
+class Builder(InteractivePlotter):
     """Main application."""
 
     def __init__(self, parent=None, testing=False):
@@ -53,10 +53,6 @@ class Builder(Plotter):
         super().__init__(parent=parent, testing=testing)
         self.unit = rcParams["unit"]
         self.default_block_color = rcParams["block"]["color"]
-        self.azimuth = rcParams["builder"]["azimuth"]
-        self.azimuth_rng = rcParams["builder"]["azimuth_rng"]
-        self.elevation_rng = rcParams["builder"]["elevation_rng"]
-        self.elevation = rcParams["builder"]["elevation"]
         self.toolbar_area = rcParams["app"]["toolbar"]["area"]
         self.icon_size = rcParams["app"]["toolbar"]["icon_size"]
         self.dimensions = rcParams["builder"]["dimensions"]
@@ -67,17 +63,14 @@ class Builder(Plotter):
         self.floor = 0.
         self.icons = None
         self.toolbar = None
-        self.picker = None
         self.current_block_mode = None
         self.mode_functions = None
-        self.cached_coords = [-1, -1, -1]
 
         # configuration
         self.show()
         self.load_elements()
         self.add_elements()
         self.load_block_modes()
-        self.load_interaction()
         self.load_icons()
         self.load_toolbar()
         self.selector.hide()
@@ -86,39 +79,12 @@ class Builder(Plotter):
 
     def update_camera(self):
         """Update the internal camera."""
-        rad_azimuth = _deg2rad(self.azimuth)
-        rad_elevation = _deg2rad(self.elevation)
-
-        position = self.grid.center + [
-            self.distance * np.cos(rad_azimuth) * np.sin(rad_elevation),
-            self.distance * np.sin(rad_azimuth) * np.sin(rad_elevation),
-            self.distance * np.cos(rad_elevation)]
-        self.camera.SetViewUp((0., 0., 1.))
-        self.camera.SetPosition(position)
-        self.camera.SetFocalPoint(self.grid.center)
+        self.focal_point = self.grid.center
+        super().update_camera()
 
     def move_camera(self, update, inverse=False):
-        """Move the camera depending on the given update property."""
-        if inverse:
-            delta = -2
-        else:
-            delta = 2
-        if update == "azimuth":
-            self.azimuth += delta
-            if self.azimuth < self.azimuth_rng[0]:
-                self.azimuth = self.azimuth + self.azimuth_rng[1]
-            if self.azimuth > self.azimuth_rng[1]:
-                self.azimuth = self.azimuth % self.azimuth_rng[1]
-        elif update == "elevation":
-            self.elevation += delta
-            self.elevation = _clamp(self.elevation, self.elevation_rng)
-        elif update == "distance":
-            self.distance += delta
-            self.distance = _clamp(self.distance, self.distance_rng)
-
-        self.update_camera()
-
-        # update pick
+        """Trigger a pick when moving the camera."""
+        super().move_camera(update, inverse)
         x, y = self.interactor.GetEventPosition()
         self.picker.Pick(x, y, 0, self.renderer)
         self.render_scene()
@@ -167,22 +133,6 @@ class Builder(Plotter):
         if func is not None:
             func(vtk_picker)
 
-    def on_key_press(self, vtk_picker, event):
-        """Process key press events."""
-        key = self.interactor.GetKeySym()
-        if key == rcParams["builder"]["bindings"]["distance_minus"]:
-            self.move_camera(update="distance", inverse=True)
-        if key == rcParams["builder"]["bindings"]["distance_plus"]:
-            self.move_camera(update="distance")
-        if key == rcParams["builder"]["bindings"]["azimuth_minus"]:
-            self.move_camera(update="azimuth", inverse=True)
-        if key == rcParams["builder"]["bindings"]["azimuth_plus"]:
-            self.move_camera(update="azimuth")
-        if key == rcParams["builder"]["bindings"]["elevation_minus"]:
-            self.move_camera(update="elevation", inverse=True)
-        if key == rcParams["builder"]["bindings"]["elevation_plus"]:
-            self.move_camera(update="elevation")
-
     def load_block_modes(self):
         """Load the block modes."""
         self.set_block_mode(BlockMode.BUILD)
@@ -224,44 +174,6 @@ class Builder(Plotter):
         self.grid = Grid(self.dimensions)
         self.plane = Plane(self.dimensions)
         self.selector = SymmetrySelector(self.dimensions)
-
-    def load_interaction(self):
-        """Load interactions."""
-        # disable default interactions
-        self.set_style(None)
-
-        # enable cell picking
-        self.picker = vtk.vtkCellPicker()
-        self.picker.AddObserver(
-            vtk.vtkCommand.EndPickEvent,
-            self.on_pick
-        )
-
-        # setup the key bindings
-        self.interactor.AddObserver(
-            vtk.vtkCommand.MouseMoveEvent,
-            self.on_mouse_move
-        )
-        self.interactor.AddObserver(
-            vtk.vtkCommand.MouseWheelForwardEvent,
-            self.on_mouse_wheel_forward
-        )
-        self.interactor.AddObserver(
-            vtk.vtkCommand.MouseWheelBackwardEvent,
-            self.on_mouse_wheel_backward
-        )
-        self.interactor.AddObserver(
-            vtk.vtkCommand.LeftButtonPressEvent,
-            self.on_mouse_left_press
-        )
-        self.interactor.AddObserver(
-            vtk.vtkCommand.LeftButtonReleaseEvent,
-            self.on_mouse_left_release
-        )
-        self.interactor.AddObserver(
-            vtk.vtkCommand.KeyPressEvent,
-            self.on_key_press
-        )
 
     def load_icons(self):
         """Load the icons.
@@ -534,20 +446,6 @@ def _get_toolbar_area(area):
         return QtCore.Qt.TopToolBarArea
     if area == "bottom":
         return QtCore.Qt.BottomToolBarArea
-
-
-def _clamp(value, rng):
-    value = rng[1] if value > rng[1] else value
-    value = rng[0] if value < rng[0] else value
-    return value
-
-
-def _deg2rad(deg):
-    return deg * np.pi / 180.
-
-
-def _rad2deg(rad):
-    return rad * 180. / np.pi
 
 
 def _rgb2str(color, is_int=False):

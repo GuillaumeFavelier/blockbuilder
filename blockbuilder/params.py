@@ -41,6 +41,7 @@ rcParams = {
     },
     "builder": {
         "dimensions": (32, 32, 32),
+        "view_up": (0, 0, 1),
         "azimuth": 0,
         "azimuth_rng": (0, 360),
         "elevation": 45,
