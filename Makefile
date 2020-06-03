@@ -21,10 +21,6 @@ coverage:
 	@echo "Run coverage"
 	@pytest --cov=blockbuilder -n 1
 
-coverage-report: coverage
-	@echo "Report coverage"
-	@coverage report
-
 coverage-html: coverage
 	@echo "Report HTML coverage"
 	@coverage html
