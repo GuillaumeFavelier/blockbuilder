@@ -54,8 +54,6 @@ jobs:
 - job: 'Linux'
   pool:
     vmImage: 'ubuntu-latest'
-  variables:
-    AZURE_CI_LINUX: 'True'
   steps:
   - script: sudo apt install libxkbcommon-x11-0
     displayName: 'Install libxkbcommon-x11-0'
