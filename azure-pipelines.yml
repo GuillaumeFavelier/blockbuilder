@@ -51,24 +51,24 @@ jobs:
   - bash: pytest -v blockbuilder -n 1
     displayName: 'Run tests'
 
-- job: 'Linux'
-  pool:
-    vmImage: 'ubuntu-latest'
-  steps:
-  - script: sudo apt install libxkbcommon-x11-0
-    displayName: 'Install libxkbcommon-x11-0'
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '3.7'
-      architecture: 'x64'
-      addToPath: true
-    displayName: 'Setup Python'
-  - bash: |
-      python -m pip install --upgrade pip setuptools wheel
-      pip install -r requirements_testing.txt
-      pip install pytest-azurepipelines pytest-faulthandler pytest-xvfb
-    displayName: 'Install dependencies'
-  - bash: pip install -e .
-    displayName: 'Install blockbuilder'
-  - bash: pytest -v blockbuilder -n 1
-    displayName: 'Run tests'
+# - job: 'Linux'
+#   pool:
+#     vmImage: 'ubuntu-latest'
+#   steps:
+#   - script: sudo apt install libxkbcommon-x11-0
+#     displayName: 'Install libxkbcommon-x11-0'
+#   - task: UsePythonVersion@0
+#     inputs:
+#       versionSpec: '3.7'
+#       architecture: 'x64'
+#       addToPath: true
+#     displayName: 'Setup Python'
+#   - bash: |
+#       python -m pip install --upgrade pip setuptools wheel
+#       pip install -r requirements_testing.txt
+#       pip install pytest-faulthandler pytest-xvfb
+#     displayName: 'Install dependencies'
+#   - bash: pip install -e .
+#     displayName: 'Install blockbuilder'
+#   - bash: pytest -v blockbuilder -n 1
+#     displayName: 'Run tests'

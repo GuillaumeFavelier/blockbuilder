@@ -13,6 +13,10 @@ pydocstyle:
 	@echo "Run pydocstyle"
 	@pydocstyle blockbuilder
 
+tests:
+	@echo "Run tests"
+	@pytest -v blockbuilder -n 1
+
 coverage:
 	@echo "Run coverage"
 	@pytest --cov=blockbuilder -n 1
