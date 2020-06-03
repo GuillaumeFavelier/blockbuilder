@@ -16,6 +16,10 @@ class InteractivePlotter(Plotter):
         self.focal_point = np.array([0, 0, 0])
         self.picker = None
 
+        bounds = np.array(self.renderer.ComputeVisiblePropBounds())
+        self.distance = max(bounds[1::2] - bounds[::2]) * 2.0
+        self.distance_rng = [self.distance * 0.5, self.distance * 1.5]
+
         # configure
         self.load_interaction()
 
@@ -37,6 +41,10 @@ class InteractivePlotter(Plotter):
         elif update == "distance":
             self.distance += delta
             self.distance = _clamp(self.distance, self.distance_rng)
+        else:
+            raise ValueError("Expected value for ``update`` is ``azimuth``, "
+                             "``elevation`` or ``distance`` but {} was given."
+                             .format(update))
         self.update_camera()
 
     def update_camera(self):
@@ -81,7 +89,12 @@ class InteractivePlotter(Plotter):
                 self.on_pick
             )
 
-        # setup the observers
+        # setup key press observer
+        self.interactor.AddObserver(
+            vtk.vtkCommand.KeyPressEvent,
+            self.on_key_press
+        )
+        # setup the other observers
         if hasattr(self, "on_mouse_move") and \
            callable(self.on_mouse_move):
             self.interactor.AddObserver(
@@ -112,20 +125,10 @@ class InteractivePlotter(Plotter):
                 vtk.vtkCommand.LeftButtonReleaseEvent,
                 self.on_mouse_left_release
             )
-        if hasattr(self, "on_key_press") and\
-           callable(self.on_key_press):
-            self.interactor.AddObserver(
-                vtk.vtkCommand.KeyPressEvent,
-                self.on_key_press
-            )
 
 
 def _deg2rad(deg):
     return deg * np.pi / 180.
-
-
-def _rad2deg(rad):
-    return rad * 180. / np.pi
 
 
 def _clamp(value, rng):
