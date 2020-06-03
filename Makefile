@@ -3,7 +3,7 @@ CODESPELL_SKIP ?= "*.pyc"
 
 all: doctest
 
-doctest: codespell pydocstyle
+style: codespell pydocstyle
 
 codespell:
 	@echo "Run codespell"

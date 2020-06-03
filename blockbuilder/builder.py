@@ -79,7 +79,7 @@ class Builder(InteractivePlotter):
 
     def update_camera(self):
         """Update the internal camera."""
-        self.focal_point = self.grid.center
+        self.set_focal_point(self.grid.center)
         super().update_camera()
 
     def move_camera(self, update, inverse=False):
@@ -88,6 +88,12 @@ class Builder(InteractivePlotter):
         x, y = self.interactor.GetEventPosition()
         self.picker.Pick(x, y, 0, self.renderer)
         self.render_scene()
+
+    def translate_camera(self, tr):
+        """Translate the camera."""
+        self.grid.translate(tr)
+        self.set_focal_point(self.grid.center)
+        super().translate_camera(tr)
 
     def on_mouse_move(self, vtk_picker, event):
         """Process mouse move events."""
@@ -98,20 +104,14 @@ class Builder(InteractivePlotter):
         """Process mouse wheel forward events."""
         tr = np.array([0., 0., self.unit])
         if self.grid.origin[2] < self.ceiling:
-            self.grid.translate(tr)
-            position = np.array(self.camera.GetPosition())
-            self.camera.SetPosition(position + tr)
-            self.camera.SetFocalPoint(self.grid.center)
+            self.translate_camera(tr)
         self.render_scene()
 
     def on_mouse_wheel_backward(self, vtk_picker, event):
         """Process mouse wheel backward events."""
         tr = np.array([0., 0., -self.unit])
         if self.grid.origin[2] > self.floor:
-            self.grid.translate(tr)
-            position = np.array(self.camera.GetPosition())
-            self.camera.SetPosition(position + tr)
-            self.camera.SetFocalPoint(self.grid.center)
+            self.translate_camera(tr)
         self.render_scene()
 
     def on_mouse_left_press(self, vtk_picker, event):

@@ -19,6 +19,8 @@ def test_interactive_plotter(qtbot):
     for key in keys:
         qtbot.keyPress(plotter.render_widget, _parse_key(key))
 
+    plotter.translate_camera([0, 0, 0])
+
     # check boundaries
     plotter.azimuth = plotter.azimuth_rng[0]
     plotter.move_camera(update="azimuth", inverse=False)

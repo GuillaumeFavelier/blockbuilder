@@ -27,6 +27,16 @@ class InteractivePlotter(Plotter):
         # configure
         self.load_interaction()
 
+    def set_focal_point(self, point):
+        """Set the focal point."""
+        self.focal_point = point
+        self.camera.SetFocalPoint(self.grid.center)
+
+    def translate_camera(self, tr):
+        """Translate the camera."""
+        position = np.array(self.camera.GetPosition())
+        self.camera.SetPosition(position + tr)
+
     def move_camera(self, update, inverse=False):
         """Move the camera depending on the given update property."""
         if inverse:
