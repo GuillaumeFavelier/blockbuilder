@@ -6,5 +6,6 @@ pydocstyle
 pytest
 pytest-qt
 pytest-sugar
+pytest-xdist
 pytest-subprocess
 coverage
