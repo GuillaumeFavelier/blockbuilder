@@ -15,7 +15,7 @@ pydocstyle:
 
 coverage:
 	@echo "Run coverage"
-	@coverage run -m pytest -v blockbuilder -n 1
+	@pytest --cov=blockbuilder -n 1
 
 coverage-report: coverage
 	@echo "Report coverage"

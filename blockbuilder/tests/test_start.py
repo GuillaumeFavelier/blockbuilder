@@ -1,14 +1,17 @@
-import sys
 import os
+import sys
+import pytest
 import subprocess
 from blockbuilder.app import start
 
 
+@pytest.mark.xfail(os.environ.get("AZURE_CI_LINUX", False))
 def test_start(qtbot):
     builder = start.main(True)
     qtbot.addWidget(builder)
 
 
+@pytest.mark.xfail(os.environ.get("AZURE_CI_LINUX", False))
 def test_subprocess_start(qapp, fake_process):
     command = [
         sys.executable, '-uc',

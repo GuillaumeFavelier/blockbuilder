@@ -1,6 +1,8 @@
-from blockbuilder.plotter import MinimalPlotter, CorePlotter, Plotter
+import os
+import pytest
 import vtk
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from blockbuilder.plotter import MinimalPlotter, CorePlotter, Plotter
 
 
 def get_poly_data():
@@ -33,6 +35,7 @@ def test_minimal_plotter(qtbot):
     plotter.close()
 
 
+@pytest.mark.xfail(os.environ.get("AZURE_CI_LINUX", False))
 def test_core_plotter(qtbot):
     black = (0, 0, 0)
     white = (1, 1, 1)
@@ -56,6 +59,7 @@ def test_core_plotter(qtbot):
     plotter.close()
 
 
+@pytest.mark.xfail(os.environ.get("AZURE_CI_LINUX", False))
 def test_plotter(qtbot):
     # default parameters
     mesh = get_poly_data()
