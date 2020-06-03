@@ -1,3 +1,5 @@
+"""Module about interactions with a plotter."""
+
 import numpy as np
 import vtk
 from .params import rcParams
@@ -5,8 +7,10 @@ from .plotter import Plotter
 
 
 class InteractivePlotter(Plotter):
+    """Plotter with interactions."""
 
     def __init__(self, parent=None, testing=False):
+        """Initialize the InteractivePlotter."""
         super().__init__(parent=parent, testing=testing)
         self.azimuth = rcParams["builder"]["azimuth"]
         self.azimuth_rng = rcParams["builder"]["azimuth_rng"]
