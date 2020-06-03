@@ -18,11 +18,11 @@ class Intersection(object):
                 self.intersections[actor.element_id.value] = idx
 
     def exist(self):
-        """Return True is there is any intersection."""
+        """Return True if there is any intersection."""
         return self.any_intersection
 
     def element(self, element_id):
-        """Return True is there is any intersection with element_id."""
+        """Return True if there is any intersection with element_id."""
         return self.intersections[element_id.value] is not None
 
     def point(self, element_id):

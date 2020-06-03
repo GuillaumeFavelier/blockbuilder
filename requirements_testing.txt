@@ -8,5 +8,4 @@ pytest-qt
 pytest-cov
 pytest-sugar
 pytest-xdist
-pytest-subprocess
 coverage

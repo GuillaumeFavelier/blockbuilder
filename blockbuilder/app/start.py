@@ -1,4 +1,3 @@
-import os
 from PyQt5.QtWidgets import QApplication
 from blockbuilder.builder import Builder
 
@@ -16,5 +15,4 @@ def main(testing=False):
 
 
 if __name__ == "__main__":
-    testing = os.environ.get("BB_TESTING", False)
-    main(testing)
+    main()
