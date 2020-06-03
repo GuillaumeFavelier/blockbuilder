@@ -2,7 +2,6 @@
 
 import vtk
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QMainWindow
 from .params import rcParams
 
@@ -10,46 +9,36 @@ from .params import rcParams
 class MinimalPlotter(QMainWindow):
     """Minimal plotter."""
 
-    signal_close = pyqtSignal()
-
     def __init__(self, parent=None):
         """Initialize the MinimalPlotter."""
-        super().__init__(parent)
-        self.signal_close.connect(self._delete)
+        super().__init__(parent=parent)
         self.render_widget = QVTKRenderWindowInteractor()
+        self.setCentralWidget(self.render_widget)
+        self.render_window = self.render_widget.GetRenderWindow()
         self.renderer = vtk.vtkRenderer()
         self.camera = self.renderer.GetActiveCamera()
-        self.render_window = self.render_widget.GetRenderWindow()
         self.render_window.AddRenderer(self.renderer)
         self.interactor = self.render_window.GetInteractor()
-        self.setCentralWidget(self.render_widget)
 
-    def start(self):
-        """Start the plotter."""
+    def showEvent(self, event):
+        """Prepare the context for 3d."""
+        event.accept()
         self.render_widget.Initialize()
-        self.render_widget.Start()
-        self.show()
 
     def closeEvent(self, event):
-        """Manage the close event."""
-        self.signal_close.emit()
+        """Clear the context properly."""
+        self.render_widget.Finalize()
         event.accept()
-
-    def _delete(self):
-        """Decrease reference count to avoid cycle."""
-        self.render_widget = None
-        self.render_window = None
-        self.renderer = None
-        self.camera = None
-        self.interactor = None
 
 
 class CorePlotter(MinimalPlotter):
     """Plotter specialized in low-level operations."""
 
-    def __init__(self):
+    def __init__(self, parent=None):
         """Initialize the Plotter."""
-        super().__init__()
+        super().__init__(parent=parent)
+        self.show_edges = rcParams["plotter"]["show_edges"]
+        self.line_width = rcParams["plotter"]["line_width"]
 
     def set_background(self, color, top=None):
         """Set the background color."""
@@ -86,7 +75,7 @@ class CorePlotter(MinimalPlotter):
         self.renderer.ResetCamera()
         self.renderer.Modified()
 
-    def render(self):
+    def render_scene(self):
         """Render the scene."""
         # fix the clipping planes being too small
         rng = [0] * 6
@@ -101,26 +90,29 @@ class CorePlotter(MinimalPlotter):
         mapper.SetInputData(mesh)
         actor = vtk.vtkActor()
         actor.SetMapper(mapper)
-        self.renderer.AddActor(actor)
         if rgba:
             mapper.SetColorModeToDirectScalars()
+        prop = actor.GetProperty()
+        prop.SetColor(color)
+        prop.SetOpacity(opacity)
+        prop.SetEdgeColor(edge_color)
+        prop.SetLineWidth(self.line_width)
+        prop.SetEdgeVisibility(self.show_edges)
+        self.renderer.AddActor(actor)
+        self.renderer.Modified()
         return actor
 
 
 class Plotter(CorePlotter):
     """Main plotter."""
 
-    def __init__(self, window_size=None, show_edges=None, line_width=None,
+    def __init__(self, parent=None, window_size=None,
                  advanced=None, background_top_color=None,
-                 background_bottom_color=None):
+                 background_bottom_color=None, testing=False):
         """Initialize the default visual properties."""
-        super().__init__()
+        super().__init__(parent=parent)
         if window_size is None:
             window_size = rcParams["plotter"]["window_size"]
-        if show_edges is None:
-            show_edges = rcParams["plotter"]["show_edges"]
-        if line_width is None:
-            line_width = rcParams["plotter"]["line_width"]
         if advanced is None:
             advanced = rcParams["plotter"]["advanced"]
         if background_top_color is None:
@@ -129,9 +121,11 @@ class Plotter(CorePlotter):
             background_bottom_color = \
                 rcParams["plotter"]["background_bottom_color"]
         self.window_size = window_size
-        self.show_edges = show_edges
-        self.line_width = line_width
-        self.advanced = advanced
+        if testing:
+            # On Azure, AA and smoothing cause segfaults (access violation)
+            self.advanced = False
+        else:
+            self.advanced = advanced
         self.background_top_color = background_top_color
         self.background_bottom_color = background_bottom_color
 
@@ -143,18 +137,6 @@ class Plotter(CorePlotter):
 
         # configuration
         self.load_graphic_quality()
-
-    def add_mesh(self, mesh, rgba=False, color=(1., 1., 1.), opacity=1.,
-                 edge_color=(0., 0., 0.)):
-        """Add a mesh to the scene."""
-        actor = super().add_mesh(mesh, rgba)
-        prop = actor.GetProperty()
-        prop.SetColor(color)
-        prop.SetOpacity(opacity)
-        prop.SetEdgeColor(edge_color)
-        prop.SetLineWidth(self.line_width)
-        prop.SetEdgeVisibility(self.show_edges)
-        return actor
 
     def load_graphic_quality(self):
         """Configure the visual quality."""

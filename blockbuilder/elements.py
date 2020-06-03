@@ -50,6 +50,7 @@ class Base(object):
         self.center = self.origin + np.multiply(self.dimensions / 2.,
                                                 self.spacing)
         self.mesh = vtk.vtkUniformGrid()
+        self.mesh.Initialize()
         self.mesh.SetDimensions(self.dimensions)
         self.mesh.SetSpacing(self.spacing)
         self.mesh.SetOrigin(self.origin)

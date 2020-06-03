@@ -17,14 +17,14 @@ coverage:
 	@echo "Run coverage"
 	@coverage run -m pytest -v blockbuilder
 
-coverage-report:
+coverage-report: coverage
 	@echo "Report coverage"
 	@coverage report
 
-coverage-html:
+coverage-html: coverage
 	@echo "Report HTML coverage"
 	@coverage html
 
-coverage-codacy:
+coverage-codacy: coverage
 	@echo "Report XML coverage"
 	@coverage xml -o cobertura.xml

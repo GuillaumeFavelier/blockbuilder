@@ -48,9 +48,9 @@ class Toggle(enum.Enum):
 class Builder(Plotter):
     """Main application."""
 
-    def __init__(self, dimensions=None):
+    def __init__(self, parent=None, testing=False):
         """Initialize the Builder."""
-        super().__init__()
+        super().__init__(parent=parent, testing=testing)
         self.unit = rcParams["unit"]
         self.default_block_color = rcParams["block"]["color"]
         self.azimuth = rcParams["builder"]["azimuth"]
@@ -59,9 +59,8 @@ class Builder(Plotter):
         self.elevation = rcParams["builder"]["elevation"]
         self.toolbar_area = rcParams["app"]["toolbar"]["area"]
         self.icon_size = rcParams["app"]["toolbar"]["icon_size"]
-        if dimensions is None:
-            dimensions = rcParams["builder"]["dimensions"]
-        self.set_dimensions(dimensions)
+        self.dimensions = rcParams["builder"]["dimensions"]
+        self.set_dimensions(self.dimensions)
         self.button_pressed = False
         self.button_released = False
         self.area_selection = False
@@ -74,18 +73,16 @@ class Builder(Plotter):
         self.cached_coords = [-1, -1, -1]
 
         # configuration
+        self.show()
         self.load_elements()
         self.add_elements()
         self.load_block_modes()
         self.load_interaction()
         self.load_icons()
         self.load_toolbar()
-
-        # set initial frame
         self.selector.hide()
         self.update_camera()
-        self.render()
-        self.start()
+        self.render_scene()
 
     def update_camera(self):
         """Update the internal camera."""
@@ -124,7 +121,7 @@ class Builder(Plotter):
         # update pick
         x, y = self.interactor.GetEventPosition()
         self.picker.Pick(x, y, 0, self.renderer)
-        self.render()
+        self.render_scene()
 
     def on_mouse_move(self, vtk_picker, event):
         """Process mouse move events."""
@@ -139,7 +136,7 @@ class Builder(Plotter):
             position = np.array(self.camera.GetPosition())
             self.camera.SetPosition(position + tr)
             self.camera.SetFocalPoint(self.grid.center)
-        self.render()
+        self.render_scene()
 
     def on_mouse_wheel_backward(self, vtk_picker, event):
         """Process mouse wheel backward events."""
@@ -149,7 +146,7 @@ class Builder(Plotter):
             position = np.array(self.camera.GetPosition())
             self.camera.SetPosition(position + tr)
             self.camera.SetFocalPoint(self.grid.center)
-        self.render()
+        self.render_scene()
 
     def on_mouse_left_press(self, vtk_picker, event):
         """Process mouse left button press events."""
@@ -384,7 +381,7 @@ class Builder(Plotter):
                 self.grid.set_block_mode(value)
             if self.selector is not None:
                 self.selector.set_block_mode(value)
-        self.render()
+        self.render_scene()
 
     def set_block_color(self, value=None, is_int=True):
         """Set the current block color."""
@@ -410,7 +407,7 @@ class Builder(Plotter):
         intersection = Intersection(vtk_picker)
         if not intersection.exist():
             self.selector.hide()
-            self.render()
+            self.render_scene()
             return
 
         if not intersection.element(Element.GRID):
@@ -452,14 +449,14 @@ class Builder(Plotter):
                 for coords in self.selector.selection():
                     operation(coords)
 
-        self.render()
+        self.render_scene()
 
     def action_reset(self, unused):
         """Reset the block properties."""
         del unused
         self.block.remove_all()
         self.set_block_color(self.default_block_color, is_int=False)
-        self.render()
+        self.render_scene()
 
     def action_import(self, unused):
         """Import an external blockset."""
@@ -501,7 +498,7 @@ class Builder(Plotter):
 
                     self.selector.hide()
                     self.update_camera()
-            self.render()
+            self.render_scene()
 
     def action_export(self, unused):
         """Export the internal blockset."""
@@ -525,7 +522,7 @@ class Builder(Plotter):
     def toggle_edges(self, value):
         """Toggle area selection."""
         self.block.toggle_edges(value)
-        self.render()
+        self.render_scene()
 
 
 def _get_toolbar_area(area):

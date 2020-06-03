@@ -6,4 +6,5 @@ pydocstyle
 pytest
 pytest-qt
 pytest-sugar
+pytest-subprocess
 coverage
