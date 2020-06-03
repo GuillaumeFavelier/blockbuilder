@@ -9,27 +9,20 @@ pr:
 
 jobs:
 
-# - job: 'Linux'
-#   pool:
-#     vmImage: 'ubuntu-latest'
-#   steps:
-#   - script: sudo apt install libxkbcommon-x11-0
-#     displayName: 'Install libxkbcommon-x11-0'
-#   - task: UsePythonVersion@0
-#     inputs:
-#       versionSpec: '3.7'
-#     displayName: 'Use Python 3.7'
-#   - script: |
-#       python -m pip install --upgrade pip setuptools wheel
-#       python -m pip install -r requirements.txt
-#       python -m pip install pytest pytest-azurepipelines pytest-faulthandler pytest-qt
-#       python -m pip install git+git://github.com/ponty/PyVirtualDisplay.git
-#       python -m pip install git+git://github.com/The-Compiler/pytest-xvfb.git
-#     displayName: 'Install dependencies'
-#   - script: python setup.py develop
-#     displayName: 'Install blockbuilder'
-#   - script: pytest -s blockbuilder/tests
-#     displayName: 'Run tests'
+- job: 'Style'
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.8'
+      architecture: 'x64'
+      addToPath: true
+  - bash: python -m pip install --upgrade pip setuptools wheel
+  - bash: pip install codespell
+  - bash: make codespell
+  - bash: pip install pydocstyle
+  - bash: make pydocstyle
 
 - job: 'Windows'
   pool:
@@ -53,3 +46,25 @@ jobs:
   - bash: |
       pytest -v blockbuilder
     displayName: 'Run tests'
+
+# - job: 'Linux'
+#   pool:
+#     vmImage: 'ubuntu-latest'
+#   steps:
+#   - script: sudo apt install libxkbcommon-x11-0
+#     displayName: 'Install libxkbcommon-x11-0'
+#   - task: UsePythonVersion@0
+#     inputs:
+#       versionSpec: '3.7'
+#     displayName: 'Use Python 3.7'
+#   - script: |
+#       python -m pip install --upgrade pip setuptools wheel
+#       python -m pip install -r requirements.txt
+#       python -m pip install pytest pytest-azurepipelines pytest-faulthandler pytest-qt
+#       python -m pip install git+git://github.com/ponty/PyVirtualDisplay.git
+#       python -m pip install git+git://github.com/The-Compiler/pytest-xvfb.git
+#     displayName: 'Install dependencies'
+#   - script: python setup.py develop
+#     displayName: 'Install blockbuilder'
+#   - script: pytest -s blockbuilder/tests
+#     displayName: 'Run tests'
