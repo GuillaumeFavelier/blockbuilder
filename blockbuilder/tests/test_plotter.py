@@ -21,6 +21,8 @@ def get_uniform_grid():
     return mesh
 
 
+@pytest.mark.skipif(os.environ.get("AZURE_CI_LINUX", False),
+                    reason="Bug with pyvirtualdisplay")
 def test_minimal_plotter(qtbot):
     plotter = MinimalPlotter()
     assert _hasattr(plotter, "render_widget", QVTKRenderWindowInteractor)
@@ -35,7 +37,8 @@ def test_minimal_plotter(qtbot):
     plotter.close()
 
 
-@pytest.mark.xfail(os.environ.get("AZURE_CI_LINUX", False))
+@pytest.mark.skipif(os.environ.get("AZURE_CI_LINUX", False),
+                    reason="Bug with pyvirtualdisplay")
 def test_core_plotter(qtbot):
     black = (0, 0, 0)
     white = (1, 1, 1)
@@ -59,7 +62,8 @@ def test_core_plotter(qtbot):
     plotter.close()
 
 
-@pytest.mark.xfail(os.environ.get("AZURE_CI_LINUX", False))
+@pytest.mark.skipif(os.environ.get("AZURE_CI_LINUX", False),
+                    reason="Bug with pyvirtualdisplay")
 def test_plotter(qtbot):
     # default parameters
     mesh = get_poly_data()
