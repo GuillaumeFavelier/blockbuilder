@@ -18,11 +18,17 @@ jobs:
       versionSpec: '3.8'
       architecture: 'x64'
       addToPath: true
+    displayName: 'Setup Python'
   - bash: python -m pip install --upgrade pip setuptools wheel
+    displayName: 'Install dependencies'
   - bash: pip install codespell
+    displayName: 'Install codespell'
   - bash: make codespell
+    displayName: 'Run codespell'
   - bash: pip install pydocstyle
+    displayName: 'Install pydocstyle'
   - bash: make pydocstyle
+    displayName: 'Run pydocstyle'
 
 - job: 'Windows'
   pool:
@@ -40,11 +46,9 @@ jobs:
       python -m pip install --upgrade pip setuptools wheel
       pip install -r requirements_testing.txt
     displayName: 'Install dependencies'
-  - bash: |
-      pip install -e .
+  - bash: pip install -e .
     displayName: 'Install blockbuilder'
-  - bash: |
-      pytest -v blockbuilder
+  - bash: pytest -v blockbuilder -n 1
     displayName: 'Run tests'
 
 # - job: 'Linux'
@@ -56,15 +60,15 @@ jobs:
 #   - task: UsePythonVersion@0
 #     inputs:
 #       versionSpec: '3.7'
-#     displayName: 'Use Python 3.7'
-#   - script: |
+#       architecture: 'x64'
+#       addToPath: true
+#     displayName: 'Setup Python'
+#   - bash: |
 #       python -m pip install --upgrade pip setuptools wheel
-#       python -m pip install -r requirements.txt
-#       python -m pip install pytest pytest-azurepipelines pytest-faulthandler pytest-qt
-#       python -m pip install git+git://github.com/ponty/PyVirtualDisplay.git
-#       python -m pip install git+git://github.com/The-Compiler/pytest-xvfb.git
+#       pip install -r requirements_testing.txt
+#       pip install pytest-azurepipelines pytest-faulthandler pytest-xvfb
 #     displayName: 'Install dependencies'
-#   - script: python setup.py develop
+#   - bash: pip install -e .
 #     displayName: 'Install blockbuilder'
-#   - script: pytest -s blockbuilder/tests
+#   - bash: pytest -v blockbuilder -n 1
 #     displayName: 'Run tests'
