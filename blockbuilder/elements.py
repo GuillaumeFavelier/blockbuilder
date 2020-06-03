@@ -30,16 +30,17 @@ class Symmetry(enum.Enum):
 class Base(object):
     """."""
 
-    def __init__(self, plotter, element_id, dimensions, color,
+    def __init__(self, element_id, dimensions, color,
                  opacity, origin=None, spacing=None):
         """Initialize the Base."""
+        self.actor = None
+        self.element_id = element_id
         self.unit = rcParams["unit"]
         self.edge_color_offset = rcParams["base"]["edge_color_offset"]
         if origin is None:
             origin = rcParams["origin"]
         if spacing is None:
             spacing = [self.unit, self.unit, self.unit]
-        self.plotter = plotter
         self.dimensions = np.asarray(dimensions)
         self.origin = np.asarray(origin)
         self.color = color
@@ -49,17 +50,16 @@ class Base(object):
         self.center = self.origin + np.multiply(self.dimensions / 2.,
                                                 self.spacing)
         self.mesh = vtk.vtkUniformGrid()
+        self.mesh.Initialize()
         self.mesh.SetDimensions(self.dimensions)
         self.mesh.SetSpacing(self.spacing)
         self.mesh.SetOrigin(self.origin)
-        self.actor = self.plotter.add_mesh(
-            mesh=self.mesh,
-            color=self.color,
-            edge_color=self.edge_color,
-            opacity=self.opacity,
-        )
-        # add data for picking
-        self.actor.element_id = element_id
+        self.plotting = {
+            "mesh": self.mesh,
+            "color": self.color,
+            "edge_color": self.edge_color,
+            "opacity": self.opacity,
+        }
 
     def set_block_mode(self, mode):
         """Set the block mode."""
@@ -86,7 +86,7 @@ class Base(object):
 class Grid(Base):
     """Grid element of the scene."""
 
-    def __init__(self, plotter, dimensions):
+    def __init__(self, dimensions):
         """Initialize the Grid."""
         color = rcParams["grid"]["color"]["build"]
         opacity = rcParams["grid"]["opacity"]
@@ -96,7 +96,6 @@ class Grid(Base):
             1
         ]
         super().__init__(
-            plotter=plotter,
             element_id=Element.GRID,
             dimensions=dimensions,
             color=color,
@@ -107,7 +106,7 @@ class Grid(Base):
 class Plane(Base):
     """Plane element of the scene."""
 
-    def __init__(self, plotter, dimensions):
+    def __init__(self, dimensions):
         """Initialize the Plane."""
         unit = rcParams["unit"]
         origin = rcParams["origin"] - np.array([0, 0, unit])
@@ -120,7 +119,6 @@ class Plane(Base):
         ]
         dimensions = [2, 2, 2]
         super().__init__(
-            plotter=plotter,
             element_id=Element.PLANE,
             dimensions=dimensions,
             color=color,
@@ -128,19 +126,17 @@ class Plane(Base):
             origin=origin,
             spacing=spacing,
         )
-        _resolve_coincident_topology(self.actor)
 
 
 class Selector(Base):
     """Selector element of the scene."""
 
-    def __init__(self, plotter):
+    def __init__(self):
         """Initialize the Selector."""
         dimensions = [2, 2, 2]
         color = rcParams["selector"]["color"]["build"]
         opacity = rcParams["selector"]["opacity"]
         super().__init__(
-            plotter=plotter,
             element_id=Element.SELECTOR,
             dimensions=dimensions,
             color=color,
@@ -171,11 +167,10 @@ class Selector(Base):
 class AreaSelector(Selector):
     """Selector that supports area."""
 
-    def __init__(self, plotter):
+    def __init__(self):
         """Initialize the selector."""
-        super().__init__(plotter)
+        super().__init__()
         self.area = None
-        self.active_selection = False
         self.area_first_coords = None
         self.area_last_coords = None
 
@@ -190,14 +185,12 @@ class AreaSelector(Selector):
         self.select(self.area[0])
         self.mesh.SetDimensions(coords_diff)
         self.mesh.Modified()
-        self.active_selection = True
 
     def reset_area(self):
         """Reset the selector."""
         dimensions = [2, 2, 2]
         self.mesh.SetDimensions(dimensions)
         self.mesh.Modified()
-        self.active_selection = False
         self.area_first_coords = None
         self.area_last_coords = None
 
@@ -221,20 +214,16 @@ class AreaSelector(Selector):
         """Return the current area selection."""
         return self.area
 
-    def is_selection_active(self):
-        """Return True if the selection is active."""
-        return self.active_selection
-
 
 class SymmetrySelector(AreaSelector):
     """Selector that supports symmetry."""
 
-    def __init__(self, plotter, dimensions):
+    def __init__(self, dimensions):
         """Initialize the selector."""
-        super().__init__(plotter)
-        self.selector_x = AreaSelector(plotter)
-        self.selector_y = AreaSelector(plotter)
-        self.selector_xy = AreaSelector(plotter)
+        super().__init__()
+        self.selector_x = AreaSelector()
+        self.selector_y = AreaSelector()
+        self.selector_xy = AreaSelector()
         self.symmetry = Symmetry.SYMMETRY_NONE
         self.dimensions = dimensions
 
@@ -337,14 +326,16 @@ class SymmetrySelector(AreaSelector):
 class Block(object):
     """Main block manager."""
 
-    def __init__(self, plotter, dimensions):
+    def __init__(self, dimensions, mesh=None):
         """Initialize the block manager."""
+        self.actor = None
+        self.element_id = Element.BLOCK
         self.unit = rcParams["unit"]
         self.origin = rcParams["origin"]
-        self.color_array = rcParams["block"]["color_array"]
+        self.color_array_name = rcParams["block"]["color_array_name"]
         self.color = rcParams["block"]["color"]
         self.edge_color = rcParams["block"]["edge_color"]
-        self.plotter = plotter
+        self.merge_policy = rcParams["block"]["merge_policy"]
         self.dimensions = np.asarray(dimensions)
         self.spacing = np.asarray([self.unit, self.unit, self.unit])
 
@@ -360,22 +351,42 @@ class Block(object):
                     points.SetPoint(counter, point)
                     counter += 1
 
-        self.mesh = vtk.vtkStructuredGrid()
-        self.mesh.SetDimensions(self.dimensions)
-        self.mesh.SetPoints(points)
-        _set_mesh_cell_array(
-            self.mesh,
-            self.color_array,
-            np.tile(self.color, (self.number_of_cells, 1)),
-        )
-        self.remove_all()
-        self.actor = self.plotter.add_mesh(
-            self.mesh,
-            edge_color=self.edge_color,
-            rgba=True,
-        )
-        _resolve_coincident_topology(self.actor)
-        self.actor.element_id = Element.BLOCK
+        if mesh is None:
+            self.mesh = vtk.vtkStructuredGrid()
+            self.mesh.SetDimensions(self.dimensions)
+            self.mesh.SetPoints(points)
+            self.color_array = _add_mesh_cell_array(
+                self.mesh,
+                self.color_array_name,
+                np.tile(self.color, (self.number_of_cells, 1)),
+            )
+            self.remove_all()
+        else:
+            self.mesh = mesh
+            self.color_array = _get_mesh_cell_array(
+                mesh,
+                self.color_array_name
+            )
+        self.plotting = {
+            "mesh": self.mesh,
+            "edge_color": self.edge_color,
+            "rgba": True,
+        }
+
+    def merge(self, block):
+        """Merge the input block properties."""
+        color_array = block.color_array
+        for cell_id in range(block.number_of_cells):
+            if block.mesh.IsCellVisible(cell_id):
+                if self.merge_policy == "external" or \
+                   (self.merge_policy == "internal" and
+                        not self.mesh.IsCellVisible(cell_id)):
+                    coords = _cell_to_coords(cell_id, block.dimensions)
+                    cell_id = _coords_to_cell(coords, self.dimensions)
+                    self.mesh.UnBlankCell(cell_id)
+                    color = color_array.GetTuple3(cell_id)
+                    self.color_array.SetTuple3(cell_id, *color)
+        self.mesh.Modified()
 
     def add(self, coords):
         """Add the block at the given coords."""
@@ -383,14 +394,19 @@ class Block(object):
             area = coords
             for x in np.arange(area[0][0], area[1][0] + 1):
                 for y in np.arange(area[0][1], area[1][1] + 1):
-                    _coords = [x, y, area[0][2]]
-                    cell_id = _coords_to_cell(_coords, self.dimensions)
-                    if not self.mesh.IsCellVisible(cell_id):
-                        self.mesh.UnBlankCell(cell_id)
+                    for z in np.arange(area[0][2], area[1][2] + 1):
+                        _coords = [x, y, z]
+                        cell_id = _coords_to_cell(_coords, self.dimensions)
+                        if not self.mesh.IsCellVisible(cell_id):
+                            self.mesh.UnBlankCell(cell_id)
+                        self.color_array.SetTuple3(
+                            cell_id, *self.color)
         else:
             cell_id = _coords_to_cell(coords, self.dimensions)
             if not self.mesh.IsCellVisible(cell_id):
                 self.mesh.UnBlankCell(cell_id)
+            self.color_array.SetTuple3(
+                cell_id, *self.color)
         self.mesh.Modified()
 
     def add_all(self):
@@ -405,11 +421,12 @@ class Block(object):
             area = coords
             for x in np.arange(area[0][0], area[1][0] + 1):
                 for y in np.arange(area[0][1], area[1][1] + 1):
-                    _coords = [x, y, area[0][2]]
-                    cell_id = _coords_to_cell(_coords, self.dimensions)
-                    if self.mesh.IsCellVisible(cell_id):
-                        self.mesh.BlankCell(cell_id)
-                        self.mesh.Modified()
+                    for z in np.arange(area[0][2], area[1][2] + 1):
+                        _coords = [x, y, z]
+                        cell_id = _coords_to_cell(_coords, self.dimensions)
+                        if self.mesh.IsCellVisible(cell_id):
+                            self.mesh.BlankCell(cell_id)
+                            self.mesh.Modified()
         else:
             cell_id = _coords_to_cell(coords, self.dimensions)
             if self.mesh.IsCellVisible(cell_id):
@@ -431,13 +448,19 @@ class Block(object):
         prop = self.actor.GetProperty()
         prop.SetEdgeVisibility(self.show_edges)
 
+    def set_color(self, color, is_int=False):
+        """Set the current color."""
+        if is_int:
+            color = color / 255.
+        self.color = color
+
 
 def _coords_to_cell(coords, dimensions):
     coords = np.asarray(coords)
     cell_id = coords[0] + \
         coords[1] * (dimensions[0] - 1) + \
         coords[2] * (dimensions[0] - 1) * (dimensions[1] - 1)
-    return cell_id
+    return int(cell_id)
 
 
 def _cell_to_coords(cell_id, dimensions):
@@ -454,13 +477,19 @@ def _cell_to_coords(cell_id, dimensions):
     return coords
 
 
-def _set_mesh_cell_array(mesh, array_name, array):
+def _add_mesh_cell_array(mesh, array_name, array):
     from vtk.util.numpy_support import numpy_to_vtk
     cell_data = mesh.GetCellData()
     vtk_array = numpy_to_vtk(array)
     vtk_array.SetName(array_name)
     cell_data.AddArray(vtk_array)
     cell_data.SetActiveScalars(array_name)
+    return vtk_array
+
+
+def _get_mesh_cell_array(mesh, array_name):
+    cell_data = mesh.GetCellData()
+    return cell_data.GetArray(array_name)
 
 
 def _resolve_coincident_topology(actor):

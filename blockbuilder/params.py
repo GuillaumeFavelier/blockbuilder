@@ -33,13 +33,15 @@ rcParams = {
         "opacity": .7,
     },
     "block": {
-        "color_array": "color",
-        "color": (1., 1., 1., 1.),
+        "color_array_name": "color",
+        "color": (.7, .7, .7),
         "edge_color": (.0, .0, .0),
+        "merge_policies": ["external", "internal"],
+        "merge_policy": "external",
     },
     "builder": {
-        "name": "BlockBuilder",
         "dimensions": (32, 32, 32),
+        "view_up": (0, 0, 1),
         "azimuth": 0,
         "azimuth_rng": (0, 360),
         "elevation": 45,
@@ -56,5 +58,13 @@ rcParams = {
             "select": False,
             "edges": True,
         },
-    }
+    },
+    "app": {
+        "name": "BlockBuilder",
+        "toolbar": {
+            "areas": ["left", "right", "top", "bottom"],
+            "area": "top",
+            "icon_size": (36, 36),
+        },
+    },
 }

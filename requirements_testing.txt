@@ -1,0 +1,11 @@
+numpy
+vtk
+PyQt5
+codespell
+pydocstyle
+pytest
+pytest-qt
+pytest-cov
+pytest-sugar
+pytest-xdist
+coverage
