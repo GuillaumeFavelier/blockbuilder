@@ -1,9 +1,9 @@
 """Module about the block element."""
 
 import numpy as np
-import vtk
 from .params import rcParams
 from .element import ElementId
+from .utils import get_structured_grid, get_mesh_cell_array
 
 
 class Block(object):
@@ -14,42 +14,33 @@ class Block(object):
         self.actor = None
         self.element_id = ElementId.BLOCK
         self.unit = rcParams["unit"]
-        self.origin = rcParams["origin"]
+        self.origin = np.asarray(rcParams["origin"])
         self.color_array_name = rcParams["block"]["color_array_name"]
-        self.color = rcParams["block"]["color"]
-        self.edge_color = rcParams["block"]["edge_color"]
+        self.color = np.asarray(rcParams["block"]["color"])
+        self.edge_color = np.asarray(rcParams["block"]["edge_color"])
         self.merge_policy = rcParams["block"]["merge_policy"]
-        self.dimensions = np.asarray(dimensions)
+        # we assume that the input mesh respect the spacing
         self.spacing = np.asarray([self.unit, self.unit, self.unit])
 
-        counter = 0
-        self.number_of_points = np.prod(self.dimensions)
-        self.number_of_cells = np.prod(self.dimensions - 1)
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(self.number_of_points)
-        for k in range(self.dimensions[0]):
-            for j in range(self.dimensions[1]):
-                for i in range(self.dimensions[2]):
-                    point = self.origin + np.multiply([i, j, k], self.spacing)
-                    points.SetPoint(counter, point)
-                    counter += 1
-
         if mesh is None:
-            self.mesh = vtk.vtkStructuredGrid()
-            self.mesh.SetDimensions(self.dimensions)
-            self.mesh.SetPoints(points)
-            self.color_array = _add_mesh_cell_array(
-                self.mesh,
-                self.color_array_name,
-                np.tile(self.color, (self.number_of_cells, 1)),
+            self.dimensions = np.asarray(dimensions)
+            self.number_of_cells = int(np.prod(self.dimensions - 1))
+            self.mesh = get_structured_grid(
+                dimensions=self.dimensions,
+                origin=self.origin,
+                spacing=self.spacing,
+                array_name=self.color_array_name,
+                color=self.color,
             )
             self.remove_all()
         else:
+            self.dimensions = np.asarray(mesh.GetDimensions())
+            self.number_of_cells = int(mesh.GetNumberOfCells())
             self.mesh = mesh
-            self.color_array = _get_mesh_cell_array(
-                mesh,
-                self.color_array_name
-            )
+        self.color_array = get_mesh_cell_array(
+            self.mesh,
+            self.color_array_name
+        )
         self.plotting = {
             "mesh": self.mesh,
             "edge_color": self.edge_color,
@@ -158,21 +149,6 @@ def _cell_to_coords(cell_id, dimensions):
     coords[1] = np.floor(coords[1] / offset[1])
     coords[0] = (cell_id % offset[2]) % offset[1]
     return coords
-
-
-def _add_mesh_cell_array(mesh, array_name, array):
-    from vtk.util.numpy_support import numpy_to_vtk
-    cell_data = mesh.GetCellData()
-    vtk_array = numpy_to_vtk(array)
-    vtk_array.SetName(array_name)
-    cell_data.AddArray(vtk_array)
-    cell_data.SetActiveScalars(array_name)
-    return vtk_array
-
-
-def _get_mesh_cell_array(mesh, array_name):
-    cell_data = mesh.GetCellData()
-    return cell_data.GetArray(array_name)
 
 
 def _resolve_coincident_topology(actor):

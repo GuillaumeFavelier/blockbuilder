@@ -1,22 +1,5 @@
-import vtk
-from blockbuilder.utils import _hasattr
+from blockbuilder.utils import _hasattr, get_poly_data, get_uniform_grid
 from blockbuilder.core_plotter import CorePlotter
-
-
-def get_poly_data():
-    mesh = vtk.vtkSphereSource()
-    mesh.SetPhiResolution(8)
-    mesh.SetThetaResolution(8)
-    return mesh.GetOutput()
-
-
-def get_uniform_grid():
-    mesh = vtk.vtkUniformGrid()
-    mesh.Initialize()
-    mesh.SetDimensions(2, 2, 2)
-    mesh.SetSpacing(1, 1, 1)
-    mesh.SetOrigin(0, 0, 0)
-    return mesh
 
 
 def test_core_plotter(qtbot):
