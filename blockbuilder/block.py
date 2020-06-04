@@ -65,16 +65,12 @@ class Block(object):
     def add(self, coords):
         """Add the block at the given coords."""
         if isinstance(coords, tuple):
-            area = coords
-            for x in np.arange(area[0][0], area[1][0] + 1):
-                for y in np.arange(area[0][1], area[1][1] + 1):
-                    for z in np.arange(area[0][2], area[1][2] + 1):
-                        _coords = [x, y, z]
-                        cell_id = _coords_to_cell(_coords, self.dimensions)
-                        if not self.mesh.IsCellVisible(cell_id):
-                            self.mesh.UnBlankCell(cell_id)
-                        self.color_array.SetTuple3(
-                            cell_id, *self.color)
+            for _coords in _area_to_coords(coords):
+                cell_id = _coords_to_cell(_coords, self.dimensions)
+                if not self.mesh.IsCellVisible(cell_id):
+                    self.mesh.UnBlankCell(cell_id)
+                self.color_array.SetTuple3(
+                    cell_id, *self.color)
         else:
             cell_id = _coords_to_cell(coords, self.dimensions)
             if not self.mesh.IsCellVisible(cell_id):
@@ -92,15 +88,11 @@ class Block(object):
     def remove(self, coords):
         """Remove the block at the given coords."""
         if isinstance(coords, tuple):
-            area = coords
-            for x in np.arange(area[0][0], area[1][0] + 1):
-                for y in np.arange(area[0][1], area[1][1] + 1):
-                    for z in np.arange(area[0][2], area[1][2] + 1):
-                        _coords = [x, y, z]
-                        cell_id = _coords_to_cell(_coords, self.dimensions)
-                        if self.mesh.IsCellVisible(cell_id):
-                            self.mesh.BlankCell(cell_id)
-                            self.mesh.Modified()
+            for _coords in _area_to_coords(coords):
+                cell_id = _coords_to_cell(_coords, self.dimensions)
+                if self.mesh.IsCellVisible(cell_id):
+                    self.mesh.BlankCell(cell_id)
+                    self.mesh.Modified()
         else:
             cell_id = _coords_to_cell(coords, self.dimensions)
             if self.mesh.IsCellVisible(cell_id):
@@ -124,6 +116,13 @@ class Block(object):
         if is_int:
             color = color / 255.
         self.color = color
+
+
+def _area_to_coords(area):
+    X = np.arange(area[0][0], area[1][0] + 1)
+    Y = np.arange(area[0][1], area[1][1] + 1)
+    Z = np.arange(area[0][2], area[1][2] + 1)
+    return np.array(np.meshgrid(X, Y, Z)).T.reshape(-1, 3)
 
 
 def _coords_to_cell(coords, dimensions):
