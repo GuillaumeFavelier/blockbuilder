@@ -45,7 +45,7 @@ class Toggle(enum.Enum):
     EDGES = enum.auto()
 
 
-class Builder(InteractivePlotter):
+class MainPlotter(InteractivePlotter):
     """Main application."""
 
     def __init__(self, parent=None, testing=False):

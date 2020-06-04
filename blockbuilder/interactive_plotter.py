@@ -3,10 +3,10 @@
 import numpy as np
 import vtk
 from .params import rcParams
-from .plotter import Plotter
+from .core_plotter import CorePlotter
 
 
-class InteractivePlotter(Plotter):
+class InteractivePlotter(CorePlotter):
     """Plotter with interactions."""
 
     def __init__(self, parent=None, testing=False):
