@@ -1,7 +1,6 @@
 [run]
 branch = True
 source = blockbuilder
-include = */blockbuilder/*
 omit =
     */tests/*
 		*/icons/resources.py
