@@ -11,7 +11,7 @@ rcParams = {
         "background_top_color": (0.05, 0.05, 0.05),
         "background_bottom_color": (0., 0., .35),
     },
-    "base": {
+    "element": {
         "edge_color_offset": (.15, .15, .15),
     },
     "grid": {
