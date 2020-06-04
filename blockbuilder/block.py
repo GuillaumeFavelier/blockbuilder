@@ -113,17 +113,14 @@ class Block(object):
             self.mesh.BlankCell(cell_id)
         self.mesh.Modified()
 
-    def toggle_edges(self, value=None):
+    def toggle_edges(self, value):
         """Toggle visibility of the block edges."""
-        if value is None:
-            self.show_edges = not self.show_edges
-        else:
-            self.show_edges = value
         prop = self.actor.GetProperty()
-        prop.SetEdgeVisibility(self.show_edges)
+        prop.SetEdgeVisibility(value)
 
     def set_color(self, color, is_int=False):
         """Set the current color."""
+        color = np.asarray(color)
         if is_int:
             color = color / 255.
         self.color = color
@@ -149,9 +146,3 @@ def _cell_to_coords(cell_id, dimensions):
     coords[1] = np.floor(coords[1] / offset[1])
     coords[0] = (cell_id % offset[2]) % offset[1]
     return coords
-
-
-def _resolve_coincident_topology(actor):
-    mapper = actor.GetMapper()
-    mapper.SetResolveCoincidentTopologyToPolygonOffset()
-    mapper.SetRelativeCoincidentTopologyPolygonOffsetParameters(+1., +1.)
