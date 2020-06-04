@@ -1,7 +1,7 @@
 """Module about the main application."""
 
 import numpy as np
-from .elements import Element
+from .element import ElementId
 
 
 class Intersection(object):
@@ -11,7 +11,7 @@ class Intersection(object):
         """Initialize the Intersection manager."""
         self.any_intersection = (picker.GetCellId() != -1)
         if self.any_intersection:
-            self.intersections = [None for element in Element]
+            self.intersections = [None for element in ElementId]
             self.picked_points = picker.GetPickedPositions()
             self.picked_actors = picker.GetActors()
             for idx, actor in enumerate(self.picked_actors):

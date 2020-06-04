@@ -6,7 +6,11 @@ import numpy as np
 import vtk
 
 from .params import rcParams
-from .elements import Element, Symmetry, SymmetrySelector, Grid, Plane, Block
+from .element import ElementId
+from .selector import Symmetry, SymmetrySelector
+from .grid import Grid
+from .plane import Plane
+from .block import Block
 from .intersection import Intersection
 from .interactive_plotter import InteractivePlotter
 
@@ -18,19 +22,15 @@ from PyQt5.QtWidgets import (QPushButton, QToolButton, QButtonGroup,
 
 @enum.unique
 class BlockMode(enum.Enum):
-    """List the modes available in Builder."""
+    """List the modes available in MainPlotter."""
 
     BUILD = enum.auto()
     DELETE = enum.auto()
-    # CAMERA = enum.auto()
-    # LIBRARY = enum.auto()
-    # SETTINGS = enum.auto()
-    # HELP = enum.auto()
 
 
 @enum.unique
 class Action(enum.Enum):
-    """List the actions available in Builder."""
+    """List the actions available in MainPlotter."""
 
     RESET = enum.auto()
     IMPORT = enum.auto()
@@ -39,7 +39,7 @@ class Action(enum.Enum):
 
 @enum.unique
 class Toggle(enum.Enum):
-    """List the toggles available in Builder."""
+    """List the toggles available in MainPlotter."""
 
     SELECT = enum.auto()
     EDGES = enum.auto()
@@ -49,7 +49,7 @@ class MainPlotter(InteractivePlotter):
     """Main application."""
 
     def __init__(self, parent=None, testing=False):
-        """Initialize the Builder."""
+        """Initialize the MainPlotter."""
         super().__init__(parent=parent, testing=testing)
         self.unit = rcParams["unit"]
         self.default_block_color = rcParams["block"]["color"]
@@ -322,10 +322,10 @@ class MainPlotter(InteractivePlotter):
             self.render_scene()
             return
 
-        if not intersection.element(Element.GRID):
+        if not intersection.element(ElementId.GRID):
             return
 
-        grid_ipoint = intersection.point(Element.GRID)
+        grid_ipoint = intersection.point(ElementId.GRID)
 
         coords = np.floor(grid_ipoint / self.unit)
         coords[2] = self.grid.origin[2] / self.unit

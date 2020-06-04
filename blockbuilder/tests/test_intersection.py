@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 import vtk
-from blockbuilder.elements import Element
+from blockbuilder.element import ElementId
 from blockbuilder.intersection import Intersection
 
 
@@ -41,7 +41,7 @@ class FakePicker(vtk.vtkPicker):
     False,
     ])
 def test_intersection(no_pick):
-    for element_id in Element:
+    for element_id in ElementId:
         position = np.random.rand(3)
         picker = FakePicker(element_id, position, no_pick)
         intersection = Intersection(picker)
