@@ -11,7 +11,6 @@ from PyQt5 import QtCore
 def test_main_plotter(qtbot):
     plotter = MainPlotter(testing=True)
     qtbot.addWidget(plotter)
-    plotter.show()
 
     _hasattr(plotter, "unit", float)
     _hasattr(plotter, "default_block_color", tuple)
@@ -48,19 +47,6 @@ def test_main_plotter(qtbot):
     assert _hasattr(plotter, "plane", Plane)
     assert _hasattr(plotter, "selector", SymmetrySelector)
 
-    # add a block
-    plotter.set_block_mode()
-    plotter.set_block_mode(BlockMode.BUILD)
-    window_size = plotter.window_size
-    qtbot.mouseMove(plotter.render_widget, QtCore.QPoint(0, 0))
-    qtbot.mouseMove(plotter.render_widget,
-                    QtCore.QPoint(window_size[0] // 2, window_size[1] // 2))
-    qtbot.mouseClick(plotter.render_widget, QtCore.Qt.LeftButton)
-
-    # remove a block
-    plotter.set_block_mode(BlockMode.DELETE)
-    qtbot.mouseClick(plotter.render_widget, QtCore.Qt.LeftButton)
-
     # add elements
     for element_name in ["block", "grid", "plane", "selector"]:
         element = getattr(plotter, element_name)
@@ -71,6 +57,42 @@ def test_main_plotter(qtbot):
         assert selector.actor is not None
         assert selector.actor.element_id == selector.element_id
 
+    # remove elements
+    plotter.remove_elements()
+    for element_name in ["block", "grid", "plane", "selector"]:
+        element = getattr(plotter, element_name)
+        assert element.actor is None
+    for selector_name in ["x", "y", "xy"]:
+        selector = getattr(plotter.selector, "selector_" + selector_name)
+        assert selector.actor is None
+
+    plotter.close()
+
+
+def test_main_plotter_add_block(qtbot):
+    plotter = MainPlotter(testing=True)
+    qtbot.addWidget(plotter)
+
+    # add a block
+    plotter.set_block_mode(BlockMode.BUILD)
+    window_size = plotter.window_size
+    qtbot.mouseMove(plotter.render_widget,
+                    QtCore.QPoint(window_size[0] // 2, window_size[1] // 2))
+    qtbot.mouseClick(plotter.render_widget, QtCore.Qt.LeftButton)
+
+    # remove a block
+    plotter.set_block_mode(BlockMode.DELETE)
+    qtbot.mouseMove(plotter.render_widget,
+                    QtCore.QPoint(window_size[0] // 2, window_size[1] // 2))
+    qtbot.mouseClick(plotter.render_widget, QtCore.Qt.LeftButton)
+
+    plotter.close()
+
+
+def test_main_plotter_move_camera(qtbot):
+    plotter = MainPlotter(testing=True)
+    qtbot.addWidget(plotter)
+
     # camera
     plotter.move_camera(update="distance")
     tr = [0, 0, 1]
@@ -80,6 +102,19 @@ def test_main_plotter(qtbot):
     plotter.update_camera()
     assert np.allclose(plotter.camera.GetFocalPoint(), plotter.grid.center)
 
+    plotter.close()
+
+
+def test_main_plotter_coverage(qtbot):
+    plotter = MainPlotter(testing=True)
+    qtbot.addWidget(plotter)
+    # just for coverage:
+    plotter.set_block_mode()
+    for symmetry in Symmetry:
+        plotter.set_symmetry(symmetry)
+        plotter.selector.hide()
+        plotter.selector.show()
+
     # no mouse wheel event in pytest-qt
     plotter.on_mouse_wheel_forward(None, None)
     plotter.on_mouse_wheel_backward(None, None)
@@ -88,20 +123,5 @@ def test_main_plotter(qtbot):
     plotter.on_mouse_wheel_forward(None, None)
     plotter.grid.origin[2] = plotter.floor - 1
     plotter.on_mouse_wheel_backward(None, None)
-
-    # just for coverage:
-    for symmetry in Symmetry:
-        plotter.set_symmetry(symmetry)
-        plotter.selector.hide()
-        plotter.selector.show()
-
-    # remove elements
-    plotter.remove_elements()
-    for element_name in ["block", "grid", "plane", "selector"]:
-        element = getattr(plotter, element_name)
-        assert element.actor is None
-    for selector_name in ["x", "y", "xy"]:
-        selector = getattr(plotter.selector, "selector_" + selector_name)
-        assert selector.actor is None
 
     plotter.close()
