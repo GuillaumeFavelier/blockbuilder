@@ -113,7 +113,7 @@ class SymmetrySelector(AreaSelector):
         self.selector_y = AreaSelector()
         self.selector_xy = AreaSelector()
         self.symmetry = Symmetry.SYMMETRY_NONE
-        self.dimensions = dimensions
+        self.dimensions = np.asarray(dimensions)
 
     def set_block_mode(self, mode):
         """Set the block mode."""
