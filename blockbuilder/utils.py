@@ -73,4 +73,5 @@ def get_structured_grid(dimensions=(2, 2, 2), origin=(0., 0., 0.),
         array_name=array_name,
         array=array,
     )
+    mesh.Modified()
     return mesh

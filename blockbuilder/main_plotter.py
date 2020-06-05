@@ -56,15 +56,16 @@ class MainPlotter(InteractivePlotter):
         self.toolbar_area = rcParams["app"]["toolbar"]["area"]
         self.icon_size = rcParams["app"]["toolbar"]["icon_size"]
         self.dimensions = rcParams["builder"]["dimensions"]
-        self.set_dimensions(self.dimensions)
         self.button_pressed = False
         self.button_released = False
         self.area_selection = False
-        self.floor = 0.
+        self.floor = None
+        self.ceiling = None
         self.icons = None
         self.toolbar = None
         self.current_block_mode = None
         self.mode_functions = None
+        self.set_dimensions(self.dimensions)
 
         # configuration
         self.show()
@@ -130,8 +131,7 @@ class MainPlotter(InteractivePlotter):
     def on_pick(self, vtk_picker, event):
         """Process pick events."""
         func = self.mode_functions.get(self.current_block_mode, None)
-        if func is not None:
-            func(vtk_picker)
+        func(vtk_picker)
 
     def load_block_modes(self):
         """Load the block modes."""
@@ -139,8 +139,7 @@ class MainPlotter(InteractivePlotter):
         self.mode_functions = dict()
         for mode in BlockMode:
             func_name = "use_{}_mode".format(mode.name.lower())
-            if hasattr(self, func_name):
-                self.mode_functions[mode] = getattr(self, func_name)
+            self.mode_functions[mode] = getattr(self, func_name)
 
     def add_element(self, element):
         """Add an element to the scene."""
@@ -158,15 +157,20 @@ class MainPlotter(InteractivePlotter):
         self.add_element(self.selector.selector_y)
         self.add_element(self.selector.selector_xy)
 
+    def remove_element(self, element):
+        """Remove an elements from the scene."""
+        self.renderer.RemoveActor(element.actor)
+        element.actor = None
+
     def remove_elements(self):
         """Remove all the default elements of the scene."""
-        self.renderer.RemoveActor(self.block.actor)
-        self.renderer.RemoveActor(self.grid.actor)
-        self.renderer.RemoveActor(self.plane.actor)
-        self.renderer.RemoveActor(self.selector.actor)
-        self.renderer.RemoveActor(self.selector.selector_x.actor)
-        self.renderer.RemoveActor(self.selector.selector_y.actor)
-        self.renderer.RemoveActor(self.selector.selector_xy.actor)
+        self.remove_element(self.block)
+        self.remove_element(self.grid)
+        self.remove_element(self.plane)
+        self.remove_element(self.selector)
+        self.remove_element(self.selector.selector_x)
+        self.remove_element(self.selector.selector_y)
+        self.remove_element(self.selector.selector_xy)
 
     def load_elements(self):
         """Load the default elements."""
@@ -197,46 +201,41 @@ class MainPlotter(InteractivePlotter):
         button_group = QButtonGroup(parent=self.toolbar)
         for element in group:
             icon = self.icons.get(element, None)
-            if icon is not None:
-                button = QToolButton()
-                button.setFixedSize(QSize(*self.icon_size))
-                button.setIcon(icon)
-                button.setCheckable(True)
-                if default_value is not None and element is default_value:
-                    button.setChecked(True)
-                button.toggled.connect(
-                    partial(func, value=element))
-                button_group.addButton(button)
-                self.toolbar.addWidget(button)
+            button = QToolButton()
+            button.setFixedSize(QSize(*self.icon_size))
+            button.setIcon(icon)
+            button.setCheckable(True)
+            if default_value is not None and element is default_value:
+                button.setChecked(True)
+            button.toggled.connect(
+                partial(func, value=element))
+            button_group.addButton(button)
+            self.toolbar.addWidget(button)
 
     def _add_toolbar_actions(self):
         for action in Action:
             icon = self.icons.get(action, None)
-            if icon is not None:
-                button = QToolButton()
-                button.setFixedSize(QSize(*self.icon_size))
-                button.setIcon(icon)
-                func_name = "action_{}".format(action.name.lower())
-                func = getattr(self, func_name, None)
-                if func is not None:
-                    button.clicked.connect(func)
-                self.toolbar.addWidget(button)
+            button = QToolButton()
+            button.setFixedSize(QSize(*self.icon_size))
+            button.setIcon(icon)
+            func_name = "action_{}".format(action.name.lower())
+            func = getattr(self, func_name, None)
+            button.clicked.connect(func)
+            self.toolbar.addWidget(button)
 
     def _add_toolbar_toggles(self):
         for toggle in Toggle:
             icon = self.icons.get(toggle, None)
-            if icon is not None:
-                button = QToolButton()
-                button.setFixedSize(QSize(*self.icon_size))
-                button.setIcon(icon)
-                button.setCheckable(True)
-                toggle_name = toggle.name.lower()
-                func_name = "toggle_{}".format(toggle_name)
-                func = getattr(self, func_name, None)
-                if func is not None:
-                    button.toggled.connect(func)
-                button.setChecked(rcParams["builder"]["toggles"][toggle_name])
-                self.toolbar.addWidget(button)
+            button = QToolButton()
+            button.setFixedSize(QSize(*self.icon_size))
+            button.setIcon(icon)
+            button.setCheckable(True)
+            toggle_name = toggle.name.lower()
+            func_name = "toggle_{}".format(toggle_name)
+            func = getattr(self, func_name, None)
+            button.toggled.connect(func)
+            button.setChecked(rcParams["builder"]["toggles"][toggle_name])
+            self.toolbar.addWidget(button)
 
     def _add_toolbar_color_button(self):
         self.color_button = QPushButton()
@@ -274,6 +273,7 @@ class MainPlotter(InteractivePlotter):
     def set_dimensions(self, dimensions):
         """Set the current dimensions."""
         self.dimensions = np.asarray(dimensions)
+        self.floor = 0.
         self.ceiling = (self.dimensions[2] - 2) * self.unit
         self.distance = np.max(self.dimensions) * 2 * self.unit
         self.distance_rng = [4 * self.unit, 2 * self.distance]
