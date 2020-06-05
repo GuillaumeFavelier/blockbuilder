@@ -1,6 +1,6 @@
 import vtk
-from blockbuilder.utils import _hasattr
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from blockbuilder.utils import _hasattr
 from blockbuilder.minimal_plotter import MinimalPlotter
 
 
