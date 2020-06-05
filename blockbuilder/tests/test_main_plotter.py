@@ -11,6 +11,7 @@ from PyQt5 import QtCore
 def test_main_plotter(qtbot):
     plotter = MainPlotter(testing=True)
     qtbot.addWidget(plotter)
+    plotter.show()
 
     _hasattr(plotter, "unit", float)
     _hasattr(plotter, "default_block_color", tuple)
@@ -28,7 +29,6 @@ def test_main_plotter(qtbot):
     _hasattr(plotter, "mode_functions", type(None))
 
     # block mode
-    plotter.set_block_mode()
     assert plotter.current_block_mode == BlockMode.BUILD
     assert isinstance(plotter.mode_functions, dict)
     assert len(plotter.mode_functions.keys()) == len(BlockMode)
@@ -48,9 +48,8 @@ def test_main_plotter(qtbot):
     assert _hasattr(plotter, "plane", Plane)
     assert _hasattr(plotter, "selector", SymmetrySelector)
 
-    plotter.show()
-
     # add a block
+    plotter.set_block_mode()
     plotter.set_block_mode(BlockMode.BUILD)
     window_size = plotter.window_size
     qtbot.mouseMove(plotter.render_widget, QtCore.QPoint(0, 0))
