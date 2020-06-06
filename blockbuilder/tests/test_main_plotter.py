@@ -69,24 +69,24 @@ def test_main_plotter(qtbot):
     plotter.close()
 
 
-def test_main_plotter_add_block(qtbot):
-    plotter = MainPlotter(testing=True)
-    qtbot.addWidget(plotter)
+# def test_main_plotter_add_block(qtbot):
+#     plotter = MainPlotter(testing=True)
+#     qtbot.addWidget(plotter)
 
-    # add a block
-    plotter.set_block_mode(BlockMode.BUILD)
-    window_size = plotter.window_size
-    qtbot.mouseMove(plotter.render_widget,
-                    QtCore.QPoint(window_size[0] // 2, window_size[1] // 2))
-    qtbot.mouseClick(plotter.render_widget, QtCore.Qt.LeftButton)
+#     # add a block
+#     plotter.set_block_mode(BlockMode.BUILD)
+#     window_size = plotter.window_size
+#     qtbot.mouseMove(plotter.render_widget,
+#                     QtCore.QPoint(window_size[0] // 2, window_size[1] // 2))
+#     qtbot.mouseClick(plotter.render_widget, QtCore.Qt.LeftButton)
 
-    # remove a block
-    plotter.set_block_mode(BlockMode.DELETE)
-    qtbot.mouseMove(plotter.render_widget,
-                    QtCore.QPoint(window_size[0] // 2, window_size[1] // 2))
-    qtbot.mouseClick(plotter.render_widget, QtCore.Qt.LeftButton)
+#     # remove a block
+#     plotter.set_block_mode(BlockMode.DELETE)
+#     qtbot.mouseMove(plotter.render_widget,
+#                     QtCore.QPoint(window_size[0] // 2, window_size[1] // 2))
+#     qtbot.mouseClick(plotter.render_widget, QtCore.Qt.LeftButton)
 
-    plotter.close()
+#     plotter.close()
 
 
 def test_main_plotter_move_camera(qtbot):
