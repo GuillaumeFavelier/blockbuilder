@@ -83,25 +83,36 @@ def test_main_plotter_actions(qtbot, tmpdir):
     assert os.path.isdir(output_dir)
     filename = str(os.path.join(output_dir, "tmp.vtk"))
 
-    # export blockset
-    plotter = MainPlotter(testing=True)
-    qtbot.addWidget(plotter)
-    plotter.action_export(filename)
-    with pytest.raises(TypeError, match="filename"):
-        plotter.action_export(-1)
-    plotter.close()
+    offset = np.asarray([2, 2, 2])
+    old_dims = np.asarray(rcParams["builder"]["dimensions"])
+    dims_set = (
+        old_dims - offset,
+        old_dims,
+        old_dims + offset,
+    )
 
-    # import blockset
-    plotter = MainPlotter(testing=True)
-    qtbot.addWidget(plotter)
-    plotter.action_import(filename)
-    with pytest.raises(TypeError, match="filename"):
-        plotter.action_import(-1)
+    for dims in dims_set:
+        rcParams["builder"]["dimensions"] = dims
 
-    # reset
-    plotter.action_reset(None)
+        # export blockset
+        plotter = MainPlotter(testing=True)
+        qtbot.addWidget(plotter)
+        plotter.action_export(filename)
+        with pytest.raises(TypeError, match="filename"):
+            plotter.action_export(-1)
+        plotter.close()
 
-    plotter.close()
+        rcParams["builder"]["dimensions"] = old_dims
+
+        # import blockset
+        plotter = MainPlotter(testing=True)
+        qtbot.addWidget(plotter)
+        plotter.action_import(filename)
+        with pytest.raises(TypeError, match="filename"):
+            plotter.action_import(-1)
+        plotter.close()
+
+    rcParams["builder"]["dimensions"] = old_dims
 
 
 def test_main_plotter_toggles(qtbot):
@@ -147,6 +158,7 @@ def test_main_plotter_coverage(qtbot):
     plotter = MainPlotter(testing=True)
     qtbot.addWidget(plotter)
     # just for coverage:
+    plotter.action_reset(None)
     plotter.set_block_color([1., 0., 0.])
     plotter.set_block_mode()
     for symmetry in Symmetry:
