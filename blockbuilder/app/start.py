@@ -14,9 +14,7 @@ def main(testing=False):
     plotter.setWindowTitle(title)
     if testing:
         return plotter
-    else:
-        app.exec_()
-        return None
+    app.exec_()
 
 
 if __name__ == "__main__":
