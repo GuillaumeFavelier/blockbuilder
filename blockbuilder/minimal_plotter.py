@@ -23,6 +23,7 @@ class MinimalPlotter(QMainWindow):
         """Prepare the context for 3d."""
         event.accept()
         self.render_widget.Initialize()
+        self.render_widget.Start()
 
     def closeEvent(self, event):
         """Clear the context properly."""

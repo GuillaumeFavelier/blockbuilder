@@ -93,6 +93,7 @@ class CorePlotter(MinimalPlotter):
         rng = [0] * 6
         self.renderer.ComputeVisiblePropBounds(rng)
         self.renderer.ResetCameraClippingRange(rng)
+        self.renderer.Modified()
         self.render_window.Render()
 
     def add_mesh(self, mesh, rgba=False, color=(1., 1., 1.), opacity=1.,
