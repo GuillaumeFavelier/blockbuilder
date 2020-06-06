@@ -288,11 +288,8 @@ class MainPlotter(InteractivePlotter):
             value = self.current_block_mode
         else:
             self.current_block_mode = value
-        if value in BlockMode:
-            if self.grid is not None:
-                self.grid.set_block_mode(value)
-            if self.selector is not None:
-                self.selector.set_block_mode(value)
+        self.grid.set_block_mode(value)
+        self.selector.set_block_mode(value)
         self.render_scene()
 
     def set_block_color(self, value=None, is_int=True):

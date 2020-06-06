@@ -69,6 +69,19 @@ def test_main_plotter(qtbot):
     plotter.close()
 
 
+def test_main_plotter_mouse_interaction(qtbot):
+    plotter = MainPlotter(testing=True)
+    qtbot.addWidget(plotter)
+    window_size = plotter.window_size
+    with qtbot.wait_exposed(plotter.render_widget):
+        qtbot.mouseMove(plotter.render_widget, QtCore.QPoint(0, 0))
+        qtbot.mouseClick(plotter.render_widget, QtCore.Qt.LeftButton)
+        qtbot.mouseMove(plotter.render_widget,
+                        QtCore.QPoint(window_size[0] // 2,
+                                      window_size[1] // 2))
+        qtbot.mouseClick(plotter.render_widget, QtCore.Qt.LeftButton)
+    plotter.close()
+
 # def test_main_plotter_add_block(qtbot):
 #     plotter = MainPlotter(testing=True)
 #     qtbot.addWidget(plotter)
