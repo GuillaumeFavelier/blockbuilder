@@ -75,13 +75,15 @@ def test_main_plotter_mouse_interaction(qtbot):
     window_size = plotter.window_size
     start_point = QtCore.QPoint(window_size[0] // 2,
                                 window_size[1] // 2)
-    end_point = QtCore.QPoint(window_size[0] // 2 + 10,
-                              window_size[1] // 2 + 10)
+    end_point = QtCore.QPoint(window_size[0] // 2 + 100,
+                              window_size[1] // 2 + 100)
     with qtbot.wait_exposed(plotter.render_widget):
-        qtbot.mouseMove(plotter.render_widget, start_point)
-        # qtbot.mousePress(plotter.render_widget, QtCore.Qt.LeftButton)
-        # qtbot.mouseMove(plotter.render_widget, end_point)
-        # qtbot.mouseRelease(plotter.render_widget, QtCore.Qt.LeftButton)
+        qtbot.mouseMove(plotter.render_widget, start_point, 500)
+        qtbot.mousePress(plotter.render_widget, QtCore.Qt.LeftButton,
+                         QtCore.Qt.NoModifier, start_point, 500)
+        qtbot.mouseMove(plotter.render_widget, end_point, 500)
+        qtbot.mouseRelease(plotter.render_widget, QtCore.Qt.LeftButton,
+                           QtCore.Qt.NoModifier, end_point, 500)
     plotter.close()
 
 
