@@ -1,11 +1,20 @@
+import os
 import numpy as np
+import pytest
+from blockbuilder.params import rcParams
 from blockbuilder.utils import _hasattr
 from blockbuilder.block import Block
 from blockbuilder.grid import Grid
 from blockbuilder.plane import Plane
 from blockbuilder.selector import Symmetry, SymmetrySelector
-from blockbuilder.main_plotter import MainPlotter, BlockMode, Action, Toggle
+from blockbuilder.main_plotter import (MainPlotter, BlockMode, Action, Toggle,
+                                       _get_toolbar_area, _rgb2str, _qrgb2rgb)
 from PyQt5 import QtCore
+from PyQt5.QtGui import QColor
+
+# testing dimensions
+rcParams["builder"]["dimensions"] = (8, 8, 8)
+event_delay = 300
 
 
 def test_main_plotter(qtbot):
@@ -69,8 +78,44 @@ def test_main_plotter(qtbot):
     plotter.close()
 
 
+def test_main_plotter_actions(qtbot, tmpdir):
+    output_dir = str(tmpdir.mkdir("tmpdir"))
+    assert os.path.isdir(output_dir)
+    filename = str(os.path.join(output_dir, "tmp.vtk"))
+
+    # export blockset
+    plotter = MainPlotter(testing=True)
+    qtbot.addWidget(plotter)
+    plotter.action_export(filename)
+    with pytest.raises(TypeError, match="filename"):
+        plotter.action_export(-1)
+    plotter.close()
+
+    # import blockset
+    plotter = MainPlotter(testing=True)
+    qtbot.addWidget(plotter)
+    plotter.action_import(filename)
+    with pytest.raises(TypeError, match="filename"):
+        plotter.action_import(-1)
+
+    # reset
+    plotter.action_reset(None)
+
+    plotter.close()
+
+
+def test_main_plotter_toggles(qtbot):
+    plotter = MainPlotter(testing=True)
+    qtbot.addWidget(plotter)
+    for toggle in Toggle:
+        func_name = 'toggle_' + toggle.name.lower()
+        func = getattr(plotter, func_name)
+        for value in [True, False]:
+            func(value)
+    plotter.close()
+
+
 def test_main_plotter_block_scenario(qtbot):
-    delay = 500
     plotter = MainPlotter(testing=True)
     qtbot.addWidget(plotter)
     window_size = plotter.window_size
@@ -80,23 +125,22 @@ def test_main_plotter_block_scenario(qtbot):
 
     # add one block
     plotter.set_block_mode(BlockMode.BUILD)
-    qtbot.mouseMove(plotter.render_widget, point, delay)
+    qtbot.mouseMove(plotter.render_widget, point, event_delay)
     qtbot.mousePress(plotter.render_widget, QtCore.Qt.LeftButton,
-                     QtCore.Qt.NoModifier, point, delay)
+                     QtCore.Qt.NoModifier, point, event_delay)
     qtbot.mouseRelease(plotter.render_widget, QtCore.Qt.LeftButton,
-                       QtCore.Qt.NoModifier, point, delay)
+                       QtCore.Qt.NoModifier, point, event_delay)
 
     # remove one block
     plotter.set_block_mode(BlockMode.DELETE)
     qtbot.mousePress(plotter.render_widget, QtCore.Qt.LeftButton,
-                     QtCore.Qt.NoModifier, point, delay)
+                     QtCore.Qt.NoModifier, point, event_delay)
     qtbot.mouseRelease(plotter.render_widget, QtCore.Qt.LeftButton,
-                       QtCore.Qt.NoModifier, point, delay)
+                       QtCore.Qt.NoModifier, point, event_delay)
     plotter.close()
 
 
 def test_main_plotter_area_scenario(qtbot):
-    delay = 500
     plotter = MainPlotter(testing=True)
     qtbot.addWidget(plotter)
     window_size = plotter.window_size
@@ -108,35 +152,35 @@ def test_main_plotter_area_scenario(qtbot):
 
     # add one block
     plotter.set_block_mode(BlockMode.BUILD)
-    qtbot.mouseMove(plotter.render_widget, start_point, delay)
+    qtbot.mouseMove(plotter.render_widget, start_point, event_delay)
     qtbot.mousePress(plotter.render_widget, QtCore.Qt.LeftButton,
-                     QtCore.Qt.NoModifier, start_point, delay)
+                     QtCore.Qt.NoModifier, start_point, event_delay)
     qtbot.mouseRelease(plotter.render_widget, QtCore.Qt.LeftButton,
-                       QtCore.Qt.NoModifier, start_point, delay)
+                       QtCore.Qt.NoModifier, start_point, event_delay)
 
     # remove one block
     plotter.set_block_mode(BlockMode.DELETE)
     qtbot.mousePress(plotter.render_widget, QtCore.Qt.LeftButton,
-                     QtCore.Qt.NoModifier, start_point, delay)
+                     QtCore.Qt.NoModifier, start_point, event_delay)
     qtbot.mouseRelease(plotter.render_widget, QtCore.Qt.LeftButton,
-                       QtCore.Qt.NoModifier, start_point, delay)
+                       QtCore.Qt.NoModifier, start_point, event_delay)
 
     # add a set of blocks
     plotter.set_block_mode(BlockMode.BUILD)
-    qtbot.mouseMove(plotter.render_widget, start_point, delay)
+    qtbot.mouseMove(plotter.render_widget, start_point, event_delay)
     qtbot.mousePress(plotter.render_widget, QtCore.Qt.LeftButton,
-                     QtCore.Qt.NoModifier, start_point, delay)
-    qtbot.mouseMove(plotter.render_widget, end_point, delay)
+                     QtCore.Qt.NoModifier, start_point, event_delay)
+    qtbot.mouseMove(plotter.render_widget, end_point, event_delay)
     qtbot.mouseRelease(plotter.render_widget, QtCore.Qt.LeftButton,
-                       QtCore.Qt.NoModifier, end_point, delay)
+                       QtCore.Qt.NoModifier, end_point, event_delay)
 
     # remove a set of blocks
     plotter.set_block_mode(BlockMode.DELETE)
     qtbot.mousePress(plotter.render_widget, QtCore.Qt.LeftButton,
-                     QtCore.Qt.NoModifier, end_point, delay)
-    qtbot.mouseMove(plotter.render_widget, start_point, delay)
+                     QtCore.Qt.NoModifier, end_point, event_delay)
+    qtbot.mouseMove(plotter.render_widget, start_point, event_delay)
     qtbot.mouseRelease(plotter.render_widget, QtCore.Qt.LeftButton,
-                       QtCore.Qt.NoModifier, start_point, delay)
+                       QtCore.Qt.NoModifier, start_point, event_delay)
 
 
 def test_main_plotter_move_camera(qtbot):
@@ -175,3 +219,25 @@ def test_main_plotter_coverage(qtbot):
     plotter.on_mouse_wheel_backward(None, None)
 
     plotter.close()
+
+
+def test_get_toolbar_area():
+    toolbar_areas = rcParams["app"]["toolbar"]["areas"]
+    for area in toolbar_areas:
+        _get_toolbar_area(area)
+    with pytest.raises(TypeError, match="type"):
+        _get_toolbar_area(-1)
+    with pytest.raises(ValueError, match="area"):
+        _get_toolbar_area("foo")
+
+
+def test_rgb2str():
+    white = (1., 1., 1.)
+    assert isinstance(_rgb2str(white, is_int=False), str)
+    white = (255, 255, 255)
+    assert isinstance(_rgb2str(white, is_int=True), str)
+
+
+def test_qrgb2rgb():
+    white = QColor(255, 255, 255)
+    assert isinstance(_qrgb2rgb(white), tuple)

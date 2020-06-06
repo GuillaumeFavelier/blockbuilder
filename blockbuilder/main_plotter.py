@@ -367,15 +367,20 @@ class MainPlotter(InteractivePlotter):
         self.set_block_color(self.default_block_color, is_int=False)
         self.render_scene()
 
-    def action_import(self, unused):
+    def action_import(self, value=None):
         """Import an external blockset."""
-        del unused
-        filename = QFileDialog.getOpenFileName(
-            None,
-            "Import Blockset",
-            filter="Blockset (*.vts *.vtk)",
-        )
-        filename = filename[0]
+        if isinstance(value, bool):
+            filename = QFileDialog.getOpenFileName(
+                None,
+                "Import Blockset",
+                filter="Blockset (*.vts *.vtk)",
+            )
+            filename = filename[0]
+        elif isinstance(value, str):
+            filename = value
+        else:
+            raise TypeError("Expected type for ``filename``is ``str``"
+                            " but {} was given.".format(type(value)))
         if len(filename) > 0:
             reader = vtk.vtkXMLStructuredGridReader()
             reader.SetFileName(filename)
@@ -409,15 +414,21 @@ class MainPlotter(InteractivePlotter):
                     self.update_camera()
             self.render_scene()
 
-    def action_export(self, unused):
+    def action_export(self, value=None):
         """Export the internal blockset."""
-        filename = QFileDialog.getSaveFileName(
-            None,
-            "Export Blockset",
-            "Untitled.vts",
-            "Blockset (*.vts *.vtk)",
-        )
-        filename = filename[0]
+        if isinstance(value, bool):
+            filename = QFileDialog.getSaveFileName(
+                None,
+                "Export Blockset",
+                "Untitled.vts",
+                "Blockset (*.vts *.vtk)",
+            )
+            filename = filename[0]
+        elif isinstance(value, str):
+            filename = value
+        else:
+            raise TypeError("Expected type for ``filename``is ``str``"
+                            " but {} was given.".format(type(value)))
         if len(filename) > 0:
             writer = vtk.vtkXMLStructuredGridWriter()
             writer.SetFileName(filename)
@@ -435,14 +446,18 @@ class MainPlotter(InteractivePlotter):
 
 
 def _get_toolbar_area(area):
-    if area == "left":
-        return QtCore.Qt.LeftToolBarArea
-    if area == "right":
-        return QtCore.Qt.RightToolBarArea
-    if area == "top":
-        return QtCore.Qt.TopToolBarArea
-    if area == "bottom":
-        return QtCore.Qt.BottomToolBarArea
+    if not isinstance(area, str):
+        raise TypeError("Expected type for ``area`` is ``str`` but {}"
+                        " was given.".format(type(area)))
+    toolbar_areas = rcParams["app"]["toolbar"]["areas"]
+    if area not in toolbar_areas:
+        raise ValueError("Expected value for ``area`` in"
+                         " {} but {} was given.".format(toolbar_areas, area))
+    area = list(area)
+    area[0] = area[0].upper()
+    area = ''.join(area)
+    area = area + 'ToolBarArea'
+    return getattr(QtCore.Qt, area)
 
 
 def _rgb2str(color, is_int=False):
