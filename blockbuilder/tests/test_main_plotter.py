@@ -147,6 +147,7 @@ def test_main_plotter_coverage(qtbot):
     plotter = MainPlotter(testing=True)
     qtbot.addWidget(plotter)
     # just for coverage:
+    plotter.set_block_color([1., 0., 0.])
     plotter.set_block_mode()
     for symmetry in Symmetry:
         plotter.set_symmetry(symmetry)
