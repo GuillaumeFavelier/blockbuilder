@@ -16,6 +16,7 @@ from .interactive_plotter import InteractivePlotter
 
 from PyQt5 import QtCore
 from PyQt5.Qt import QIcon, QSize
+from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import (QPushButton, QToolButton, QButtonGroup,
                              QColorDialog, QFileDialog)
 
@@ -66,6 +67,11 @@ class MainPlotter(InteractivePlotter):
         self.current_block_mode = None
         self.mode_functions = None
         self.set_dimensions(self.dimensions)
+
+        # dialogs
+        self.color_dialog = QColorDialog(self)
+        self.file_dialog = QFileDialog(self)
+        self.file_dialog.setNameFilter("Blockset (*.vts *.vtk)")
 
         # configuration
         self.show()
@@ -294,15 +300,19 @@ class MainPlotter(InteractivePlotter):
 
     def set_block_color(self, value=None, is_int=True):
         """Set the current block color."""
+        def _set_color(color):
+            if isinstance(color, QColor):
+                color = _qrgb2rgb(color)
+            color = np.asarray(color)
+            self.color_button.setStyleSheet(
+                "background-color: rgb" + _rgb2str(color, is_int))
+            self.block.set_color(color, is_int)
+
         if isinstance(value, bool):
-            color = QColorDialog.getColor()
-            color = _qrgb2rgb(color)
+            self.color_dialog.colorSelected.connect(_set_color)
+            self.color_dialog.show()
         else:
-            color = value
-        color = np.asarray(color)
-        self.color_button.setStyleSheet(
-            "background-color: rgb" + _rgb2str(color, is_int))
-        self.block.set_color(color, is_int)
+            _set_color(value)
 
     def use_delete_mode(self, vtk_picker):
         """Use the delete mode."""
@@ -369,71 +379,66 @@ class MainPlotter(InteractivePlotter):
 
     def action_import(self, value=None):
         """Import an external blockset."""
+        def _import(filename):
+            if len(filename) > 0:
+                reader = vtk.vtkXMLStructuredGridReader()
+                reader.SetFileName(filename)
+                reader.Update()
+                mesh = reader.GetOutput()
+                dimensions = mesh.GetDimensions()
+                imported_block = Block(dimensions, mesh)
+                if all(np.equal(dimensions, self.dimensions)):
+                    self.block.merge(imported_block)
+                else:
+                    final_dimensions = [
+                        self.block.dimensions,
+                        imported_block.dimensions
+                    ]
+                    final_dimensions = np.max(final_dimensions, axis=0)
+
+                    if all(np.equal(self.dimensions, final_dimensions)):
+                        self.block.merge(imported_block)
+                    else:
+                        self.remove_elements()
+
+                        old_block = self.block
+                        self.set_dimensions(final_dimensions)
+                        self.load_elements()
+                        self.add_elements()
+                        self.set_block_mode()
+                        self.block.merge(old_block)
+                        self.block.merge(imported_block)
+
+                        self.selector.hide()
+                        self.update_camera()
+                self.render_scene()
+
         if isinstance(value, bool):
-            filename = QFileDialog.getOpenFileName(
-                None,
-                "Import Blockset",
-                filter="Blockset (*.vts *.vtk)",
-            )
-            filename = filename[0]
+            self.file_dialog.fileSelected.connect(_import)
+            self.file_dialog.show()
         elif isinstance(value, str):
-            filename = value
+            _import(value)
         else:
             raise TypeError("Expected type for ``filename``is ``str``"
                             " but {} was given.".format(type(value)))
-        if len(filename) > 0:
-            reader = vtk.vtkXMLStructuredGridReader()
-            reader.SetFileName(filename)
-            reader.Update()
-            mesh = reader.GetOutput()
-            dimensions = mesh.GetDimensions()
-            imported_block = Block(dimensions, mesh)
-            if all(np.equal(dimensions, self.dimensions)):
-                self.block.merge(imported_block)
-            else:
-                final_dimensions = [
-                    self.block.dimensions,
-                    imported_block.dimensions
-                ]
-                final_dimensions = np.max(final_dimensions, axis=0)
-
-                if all(np.equal(self.dimensions, final_dimensions)):
-                    self.block.merge(imported_block)
-                else:
-                    self.remove_elements()
-
-                    old_block = self.block
-                    self.set_dimensions(final_dimensions)
-                    self.load_elements()
-                    self.add_elements()
-                    self.set_block_mode()
-                    self.block.merge(old_block)
-                    self.block.merge(imported_block)
-
-                    self.selector.hide()
-                    self.update_camera()
-            self.render_scene()
 
     def action_export(self, value=None):
         """Export the internal blockset."""
+        def _export(filename):
+            if len(filename) > 0:
+                writer = vtk.vtkXMLStructuredGridWriter()
+                writer.SetFileName(filename)
+                writer.SetInputData(self.block.mesh)
+                writer.Write()
+
         if isinstance(value, bool):
-            filename = QFileDialog.getSaveFileName(
-                None,
-                "Export Blockset",
-                "Untitled.vts",
-                "Blockset (*.vts *.vtk)",
-            )
-            filename = filename[0]
+            self.file_dialog.fileSelected.connect(_export)
+            self.file_dialog.show()
         elif isinstance(value, str):
-            filename = value
+            _export(value)
         else:
             raise TypeError("Expected type for ``filename``is ``str``"
                             " but {} was given.".format(type(value)))
-        if len(filename) > 0:
-            writer = vtk.vtkXMLStructuredGridWriter()
-            writer.SetFileName(filename)
-            writer.SetInputData(self.block.mesh)
-            writer.Write()
 
     def toggle_select(self, value):
         """Toggle area selection."""

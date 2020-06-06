@@ -11,6 +11,7 @@ from blockbuilder.main_plotter import (MainPlotter, BlockMode, Action, Toggle,
                                        _get_toolbar_area, _rgb2str, _qrgb2rgb)
 from PyQt5 import QtCore
 from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import QColorDialog, QFileDialog
 
 # testing dimensions
 rcParams["builder"]["dimensions"] = (8, 8, 8)
@@ -35,6 +36,8 @@ def test_main_plotter(qtbot):
     _hasattr(plotter, "toolbar", type(None))
     _hasattr(plotter, "current_block_mode", type(None))
     _hasattr(plotter, "mode_functions", type(None))
+    _hasattr(plotter, "color_dialog", QColorDialog)
+    _hasattr(plotter, "file_dialog", QFileDialog)
 
     # block mode
     assert plotter.current_block_mode == BlockMode.BUILD
@@ -154,12 +157,39 @@ def test_main_plotter_move_camera(qtbot):
     plotter.close()
 
 
+def test_main_plotter_set_block_color_dialog(qtbot):
+    plotter = MainPlotter(testing=True)
+    qtbot.addWidget(plotter)
+    plotter.set_block_color([1., 0., 0.])
+    with qtbot.wait_exposed(plotter.color_dialog, event_delay):
+        plotter.set_block_color(True)
+    plotter.color_dialog.accept()
+    plotter.close()
+
+
+def test_main_plotter_action_import_dialog(qtbot):
+    plotter = MainPlotter(testing=True)
+    qtbot.addWidget(plotter)
+    with qtbot.wait_exposed(plotter.file_dialog, event_delay):
+        plotter.action_import(True)
+    plotter.file_dialog.accept()
+    plotter.close()
+
+
+def test_main_plotter_action_export_dialog(qtbot):
+    plotter = MainPlotter(testing=True)
+    qtbot.addWidget(plotter)
+    with qtbot.wait_exposed(plotter.file_dialog, event_delay):
+        plotter.action_export(True)
+    plotter.file_dialog.accept()
+    plotter.close()
+
+
 def test_main_plotter_coverage(qtbot):
     plotter = MainPlotter(testing=True)
     qtbot.addWidget(plotter)
     # just for coverage:
     plotter.action_reset(None)
-    plotter.set_block_color([1., 0., 0.])
     plotter.set_block_mode()
     for symmetry in Symmetry:
         plotter.set_symmetry(symmetry)
