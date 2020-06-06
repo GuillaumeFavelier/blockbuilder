@@ -39,32 +39,34 @@ rcParams = {
         "merge_policies": ["external", "internal"],
         "merge_policy": "external",
     },
-    "builder": {
-        "dimensions": (32, 32, 32),
+    "camera": {
         "view_up": (0, 0, 1),
         "azimuth": 0,
         "azimuth_rng": (0, 360),
         "elevation": 45,
         "elevation_rng": (15, 165),
-        "bindings": {
-            "distance_minus": "Up",
-            "distance_plus": "Down",
-            "azimuth_minus": "q",
-            "azimuth_plus": "d",
-            "elevation_minus": "z",
-            "elevation_plus": "s",
-        },
+    },
+    "keybinding": {
+        "distance_minus": "Up",
+        "distance_plus": "Down",
+        "azimuth_minus": "q",
+        "azimuth_plus": "d",
+        "elevation_minus": "z",
+        "elevation_plus": "s",
+    },
+    "builder": {
+        "dimensions": (32, 32, 32),
         "toggles": {
             "select": False,
             "edges": True,
         },
-    },
-    "app": {
-        "name": "BlockBuilder",
         "toolbar": {
             "areas": ["left", "right", "top", "bottom"],
             "area": "top",
             "icon_size": (36, 36),
         },
+    },
+    "app": {
+        "name": "BlockBuilder",
     },
 }

@@ -54,8 +54,8 @@ class MainPlotter(InteractivePlotter):
         super().__init__(parent=parent, testing=testing)
         self.unit = rcParams["unit"]
         self.default_block_color = rcParams["block"]["color"]
-        self.toolbar_area = rcParams["app"]["toolbar"]["area"]
-        self.icon_size = rcParams["app"]["toolbar"]["icon_size"]
+        self.toolbar_area = rcParams["builder"]["toolbar"]["area"]
+        self.icon_size = rcParams["builder"]["toolbar"]["icon_size"]
         self.dimensions = rcParams["builder"]["dimensions"]
         self.button_pressed = False
         self.button_released = False
@@ -454,7 +454,7 @@ def _get_toolbar_area(area):
     if not isinstance(area, str):
         raise TypeError("Expected type for ``area`` is ``str`` but {}"
                         " was given.".format(type(area)))
-    toolbar_areas = rcParams["app"]["toolbar"]["areas"]
+    toolbar_areas = rcParams["builder"]["toolbar"]["areas"]
     if area not in toolbar_areas:
         raise ValueError("Expected value for ``area`` in"
                          " {} but {} was given.".format(toolbar_areas, area))
