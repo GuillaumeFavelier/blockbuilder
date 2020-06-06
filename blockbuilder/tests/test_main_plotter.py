@@ -89,6 +89,7 @@ def test_main_plotter_add_block(qtbot):
     # add a block
     with qtbot.wait_exposed(plotter.render_widget):
         plotter.block.add(coords=[0, 0, 0])
+        plotter.render_scene()
 
 
 def test_main_plotter_move_camera(qtbot):
