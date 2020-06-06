@@ -118,69 +118,13 @@ def test_main_plotter_toggles(qtbot):
 def test_main_plotter_block_scenario(qtbot):
     plotter = MainPlotter(testing=True)
     qtbot.addWidget(plotter)
-    window_size = plotter.window_size
-    point = QtCore.QPoint(window_size[0] // 2, window_size[1] // 2)
     plotter.set_symmetry(Symmetry.SYMMETRY_XY)
     plotter.toggle_select(False)
-
-    # add one block
-    plotter.set_block_mode(BlockMode.BUILD)
-    qtbot.mouseMove(plotter.render_widget, point, event_delay)
-    qtbot.mousePress(plotter.render_widget, QtCore.Qt.LeftButton,
-                     QtCore.Qt.NoModifier, point, event_delay)
-    qtbot.mouseRelease(plotter.render_widget, QtCore.Qt.LeftButton,
-                       QtCore.Qt.NoModifier, point, event_delay)
-
-    # remove one block
-    plotter.set_block_mode(BlockMode.DELETE)
-    qtbot.mousePress(plotter.render_widget, QtCore.Qt.LeftButton,
-                     QtCore.Qt.NoModifier, point, event_delay)
-    qtbot.mouseRelease(plotter.render_widget, QtCore.Qt.LeftButton,
-                       QtCore.Qt.NoModifier, point, event_delay)
-    plotter.close()
-
-
-def test_main_plotter_area_scenario(qtbot):
-    plotter = MainPlotter(testing=True)
-    qtbot.addWidget(plotter)
-    window_size = plotter.window_size
-    start_point = QtCore.QPoint(window_size[0] // 2, window_size[1] // 2)
-    end_point = QtCore.QPoint(window_size[0] // 2 + 100,
-                              window_size[1] // 2 + 100)
-    plotter.set_symmetry(Symmetry.SYMMETRY_XY)
+    _play_block_scenario(qtbot, plotter)
     plotter.toggle_select(True)
-
-    # add one block
-    plotter.set_block_mode(BlockMode.BUILD)
-    qtbot.mouseMove(plotter.render_widget, start_point, event_delay)
-    qtbot.mousePress(plotter.render_widget, QtCore.Qt.LeftButton,
-                     QtCore.Qt.NoModifier, start_point, event_delay)
-    qtbot.mouseRelease(plotter.render_widget, QtCore.Qt.LeftButton,
-                       QtCore.Qt.NoModifier, start_point, event_delay)
-
-    # remove one block
-    plotter.set_block_mode(BlockMode.DELETE)
-    qtbot.mousePress(plotter.render_widget, QtCore.Qt.LeftButton,
-                     QtCore.Qt.NoModifier, start_point, event_delay)
-    qtbot.mouseRelease(plotter.render_widget, QtCore.Qt.LeftButton,
-                       QtCore.Qt.NoModifier, start_point, event_delay)
-
-    # add a set of blocks
-    plotter.set_block_mode(BlockMode.BUILD)
-    qtbot.mouseMove(plotter.render_widget, start_point, event_delay)
-    qtbot.mousePress(plotter.render_widget, QtCore.Qt.LeftButton,
-                     QtCore.Qt.NoModifier, start_point, event_delay)
-    qtbot.mouseMove(plotter.render_widget, end_point, event_delay)
-    qtbot.mouseRelease(plotter.render_widget, QtCore.Qt.LeftButton,
-                       QtCore.Qt.NoModifier, end_point, event_delay)
-
-    # remove a set of blocks
-    plotter.set_block_mode(BlockMode.DELETE)
-    qtbot.mousePress(plotter.render_widget, QtCore.Qt.LeftButton,
-                     QtCore.Qt.NoModifier, end_point, event_delay)
-    qtbot.mouseMove(plotter.render_widget, start_point, event_delay)
-    qtbot.mouseRelease(plotter.render_widget, QtCore.Qt.LeftButton,
-                       QtCore.Qt.NoModifier, start_point, event_delay)
+    _play_block_scenario(qtbot, plotter)
+    _play_area_scenario(qtbot, plotter)
+    plotter.close()
 
 
 def test_main_plotter_move_camera(qtbot):
@@ -241,3 +185,31 @@ def test_rgb2str():
 def test_qrgb2rgb():
     white = QColor(255, 255, 255)
     assert isinstance(_qrgb2rgb(white), tuple)
+
+
+def _play_block_scenario(qtbot, plotter):
+    window_size = plotter.window_size
+    point = QtCore.QPoint(window_size[0] // 2, window_size[1] // 2)
+    for mode in [BlockMode.BUILD, BlockMode.DELETE]:
+        plotter.set_block_mode(mode)
+        qtbot.mouseMove(plotter.render_widget, point, event_delay)
+        qtbot.mousePress(plotter.render_widget, QtCore.Qt.LeftButton,
+                         QtCore.Qt.NoModifier, point, event_delay)
+        qtbot.mouseRelease(plotter.render_widget, QtCore.Qt.LeftButton,
+                           QtCore.Qt.NoModifier, point, event_delay)
+
+
+def _play_area_scenario(qtbot, plotter):
+    window_size = plotter.window_size
+    start_point = QtCore.QPoint(window_size[0] // 2, window_size[1] // 2)
+    end_point = QtCore.QPoint(window_size[0] // 2 + 100,
+                              window_size[1] // 2 + 100)
+
+    for mode in [BlockMode.BUILD, BlockMode.DELETE]:
+        plotter.set_block_mode(mode)
+        qtbot.mouseMove(plotter.render_widget, start_point, event_delay)
+        qtbot.mousePress(plotter.render_widget, QtCore.Qt.LeftButton,
+                         QtCore.Qt.NoModifier, start_point, event_delay)
+        qtbot.mouseMove(plotter.render_widget, end_point, event_delay)
+        qtbot.mouseRelease(plotter.render_widget, QtCore.Qt.LeftButton,
+                           QtCore.Qt.NoModifier, end_point, event_delay)
