@@ -74,6 +74,7 @@ rcParams = {
 
 
 def get_params():
+    """Create or load the default configuration settings."""
     import os
     from pathlib import Path
     import json
