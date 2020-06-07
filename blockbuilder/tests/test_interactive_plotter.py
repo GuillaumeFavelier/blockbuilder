@@ -1,11 +1,15 @@
 import pytest
-from blockbuilder.interactive_plotter import InteractivePlotter
-from blockbuilder.params import rcParams
+
 from PyQt5 import QtCore
+
+from blockbuilder.params import rcParams
+from blockbuilder.interactive_plotter import InteractivePlotter
+
+event_delay = 150
 
 
 def test_interactive_plotter(qtbot):
-    plotter = InteractivePlotter()
+    plotter = InteractivePlotter(params=rcParams)
     qtbot.addWidget(plotter)
     plotter.show()
     keys = [
@@ -17,7 +21,12 @@ def test_interactive_plotter(qtbot):
         rcParams["keybinding"]["distance_minus"],
     ]
     for key in keys:
-        qtbot.keyPress(plotter.render_widget, _parse_key(key))
+        qtbot.keyPress(
+            plotter.render_widget,
+            _parse_key(key),
+            QtCore.Qt.NoModifier,
+            event_delay,
+        )
 
     plotter.translate_camera([0, 0, 0])
 

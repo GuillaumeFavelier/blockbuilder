@@ -1,12 +1,14 @@
 from contextlib import contextmanager
 import numpy as np
+
+from blockbuilder.params import rcParams
 from blockbuilder.utils import _hasattr
 from blockbuilder.selector import (Selector, AreaSelector, Symmetry,
                                    SymmetrySelector)
 
 
 def test_selector():
-    selector = Selector()
+    selector = Selector(params=rcParams)
     assert all(np.equal(selector.dimensions, [2, 2, 2]))
     assert _hasattr(selector, "coords", type(None))
     assert _hasattr(selector, "coords_type", type)
@@ -22,7 +24,7 @@ def test_selector():
 
 
 def test_area_selector():
-    selector = AreaSelector()
+    selector = AreaSelector(params=rcParams)
     assert _hasattr(selector, "area", type(None))
     assert _hasattr(selector, "area_first_coords", type(None))
     assert _hasattr(selector, "area_last_coords", type(None))
@@ -36,7 +38,7 @@ def test_area_selector():
 
 def test_symmetry_selector():
     dimensions = [3, 3, 3]
-    selector = SymmetrySelector(dimensions=dimensions)
+    selector = SymmetrySelector(params=rcParams, dimensions=dimensions)
     assert _hasattr(selector, "selector_x", AreaSelector)
     assert _hasattr(selector, "selector_y", AreaSelector)
     assert _hasattr(selector, "selector_xy", AreaSelector)

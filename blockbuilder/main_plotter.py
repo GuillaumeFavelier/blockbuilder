@@ -5,7 +5,12 @@ from functools import partial
 import numpy as np
 import vtk
 
-from .params import rcParams
+from PyQt5 import QtCore
+from PyQt5.Qt import QIcon, QSize
+from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import (QPushButton, QToolButton, QButtonGroup,
+                             QColorDialog, QFileDialog)
+
 from .element import ElementId
 from .selector import Symmetry, SymmetrySelector
 from .grid import Grid
@@ -13,12 +18,6 @@ from .plane import Plane
 from .block import Block
 from .intersection import Intersection
 from .interactive_plotter import InteractivePlotter
-
-from PyQt5 import QtCore
-from PyQt5.Qt import QIcon, QSize
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import (QPushButton, QToolButton, QButtonGroup,
-                             QColorDialog, QFileDialog)
 
 
 @enum.unique
@@ -49,14 +48,14 @@ class Toggle(enum.Enum):
 class MainPlotter(InteractivePlotter):
     """Main application."""
 
-    def __init__(self, parent=None, testing=False):
+    def __init__(self, params, parent=None, testing=False):
         """Initialize the MainPlotter."""
-        super().__init__(parent=parent, testing=testing)
-        self.unit = rcParams["unit"]
-        self.default_block_color = rcParams["block"]["color"]
-        self.toolbar_area = rcParams["builder"]["toolbar"]["area"]
-        self.icon_size = rcParams["builder"]["toolbar"]["icon_size"]
-        self.dimensions = rcParams["builder"]["dimensions"]
+        super().__init__(params, parent=parent, testing=testing)
+        self.unit = self.params["unit"]
+        self.dimensions = self.params["dimensions"]
+        self.default_block_color = self.params["block"]["color"]
+        self.toolbar_area = self.params["builder"]["toolbar"]["area"]
+        self.icon_size = self.params["builder"]["toolbar"]["icon_size"]
         self.button_pressed = False
         self.button_released = False
         self.area_selection = False
@@ -180,10 +179,10 @@ class MainPlotter(InteractivePlotter):
 
     def load_elements(self):
         """Load the default elements."""
-        self.block = Block(self.dimensions)
-        self.grid = Grid(self.dimensions)
-        self.plane = Plane(self.dimensions)
-        self.selector = SymmetrySelector(self.dimensions)
+        self.block = Block(self.params, self.dimensions)
+        self.grid = Grid(self.params, self.dimensions)
+        self.plane = Plane(self.params, self.dimensions)
+        self.selector = SymmetrySelector(self.params, self.dimensions)
 
     def load_icons(self):
         """Load the icons.
@@ -240,7 +239,7 @@ class MainPlotter(InteractivePlotter):
             func_name = "toggle_{}".format(toggle_name)
             func = getattr(self, func_name, None)
             button.toggled.connect(func)
-            button.setChecked(rcParams["builder"]["toggles"][toggle_name])
+            button.setChecked(self.params["builder"]["toggles"][toggle_name])
             self.toolbar.addWidget(button)
 
     def _add_toolbar_color_button(self):
@@ -253,8 +252,10 @@ class MainPlotter(InteractivePlotter):
     def load_toolbar(self):
         """Initialize the toolbar."""
         self.toolbar = self.addToolBar("toolbar")
+        toolbar_areas = self.params["builder"]["toolbar"]["areas"]
+        toolbar_area = self.params["builder"]["toolbar"]["area"]
         self.addToolBar(
-            _get_toolbar_area(self.toolbar_area),
+            _get_toolbar_area(toolbar_area, toolbar_areas),
             self.toolbar,
         )
         self.toolbar.setIconSize(QSize(*self.icon_size))
@@ -386,7 +387,7 @@ class MainPlotter(InteractivePlotter):
                 reader.Update()
                 mesh = reader.GetOutput()
                 dimensions = mesh.GetDimensions()
-                imported_block = Block(dimensions, mesh)
+                imported_block = Block(self.params, dimensions, mesh)
                 if all(np.equal(dimensions, self.dimensions)):
                     self.block.merge(imported_block)
                 else:
@@ -450,14 +451,13 @@ class MainPlotter(InteractivePlotter):
         self.render_scene()
 
 
-def _get_toolbar_area(area):
+def _get_toolbar_area(area, areas):
     if not isinstance(area, str):
         raise TypeError("Expected type for ``area`` is ``str`` but {}"
                         " was given.".format(type(area)))
-    toolbar_areas = rcParams["builder"]["toolbar"]["areas"]
-    if area not in toolbar_areas:
+    if area not in areas:
         raise ValueError("Expected value for ``area`` in"
-                         " {} but {} was given.".format(toolbar_areas, area))
+                         " {} but {} was given.".format(areas, area))
     area = list(area)
     area[0] = area[0].upper()
     area = ''.join(area)

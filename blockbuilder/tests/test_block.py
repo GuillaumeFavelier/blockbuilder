@@ -9,7 +9,7 @@ from blockbuilder.block import Block
 def test_block():
     dimensions = [3, 3, 3]
     mesh = get_structured_grid(dimensions=dimensions)
-    block = Block(dimensions=dimensions, mesh=mesh)
+    block = Block(params=rcParams, dimensions=dimensions, mesh=mesh)
 
     assert _hasattr(block, "actor", type(None))
     assert _hasattr(block, "element_id", ElementId)
@@ -35,7 +35,7 @@ def test_block():
     merge_policies = rcParams["block"]["merge_policies"]
     for policy in merge_policies:
         for visible in [False, True]:
-            external_block = Block(dimensions=[2, 2, 2])
+            external_block = Block(params=rcParams, dimensions=[2, 2, 2])
             if visible:
                 external_block.add_all()
             else:

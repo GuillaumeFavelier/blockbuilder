@@ -1,7 +1,6 @@
 """Module about the block element."""
 
 import numpy as np
-from .params import rcParams
 from .element import ElementId
 from .utils import get_structured_grid, get_mesh_cell_array
 
@@ -9,16 +8,17 @@ from .utils import get_structured_grid, get_mesh_cell_array
 class Block(object):
     """Main block manager."""
 
-    def __init__(self, dimensions, mesh=None):
+    def __init__(self, params, dimensions, mesh=None):
         """Initialize the block manager."""
         self.actor = None
         self.element_id = ElementId.BLOCK
-        self.unit = rcParams["unit"]
-        self.origin = np.asarray(rcParams["origin"])
-        self.color_array_name = rcParams["block"]["color_array_name"]
-        self.color = np.asarray(rcParams["block"]["color"])
-        self.edge_color = np.asarray(rcParams["block"]["edge_color"])
-        self.merge_policy = rcParams["block"]["merge_policy"]
+        self.params = params
+        self.unit = self.params["unit"]
+        self.origin = np.asarray(self.params["origin"])
+        self.color_array_name = self.params["block"]["color_array_name"]
+        self.color = np.asarray(self.params["block"]["color"])
+        self.edge_color = np.asarray(self.params["block"]["edge_color"])
+        self.merge_policy = self.params["block"]["merge_policy"]
         # we assume that the input mesh respect the spacing
         self.spacing = np.asarray([self.unit, self.unit, self.unit])
 

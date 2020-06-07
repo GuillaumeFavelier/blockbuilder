@@ -2,7 +2,6 @@
 
 import enum
 import numpy as np
-from .params import rcParams
 from .element import ElementId, Element
 
 
@@ -19,12 +18,13 @@ class Symmetry(enum.Enum):
 class Selector(Element):
     """Selector element of the scene."""
 
-    def __init__(self):
+    def __init__(self, params):
         """Initialize the Selector."""
         dimensions = [2, 2, 2]
-        color = rcParams["selector"]["color"]["build"]
-        opacity = rcParams["selector"]["opacity"]
+        color = params["selector"]["color"]["build"]
+        opacity = params["selector"]["opacity"]
         super().__init__(
+            params=params,
             element_id=ElementId.SELECTOR,
             dimensions=dimensions,
             color=color,
@@ -55,9 +55,9 @@ class Selector(Element):
 class AreaSelector(Selector):
     """Selector that supports area."""
 
-    def __init__(self):
+    def __init__(self, params):
         """Initialize the selector."""
-        super().__init__()
+        super().__init__(params=params)
         self.area = None
         self.area_first_coords = None
         self.area_last_coords = None
@@ -106,12 +106,12 @@ class AreaSelector(Selector):
 class SymmetrySelector(AreaSelector):
     """Selector that supports symmetry."""
 
-    def __init__(self, dimensions):
+    def __init__(self, params, dimensions):
         """Initialize the selector."""
-        super().__init__()
-        self.selector_x = AreaSelector()
-        self.selector_y = AreaSelector()
-        self.selector_xy = AreaSelector()
+        super().__init__(params=params)
+        self.selector_x = AreaSelector(params=params)
+        self.selector_y = AreaSelector(params=params)
+        self.selector_xy = AreaSelector(params=params)
         self.symmetry = Symmetry.SYMMETRY_NONE
         self.dimensions = np.asarray(dimensions)
 

@@ -3,7 +3,6 @@
 import enum
 import numpy as np
 import vtk
-from .params import rcParams
 
 
 @enum.unique
@@ -19,15 +18,16 @@ class ElementId(enum.Enum):
 class Element(object):
     """Base element."""
 
-    def __init__(self, element_id, dimensions, color,
+    def __init__(self, params, element_id, dimensions, color,
                  opacity, origin=None, spacing=None):
         """Initialize the Element."""
         self.actor = None
+        self.params = params
         self.element_id = element_id
-        self.unit = rcParams["unit"]
-        self.edge_color_offset = rcParams["element"]["edge_color_offset"]
+        self.unit = self.params["unit"]
+        self.edge_color_offset = self.params["element"]["edge_color_offset"]
         if origin is None:
-            origin = rcParams["origin"]
+            origin = self.params["origin"]
         if spacing is None:
             spacing = [self.unit, self.unit, self.unit]
         self.dimensions = np.asarray(dimensions)
@@ -57,7 +57,7 @@ class Element(object):
         else:
             element_name = self.actor.element_id.name.lower()
             mode_name = mode.name.lower()
-            self.color = rcParams[element_name]["color"][mode_name]
+            self.color = self.params[element_name]["color"][mode_name]
             self.edge_color = np.asarray(self.color) + self.edge_color_offset
             # update colors
             prop = self.actor.GetProperty()

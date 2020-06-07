@@ -1,6 +1,11 @@
 import os
 import numpy as np
 import pytest
+
+from PyQt5 import QtCore
+from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import QColorDialog, QFileDialog
+
 from blockbuilder.params import rcParams
 from blockbuilder.utils import _hasattr
 from blockbuilder.block import Block
@@ -9,17 +14,13 @@ from blockbuilder.plane import Plane
 from blockbuilder.selector import Symmetry, SymmetrySelector
 from blockbuilder.main_plotter import (MainPlotter, BlockMode, Action, Toggle,
                                        _get_toolbar_area, _rgb2str, _qrgb2rgb)
-from PyQt5 import QtCore
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QColorDialog, QFileDialog
 
-# testing dimensions
-rcParams["builder"]["dimensions"] = (8, 8, 8)
+rcParams["dimensions"] = [8, 8, 8]
 event_delay = 300
 
 
 def test_main_plotter(qtbot):
-    plotter = MainPlotter(testing=True)
+    plotter = MainPlotter(params=rcParams, testing=True)
     qtbot.addWidget(plotter)
 
     _hasattr(plotter, "unit", float)
@@ -87,39 +88,40 @@ def test_main_plotter_actions(qtbot, tmpdir):
     filename = str(os.path.join(output_dir, "tmp.vtk"))
 
     offset = np.asarray([2, 2, 2])
-    old_dims = np.asarray(rcParams["builder"]["dimensions"])
+    old_dims = rcParams["dimensions"]
+    np_old_dims = np.asarray(old_dims)
     dims_set = (
-        old_dims - offset,
-        old_dims,
-        old_dims + offset,
+        np_old_dims - offset,
+        np_old_dims,
+        np_old_dims + offset,
     )
 
     for dims in dims_set:
-        rcParams["builder"]["dimensions"] = dims
+        rcParams["dimensions"] = dims
 
         # export blockset
-        plotter = MainPlotter(testing=True)
+        plotter = MainPlotter(params=rcParams, testing=True)
         qtbot.addWidget(plotter)
         plotter.action_export(filename)
         with pytest.raises(TypeError, match="filename"):
             plotter.action_export(-1)
         plotter.close()
 
-        rcParams["builder"]["dimensions"] = old_dims
+        rcParams["dimensions"] = old_dims
 
         # import blockset
-        plotter = MainPlotter(testing=True)
+        plotter = MainPlotter(params=rcParams, testing=True)
         qtbot.addWidget(plotter)
         plotter.action_import(filename)
         with pytest.raises(TypeError, match="filename"):
             plotter.action_import(-1)
         plotter.close()
 
-    rcParams["builder"]["dimensions"] = old_dims
+    rcParams["dimensions"] = old_dims
 
 
 def test_main_plotter_toggles(qtbot):
-    plotter = MainPlotter(testing=True)
+    plotter = MainPlotter(params=rcParams, testing=True)
     qtbot.addWidget(plotter)
     for toggle in Toggle:
         func_name = 'toggle_' + toggle.name.lower()
@@ -130,7 +132,7 @@ def test_main_plotter_toggles(qtbot):
 
 
 def test_main_plotter_block_scenario(qtbot):
-    plotter = MainPlotter(testing=True)
+    plotter = MainPlotter(params=rcParams, testing=True)
     qtbot.addWidget(plotter)
     plotter.set_symmetry(Symmetry.SYMMETRY_XY)
     plotter.toggle_select(False)
@@ -142,7 +144,7 @@ def test_main_plotter_block_scenario(qtbot):
 
 
 def test_main_plotter_move_camera(qtbot):
-    plotter = MainPlotter(testing=True)
+    plotter = MainPlotter(params=rcParams, testing=True)
     qtbot.addWidget(plotter)
 
     # camera
@@ -158,7 +160,7 @@ def test_main_plotter_move_camera(qtbot):
 
 
 def test_main_plotter_set_block_color_dialog(qtbot):
-    plotter = MainPlotter(testing=True)
+    plotter = MainPlotter(params=rcParams, testing=True)
     qtbot.addWidget(plotter)
     plotter.set_block_color([1., 0., 0.])
     with qtbot.wait_exposed(plotter.color_dialog, event_delay):
@@ -168,7 +170,7 @@ def test_main_plotter_set_block_color_dialog(qtbot):
 
 
 def test_main_plotter_action_import_dialog(qtbot):
-    plotter = MainPlotter(testing=True)
+    plotter = MainPlotter(params=rcParams, testing=True)
     qtbot.addWidget(plotter)
     with qtbot.wait_exposed(plotter.file_dialog, event_delay):
         plotter.action_import(True)
@@ -177,7 +179,7 @@ def test_main_plotter_action_import_dialog(qtbot):
 
 
 def test_main_plotter_action_export_dialog(qtbot):
-    plotter = MainPlotter(testing=True)
+    plotter = MainPlotter(params=rcParams, testing=True)
     qtbot.addWidget(plotter)
     with qtbot.wait_exposed(plotter.file_dialog, event_delay):
         plotter.action_export(True)
@@ -186,7 +188,7 @@ def test_main_plotter_action_export_dialog(qtbot):
 
 
 def test_main_plotter_coverage(qtbot):
-    plotter = MainPlotter(testing=True)
+    plotter = MainPlotter(params=rcParams, testing=True)
     qtbot.addWidget(plotter)
     # just for coverage:
     plotter.action_reset(None)
@@ -211,11 +213,11 @@ def test_main_plotter_coverage(qtbot):
 def test_get_toolbar_area():
     toolbar_areas = rcParams["builder"]["toolbar"]["areas"]
     for area in toolbar_areas:
-        _get_toolbar_area(area)
+        _get_toolbar_area(area, toolbar_areas)
     with pytest.raises(TypeError, match="type"):
-        _get_toolbar_area(-1)
+        _get_toolbar_area(-1, toolbar_areas)
     with pytest.raises(ValueError, match="area"):
-        _get_toolbar_area("foo")
+        _get_toolbar_area("foo", toolbar_areas)
 
 
 def test_rgb2str():

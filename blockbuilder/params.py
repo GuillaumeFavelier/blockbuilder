@@ -4,6 +4,7 @@
 rcParams = {
     "unit": 1.,
     "origin": [0., 0., 0.],
+    "dimensions": [32, 32, 32],
     "plotter": {
         "window_size": [1280, 720],
         "show_edges": True,
@@ -56,7 +57,6 @@ rcParams = {
         "elevation_plus": "s",
     },
     "builder": {
-        "dimensions": [32, 32, 32],
         "toggles": {
             "select": False,
             "edges": True,
@@ -74,12 +74,13 @@ rcParams = {
 
 
 def get_params():
+    import os
     from pathlib import Path
     import json
 
     params = rcParams
     home_path = Path.home()
-    config_name = "blockbuilder.json"
+    config_name = os.environ.get("BB_TESTING", "blockbuilder.json")
     config_path = home_path.joinpath(config_name)
 
     if config_path.exists():

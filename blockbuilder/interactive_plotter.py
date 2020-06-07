@@ -2,21 +2,20 @@
 
 import numpy as np
 import vtk
-from .params import rcParams
 from .core_plotter import CorePlotter
 
 
 class InteractivePlotter(CorePlotter):
     """Plotter with interactions."""
 
-    def __init__(self, parent=None, testing=False):
+    def __init__(self, params, parent=None, testing=False):
         """Initialize the InteractivePlotter."""
-        super().__init__(parent=parent, testing=testing)
-        self.azimuth = rcParams["camera"]["azimuth"]
-        self.azimuth_rng = rcParams["camera"]["azimuth_rng"]
-        self.elevation_rng = rcParams["camera"]["elevation_rng"]
-        self.elevation = rcParams["camera"]["elevation"]
-        self.view_up = rcParams["camera"]["view_up"]
+        super().__init__(params=params, parent=parent, testing=testing)
+        self.azimuth = self.params["camera"]["azimuth"]
+        self.azimuth_rng = self.params["camera"]["azimuth_rng"]
+        self.elevation_rng = self.params["camera"]["elevation_rng"]
+        self.elevation = self.params["camera"]["elevation"]
+        self.view_up = self.params["camera"]["view_up"]
         self.focal_point = np.array([0, 0, 0])
         self.picker = None
 
@@ -76,17 +75,17 @@ class InteractivePlotter(CorePlotter):
     def on_key_press(self, vtk_picker, event):
         """Process key press events."""
         key = self.interactor.GetKeySym()
-        if key == rcParams["keybinding"]["distance_minus"]:
+        if key == self.params["keybinding"]["distance_minus"]:
             self.move_camera(update="distance", inverse=True)
-        if key == rcParams["keybinding"]["distance_plus"]:
+        if key == self.params["keybinding"]["distance_plus"]:
             self.move_camera(update="distance")
-        if key == rcParams["keybinding"]["azimuth_minus"]:
+        if key == self.params["keybinding"]["azimuth_minus"]:
             self.move_camera(update="azimuth", inverse=True)
-        if key == rcParams["keybinding"]["azimuth_plus"]:
+        if key == self.params["keybinding"]["azimuth_plus"]:
             self.move_camera(update="azimuth")
-        if key == rcParams["keybinding"]["elevation_minus"]:
+        if key == self.params["keybinding"]["elevation_minus"]:
             self.move_camera(update="elevation", inverse=True)
-        if key == rcParams["keybinding"]["elevation_plus"]:
+        if key == self.params["keybinding"]["elevation_plus"]:
             self.move_camera(update="elevation")
 
     def load_interaction(self):

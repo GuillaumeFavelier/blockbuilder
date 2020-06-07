@@ -1,3 +1,4 @@
+from blockbuilder.params import rcParams
 from blockbuilder.utils import _hasattr, get_poly_data, get_uniform_grid
 from blockbuilder.core_plotter import CorePlotter
 
@@ -11,7 +12,8 @@ def test_core_plotter(qtbot):
     # AA and smoothing cause segfaults (access violation) on
     # grid datasets. So we use PolyData but this is basically
     # calculated risk.
-    plotter = CorePlotter(advanced=True, testing=False)
+    plotter = CorePlotter(params=rcParams, advanced=True, testing=False)
+    assert _hasattr(plotter, "params", dict)
     assert _hasattr(plotter, "show_edges", bool)
     assert _hasattr(plotter, "line_width", int)
     assert _hasattr(plotter, "window_size", list)
@@ -34,6 +36,7 @@ def test_core_plotter(qtbot):
     background_top_color = (1, 1, 1)
     # we use advanced=False and testing=False)for coverage:
     plotter = CorePlotter(
+        params=rcParams,
         window_size=window_size,
         background_top_color=background_top_color,
         background_bottom_color=background_bottom_color,
