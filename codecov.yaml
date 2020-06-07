@@ -1,3 +1,7 @@
+comment:
+  branches: master
+  require_changes: true
+
 coverage:
   status:
     patch:
