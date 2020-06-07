@@ -1,50 +1,51 @@
 """Module about the default values."""
 
+
 rcParams = {
     "unit": 1.,
-    "origin": (0., 0., 0.),
+    "origin": [0., 0., 0.],
     "plotter": {
-        "window_size": (1280, 720),
+        "window_size": [1280, 720],
         "show_edges": True,
         "line_width": 3,
         "advanced": True,
-        "background_top_color": (0.05, 0.05, 0.05),
-        "background_bottom_color": (0., 0., .35),
+        "background_top_color": [0.05, 0.05, 0.05],
+        "background_bottom_color": [0., 0., .35],
     },
     "element": {
-        "edge_color_offset": (.15, .15, .15),
+        "edge_color_offset": [.15, .15, .15],
     },
     "grid": {
         "color": {
-            "build": (.05, .05, .35),
-            "delete": (.35, .05, .05),
+            "build": [.05, .05, .35],
+            "delete": [.35, .05, .05],
         },
         "opacity": .7,
     },
     "plane": {
-        "color": (0.4, 0.4, 0.4),
+        "color": [0.4, 0.4, 0.4],
         "opacity": 1.,
     },
     "selector": {
         "color": {
-            "build": (.3, .3, .8),
-            "delete": (.8, .3, .3),
+            "build": [.3, .3, .8],
+            "delete": [.8, .3, .3],
         },
         "opacity": .7,
     },
     "block": {
         "color_array_name": "color",
-        "color": (.7, .7, .7),
-        "edge_color": (.0, .0, .0),
+        "color": [.7, .7, .7],
+        "edge_color": [.0, .0, .0],
         "merge_policies": ["external", "internal"],
         "merge_policy": "external",
     },
     "camera": {
-        "view_up": (0, 0, 1),
+        "view_up": [0, 0, 1],
         "azimuth": 0,
-        "azimuth_rng": (0, 360),
+        "azimuth_rng": [0, 360],
         "elevation": 45,
-        "elevation_rng": (15, 165),
+        "elevation_rng": [15, 165],
     },
     "keybinding": {
         "distance_minus": "Up",
@@ -55,7 +56,7 @@ rcParams = {
         "elevation_plus": "s",
     },
     "builder": {
-        "dimensions": (32, 32, 32),
+        "dimensions": [32, 32, 32],
         "toggles": {
             "select": False,
             "edges": True,
@@ -63,10 +64,28 @@ rcParams = {
         "toolbar": {
             "areas": ["left", "right", "top", "bottom"],
             "area": "top",
-            "icon_size": (36, 36),
+            "icon_size": [36, 36],
         },
     },
     "app": {
         "name": "BlockBuilder",
     },
 }
+
+
+def get_params():
+    from pathlib import Path
+    import json
+
+    params = rcParams
+    home_path = Path.home()
+    config_name = "blockbuilder.json"
+    config_path = home_path.joinpath(config_name)
+
+    if config_path.exists():
+        with open(config_path, 'r') as fp:
+            params = json.loads(fp.read())
+    else:
+        with open(config_path, 'w') as fp:
+            json.dump(params, fp)
+    return params
