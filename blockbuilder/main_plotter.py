@@ -192,7 +192,7 @@ class MainPlotter(InteractivePlotter):
         also defines aliases for their use in the code.
 
         To automatically generate the resource file in ``blockbuilder/icons``:
-        pyrcc5 -o blockbuilder/icons/resources.py blockbuilder/icons/mne.qrc
+        pyrcc5 -o resources.py blockbuilder.qrc
         """
         from .icons import resources
         resources.qInitResources()
