@@ -35,6 +35,7 @@ class Action(enum.Enum):
     RESET = enum.auto()
     IMPORT = enum.auto()
     EXPORT = enum.auto()
+    SETTING = enum.auto()
 
 
 @enum.unique
@@ -442,6 +443,10 @@ class MainPlotter(InteractivePlotter):
         else:
             raise TypeError("Expected type for ``filename``is ``str``"
                             " but {} was given.".format(type(value)))
+
+    def action_setting(self, value=None):
+        """Open the settings menu."""
+        del value
 
     def toggle_select(self, value):
         """Toggle area selection."""
