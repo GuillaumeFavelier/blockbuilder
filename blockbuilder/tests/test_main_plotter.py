@@ -105,6 +105,8 @@ def test_main_plotter_actions(qtbot, tmpdir):
         plotter.action_export(filename)
         with pytest.raises(TypeError, match="filename"):
             plotter.action_export(-1)
+        with pytest.raises(ValueError, match="empty"):
+            plotter.action_export('')
         plotter.close()
 
         rcParams["dimensions"] = old_dims
@@ -113,8 +115,10 @@ def test_main_plotter_actions(qtbot, tmpdir):
         plotter = MainPlotter(params=rcParams, testing=True)
         qtbot.addWidget(plotter)
         plotter.action_import(filename)
-        with pytest.raises(TypeError, match="filename"):
+        with pytest.raises(TypeError, match="type"):
             plotter.action_import(-1)
+        with pytest.raises(ValueError, match="empty"):
+            plotter.action_import('')
         plotter.close()
 
     rcParams["dimensions"] = old_dims

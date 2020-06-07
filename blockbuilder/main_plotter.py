@@ -381,37 +381,38 @@ class MainPlotter(InteractivePlotter):
     def action_import(self, value=None):
         """Import an external blockset."""
         def _import(filename):
-            if len(filename) > 0:
-                reader = vtk.vtkXMLStructuredGridReader()
-                reader.SetFileName(filename)
-                reader.Update()
-                mesh = reader.GetOutput()
-                dimensions = mesh.GetDimensions()
-                imported_block = Block(self.params, dimensions, mesh)
-                if all(np.equal(dimensions, self.dimensions)):
+            if len(filename) == 0:
+                raise ValueError("The input filename string is empty")
+            reader = vtk.vtkXMLStructuredGridReader()
+            reader.SetFileName(filename)
+            reader.Update()
+            mesh = reader.GetOutput()
+            dimensions = mesh.GetDimensions()
+            imported_block = Block(self.params, dimensions, mesh)
+            if all(np.equal(dimensions, self.dimensions)):
+                self.block.merge(imported_block)
+            else:
+                final_dimensions = [
+                    self.block.dimensions,
+                    imported_block.dimensions
+                ]
+                final_dimensions = np.max(final_dimensions, axis=0)
+
+                if all(np.equal(self.dimensions, final_dimensions)):
                     self.block.merge(imported_block)
                 else:
-                    final_dimensions = [
-                        self.block.dimensions,
-                        imported_block.dimensions
-                    ]
-                    final_dimensions = np.max(final_dimensions, axis=0)
+                    self.remove_elements()
 
-                    if all(np.equal(self.dimensions, final_dimensions)):
-                        self.block.merge(imported_block)
-                    else:
-                        self.remove_elements()
+                    old_block = self.block
+                    self.set_dimensions(final_dimensions)
+                    self.load_elements()
+                    self.add_elements()
+                    self.set_block_mode()
+                    self.block.merge(old_block)
+                    self.block.merge(imported_block)
 
-                        old_block = self.block
-                        self.set_dimensions(final_dimensions)
-                        self.load_elements()
-                        self.add_elements()
-                        self.set_block_mode()
-                        self.block.merge(old_block)
-                        self.block.merge(imported_block)
-
-                        self.selector.hide()
-                        self.update_camera()
+                    self.selector.hide()
+                    self.update_camera()
                 self.render_scene()
 
         if isinstance(value, bool):
@@ -426,11 +427,12 @@ class MainPlotter(InteractivePlotter):
     def action_export(self, value=None):
         """Export the internal blockset."""
         def _export(filename):
-            if len(filename) > 0:
-                writer = vtk.vtkXMLStructuredGridWriter()
-                writer.SetFileName(filename)
-                writer.SetInputData(self.block.mesh)
-                writer.Write()
+            if len(filename) == 0:
+                raise ValueError("The output filename string is empty")
+            writer = vtk.vtkXMLStructuredGridWriter()
+            writer.SetFileName(filename)
+            writer.SetInputData(self.block.mesh)
+            writer.Write()
 
         if isinstance(value, bool):
             self.file_dialog.fileSelected.connect(_export)
