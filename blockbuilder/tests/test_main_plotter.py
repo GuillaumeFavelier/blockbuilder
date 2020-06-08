@@ -38,7 +38,8 @@ def test_main_plotter(qtbot):
     _hasattr(plotter, "current_block_mode", type(None))
     _hasattr(plotter, "mode_functions", type(None))
     _hasattr(plotter, "color_dialog", QColorDialog)
-    _hasattr(plotter, "file_dialog", QFileDialog)
+    _hasattr(plotter, "import_dialog", QFileDialog)
+    _hasattr(plotter, "export_dialog", QFileDialog)
 
     # block mode
     assert plotter.current_block_mode == BlockMode.BUILD
@@ -176,18 +177,18 @@ def test_main_plotter_set_block_color_dialog(qtbot):
 def test_main_plotter_action_import_dialog(qtbot):
     plotter = MainPlotter(params=rcParams, testing=True)
     qtbot.addWidget(plotter)
-    with qtbot.wait_exposed(plotter.file_dialog, event_delay):
+    with qtbot.wait_exposed(plotter.import_dialog, event_delay):
         plotter.action_import(True)
-    plotter.file_dialog.accept()
+    plotter.import_dialog.accept()
     plotter.close()
 
 
 def test_main_plotter_action_export_dialog(qtbot):
     plotter = MainPlotter(params=rcParams, testing=True)
     qtbot.addWidget(plotter)
-    with qtbot.wait_exposed(plotter.file_dialog, event_delay):
+    with qtbot.wait_exposed(plotter.export_dialog, event_delay):
         plotter.action_export(True)
-    plotter.file_dialog.accept()
+    plotter.export_dialog.accept()
     plotter.close()
 
 

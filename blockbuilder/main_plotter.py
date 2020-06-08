@@ -70,8 +70,12 @@ class MainPlotter(InteractivePlotter):
 
         # dialogs
         self.color_dialog = QColorDialog(self)
-        self.file_dialog = QFileDialog(self)
-        self.file_dialog.setNameFilter("Blockset (*.vts *.vtk)")
+        self.export_dialog = QFileDialog(self)
+        self.export_dialog.setWindowTitle("Export")
+        self.export_dialog.setNameFilter("Blockset (*.vts *.vtk)")
+        self.import_dialog = QFileDialog(self)
+        self.import_dialog.setNameFilter("Blockset (*.vts *.vtk)")
+        self.import_dialog.setWindowTitle("Import")
         self.setting_dialog = SettingDialog(self.params, self)
 
         # configuration
@@ -418,8 +422,8 @@ class MainPlotter(InteractivePlotter):
                 self.render_scene()
 
         if isinstance(value, bool):
-            self.file_dialog.fileSelected.connect(_import)
-            self.file_dialog.show()
+            self.import_dialog.fileSelected.connect(_import)
+            self.import_dialog.show()
         elif isinstance(value, str):
             _import(value)
         else:
@@ -437,8 +441,8 @@ class MainPlotter(InteractivePlotter):
             writer.Write()
 
         if isinstance(value, bool):
-            self.file_dialog.fileSelected.connect(_export)
-            self.file_dialog.show()
+            self.export_dialog.fileSelected.connect(_export)
+            self.export_dialog.show()
         elif isinstance(value, str):
             _export(value)
         else:

@@ -17,7 +17,7 @@ def test_main_plotter_action_setting_dialog(qtbot, tmpdir):
     qtbot.addWidget(dialog)
     with qtbot.wait_exposed(dialog, event_delay):
         dialog.show()
-    dialog.test_input_field.setValue(0)
+    dialog.test_input_field.setText("foo")
     dialog.test_input_vector_field.setValue(0)
     dialog.test_dropdown.setItemText(0, "foo")
     dialog.apply_button.click()
