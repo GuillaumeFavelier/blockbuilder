@@ -67,10 +67,29 @@ rcParams = {
             "icon_size": [36, 36],
         },
     },
+    "setting": {
+        "graphics": ["plotter"],
+        "scene": ["dimensions", "grid", "plane", "selector", "block"],
+        "dev": ["unit", "origin"],
+    },
     "app": {
         "name": "BlockBuilder",
     },
 }
+
+
+def set_params(params):
+    """Create the default configuration settings."""
+    import os
+    from pathlib import Path
+    import json
+
+    home_path = Path.home()
+    config_name = os.environ.get("BB_TESTING", "blockbuilder.json")
+    config_path = home_path.joinpath(config_name)
+
+    with open(config_path, 'w') as fp:
+        json.dump(params, fp)
 
 
 def get_params():
@@ -88,6 +107,5 @@ def get_params():
         with open(config_path, 'r') as fp:
             params = json.loads(fp.read())
     else:
-        with open(config_path, 'w') as fp:
-            json.dump(params, fp)
+        set_params(params)
     return params
