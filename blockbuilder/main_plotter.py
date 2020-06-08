@@ -9,11 +9,7 @@ from PyQt5 import QtCore
 from PyQt5.Qt import QIcon, QSize
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import (QPushButton, QToolButton, QButtonGroup,
-                             QColorDialog, QFileDialog, QDialog,
-                             QVBoxLayout, QHBoxLayout, QListWidget,
-                             QStackedWidget, QWidget, QLabel,
-                             QDoubleSpinBox, QSpinBox, QCheckBox,
-                             QGroupBox, QComboBox, QLineEdit)
+                             QColorDialog, QFileDialog)
 
 from .element import ElementId
 from .selector import Symmetry, SymmetrySelector
@@ -22,6 +18,7 @@ from .plane import Plane
 from .block import Block
 from .intersection import Intersection
 from .interactive_plotter import InteractivePlotter
+from .setting import SettingDialog
 
 
 @enum.unique
@@ -77,6 +74,8 @@ class MainPlotter(InteractivePlotter):
         self.file_dialog = QFileDialog(self)
         self.file_dialog.setModal(True)
         self.file_dialog.setNameFilter("Blockset (*.vts *.vtk)")
+        self.setting_dialog = SettingDialog(self.params, self)
+        self.setting_dialog.setModal(True)
 
         # configuration
         self.show()
@@ -452,154 +451,7 @@ class MainPlotter(InteractivePlotter):
     def action_setting(self, value=None):
         """Open the settings menu."""
         del value
-
-        copy_params = dict(self.params)
-
-        def _create_dropdown(layout, value, path):
-            def _atomic_set(value):
-                local_params = copy_params
-                for path_element in path:
-                    local_params = local_params[path_element]
-                local_params["value"] = value
-
-            widget = QComboBox()
-            for element in value["range"]:
-                widget.addItem(element)
-            widget.setCurrentText(value["value"])
-            widget.currentTextChanged.connect(_atomic_set)
-            layout.addWidget(widget)
-
-        def _create_form_field_layout(layout, widget, name):
-            if isinstance(name, str):
-                widget_layout = QHBoxLayout()
-                widget_layout.addWidget(QLabel(name))
-                widget_layout.addWidget(widget)
-                layout.addLayout(widget_layout)
-            else:
-                layout.addWidget(widget)
-
-        def _create_form_field(layout, value, path, name=None):
-            def _atomic_set(value):
-                local_params = copy_params
-                for path_element in path[:-1]:
-                    local_params = local_params[path_element]
-                if isinstance(name, str):
-                    local_params[path[-1]] = value
-                else:
-                    local_params[path[-1]][name] = value
-
-            if isinstance(value, bool):
-                widget = QCheckBox()
-                widget.setChecked(value)
-                widget.toggled.connect(_atomic_set)
-                _create_form_field_layout(layout, widget, name)
-            elif isinstance(value, str):
-                widget = QLineEdit()
-                widget.setText(value)
-                widget.textChanged.connect(_atomic_set)
-                _create_form_field_layout(layout, widget, name)
-            elif isinstance(value, int):
-                widget = QSpinBox()
-                widget.setMaximum(2000)
-                widget.setValue(value)
-                widget.valueChanged.connect(_atomic_set)
-                _create_form_field_layout(layout, widget, name)
-            elif isinstance(value, float):
-                widget = QDoubleSpinBox()
-                widget.setValue(value)
-                widget.valueChanged.connect(_atomic_set)
-                _create_form_field_layout(layout, widget, name)
-            elif isinstance(value, list):
-                widget_layout = QHBoxLayout()
-                widget_layout.addWidget(QLabel(name))
-                widget_layout.setStretch(0, len(value))
-                for idx, element in enumerate(value):
-                    _create_form_field(widget_layout, element, path, idx)
-                    widget_layout.setStretch(1 + idx, 1)
-                layout.addLayout(widget_layout)
-
-        def _create_form(layout, path):
-            local_params = self.params
-            for path_element in path:
-                local_params = local_params[path_element]
-            value = local_params
-
-            if isinstance(value, dict):
-                if "dropdown" in value:
-                    hlayout = QHBoxLayout()
-                    hlayout.addWidget(QLabel(path[-1]))
-                    _create_dropdown(hlayout, value, path)
-                    layout.addLayout(hlayout)
-                else:
-                    vlayout = QVBoxLayout()
-                    group = QGroupBox(path[-1])
-                    for key in value.keys():
-                        _create_form(vlayout, path + [key])
-                    group.setLayout(vlayout)
-                    layout.addWidget(group)
-            else:
-                _create_form_field(layout, value, path, path[-1])
-
-        setting_dialog = QDialog(parent=self)
-        setting_dialog.setModal(True)
-
-        vlayout = QVBoxLayout()
-        widget_connections = dict()
-
-        # list widgets
-        hlayout = QHBoxLayout()
-        list_widget = QListWidget()
-        stacked_widget = QStackedWidget()
-        setting = self.params["setting"]
-        for idx, key in enumerate(setting.keys()):
-            list_widget.addItem(key)
-            widget = QWidget()
-            widget_layout = QVBoxLayout()
-            for value in setting[key]:
-                _create_form(widget_layout, [value])
-            widget_layout.addStretch()
-            widget.setLayout(widget_layout)
-            stacked_widget.addWidget(widget)
-            widget_connections[key] = idx
-        hlayout.addWidget(list_widget)
-        hlayout.addWidget(stacked_widget)
-        hlayout.setStretch(0, 1)
-        hlayout.setStretch(1, 5)
-        vlayout.addLayout(hlayout)
-
-        def _connect_item(item):
-            idx = widget_connections[item.text()]
-            stacked_widget.setCurrentIndex(idx)
-
-        list_widget.currentItemChanged.connect(_connect_item)
-        list_widget.setCurrentRow(0)
-
-        def _reset_params():
-            from .params import rcParams, set_params
-            set_params(rcParams)
-            setting_dialog.close()
-
-        def _apply_params():
-            from .params import set_params
-            set_params(copy_params)
-            setting_dialog.close()
-
-        # buttons
-        button_layout = QHBoxLayout()
-        apply_button = QPushButton("Apply", setting_dialog)
-        cancel_button = QPushButton("Cancel", setting_dialog)
-        reset_button = QPushButton("Reset", setting_dialog)
-        apply_button.clicked.connect(_apply_params)
-        cancel_button.clicked.connect(setting_dialog.close)
-        reset_button.clicked.connect(_reset_params)
-        button_layout.addStretch()
-        button_layout.addWidget(reset_button)
-        button_layout.addWidget(cancel_button)
-        button_layout.addWidget(apply_button)
-        vlayout.addLayout(button_layout)
-
-        setting_dialog.setLayout(vlayout)
-        setting_dialog.show()
+        self.setting_dialog.show()
 
     def toggle_select(self, value):
         """Toggle area selection."""
