@@ -1,10 +1,18 @@
+import os
 from blockbuilder.params import rcParams
 from blockbuilder.setting import SettingDialog
 
 event_delay = 300
 
 
-def test_main_plotter_action_setting_dialog(qtbot):
+def test_main_plotter_action_setting_dialog(qtbot, tmpdir):
+    # use a temporory configuration file to avoid
+    # modifying the default one.
+    output_dir = str(tmpdir.mkdir("tmpdir"))
+    assert os.path.isdir(output_dir)
+    filename = str(os.path.join(output_dir, "tmp.json"))
+    os.environ["BB_TESTING"] = filename
+
     dialog = SettingDialog(rcParams)
     qtbot.addWidget(dialog)
     with qtbot.wait_exposed(dialog, event_delay):
