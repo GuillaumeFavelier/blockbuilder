@@ -97,14 +97,14 @@ rcParams = {
             "icon_size": [36, 36],
         },
     },
-    "setting": {
-        "graphics": ["plotter", "camera"],
-        "keys": ["keybinding"],
-        "scene": ["dimensions", "grid", "plane", "selector", "block"],
-        "dev": ["unit", "origin", "element", "builder", "app"],
-    },
     "app": {
         "name": "BlockBuilder",
+    },
+    "setting": {
+        "interface": ["plotter", "builder", "camera"],
+        "keys": ["keybinding"],
+        "scene": ["dimensions", "grid", "plane", "selector", "block"],
+        "dev": ["unit", "origin", "element", "app"],
     },
 }
 

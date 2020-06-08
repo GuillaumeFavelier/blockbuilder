@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import (QPushButton, QToolButton, QButtonGroup,
                              QVBoxLayout, QHBoxLayout, QListWidget,
                              QStackedWidget, QWidget, QLabel,
                              QDoubleSpinBox, QSpinBox, QCheckBox,
-                             QGroupBox, QComboBox)
+                             QGroupBox, QComboBox, QLineEdit)
 
 from .element import ElementId
 from .selector import Symmetry, SymmetrySelector
@@ -492,6 +492,11 @@ class MainPlotter(InteractivePlotter):
                 widget = QCheckBox()
                 widget.setChecked(value)
                 widget.toggled.connect(_atomic_set)
+                _create_form_field_layout(layout, widget, name)
+            elif isinstance(value, str):
+                widget = QLineEdit()
+                widget.setText(value)
+                widget.textChanged.connect(_atomic_set)
                 _create_form_field_layout(layout, widget, name)
             elif isinstance(value, int):
                 widget = QSpinBox()
