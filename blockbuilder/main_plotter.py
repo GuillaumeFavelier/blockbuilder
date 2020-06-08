@@ -73,10 +73,13 @@ class MainPlotter(InteractivePlotter):
         self.export_dialog = QFileDialog(self)
         self.export_dialog.setWindowTitle("Export")
         self.export_dialog.setNameFilter("Blockset (*.vts *.vtk)")
+        self.export_dialog.setModal(True)
         self.import_dialog = QFileDialog(self)
         self.import_dialog.setNameFilter("Blockset (*.vts *.vtk)")
         self.import_dialog.setWindowTitle("Import")
+        self.import_dialog.setModal(True)
         self.setting_dialog = SettingDialog(self.params, self)
+        self.setting_dialog.setModal(True)
 
         # configuration
         self.show()
