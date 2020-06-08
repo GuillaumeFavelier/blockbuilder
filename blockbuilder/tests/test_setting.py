@@ -1,7 +1,7 @@
 from blockbuilder.params import rcParams
 from blockbuilder.setting import SettingDialog
 
-event_delay = 500
+event_delay = 300
 
 
 def test_main_plotter_action_setting_dialog(qtbot):

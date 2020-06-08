@@ -70,12 +70,9 @@ class MainPlotter(InteractivePlotter):
 
         # dialogs
         self.color_dialog = QColorDialog(self)
-        self.color_dialog.setModal(True)
         self.file_dialog = QFileDialog(self)
-        self.file_dialog.setModal(True)
         self.file_dialog.setNameFilter("Blockset (*.vts *.vtk)")
         self.setting_dialog = SettingDialog(self.params, self)
-        self.setting_dialog.setModal(True)
 
         # configuration
         self.show()
