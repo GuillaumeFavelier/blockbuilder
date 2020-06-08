@@ -102,8 +102,8 @@ rcParams = {
     },
     "setting": {
         "interface": ["plotter", "builder", "camera"],
-        "keys": ["keybinding"],
         "scene": ["dimensions", "grid", "plane", "selector", "block"],
+        "keys": ["keybinding"],
         "dev": ["unit", "origin", "element", "app"],
     },
 }

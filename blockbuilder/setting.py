@@ -60,6 +60,7 @@ class SettingDialog(QDialog):
                 widget = QLineEdit()
                 widget.setText(value)
                 widget.textChanged.connect(_atomic_set)
+                _create_form_field_layout(layout, widget, name)
             elif isinstance(value, int):
                 widget = QSpinBox()
                 widget.setMaximum(2000)
