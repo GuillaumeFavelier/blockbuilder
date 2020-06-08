@@ -6,7 +6,7 @@ event_delay = 300
 
 
 def test_main_plotter_action_setting_dialog(qtbot, tmpdir):
-    # use a temporory configuration file to avoid
+    # use a temporary configuration file to avoid
     # modifying the default one.
     output_dir = str(tmpdir.mkdir("tmpdir"))
     assert os.path.isdir(output_dir)
