@@ -52,12 +52,36 @@ rcParams = {
         "elevation_rng": [15, 165],
     },
     "keybinding": {
-        "distance_minus": "Up",
-        "distance_plus": "Down",
-        "azimuth_minus": "q",
-        "azimuth_plus": "d",
-        "elevation_minus": "z",
-        "elevation_plus": "s",
+        "distance_minus": {
+            "dropdown": True,
+            "range": ["Up"],
+            "value": "Up",
+        },
+        "distance_plus": {
+            "dropdown": True,
+            "range": ["Down"],
+            "value": "Down",
+        },
+        "azimuth_minus": {
+            "dropdown": True,
+            "range": ["q", "a"],
+            "value": "q",
+        },
+        "azimuth_plus": {
+            "dropdown": True,
+            "range": ["d"],
+            "value": "d",
+        },
+        "elevation_minus": {
+            "dropdown": True,
+            "range": ["z", "w"],
+            "value": "z",
+        },
+        "elevation_plus": {
+            "dropdown": True,
+            "range": ["s"],
+            "value": "s",
+        },
     },
     "builder": {
         "toggles": {

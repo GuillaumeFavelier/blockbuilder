@@ -75,17 +75,17 @@ class InteractivePlotter(CorePlotter):
     def on_key_press(self, vtk_picker, event):
         """Process key press events."""
         key = self.interactor.GetKeySym()
-        if key == self.params["keybinding"]["distance_minus"]:
+        if key == self.params["keybinding"]["distance_minus"]["value"]:
             self.move_camera(update="distance", inverse=True)
-        if key == self.params["keybinding"]["distance_plus"]:
+        if key == self.params["keybinding"]["distance_plus"]["value"]:
             self.move_camera(update="distance")
-        if key == self.params["keybinding"]["azimuth_minus"]:
+        if key == self.params["keybinding"]["azimuth_minus"]["value"]:
             self.move_camera(update="azimuth", inverse=True)
-        if key == self.params["keybinding"]["azimuth_plus"]:
+        if key == self.params["keybinding"]["azimuth_plus"]["value"]:
             self.move_camera(update="azimuth")
-        if key == self.params["keybinding"]["elevation_minus"]:
+        if key == self.params["keybinding"]["elevation_minus"]["value"]:
             self.move_camera(update="elevation", inverse=True)
-        if key == self.params["keybinding"]["elevation_plus"]:
+        if key == self.params["keybinding"]["elevation_plus"]["value"]:
             self.move_camera(update="elevation")
 
     def load_interaction(self):

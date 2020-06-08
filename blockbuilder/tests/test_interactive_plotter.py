@@ -13,12 +13,12 @@ def test_interactive_plotter(qtbot):
     qtbot.addWidget(plotter)
     plotter.show()
     keys = [
-        rcParams["keybinding"]["azimuth_minus"],
-        rcParams["keybinding"]["azimuth_plus"],
-        rcParams["keybinding"]["elevation_minus"],
-        rcParams["keybinding"]["elevation_plus"],
-        rcParams["keybinding"]["distance_plus"],
-        rcParams["keybinding"]["distance_minus"],
+        rcParams["keybinding"]["azimuth_minus"]["value"],
+        rcParams["keybinding"]["azimuth_plus"]["value"],
+        rcParams["keybinding"]["elevation_minus"]["value"],
+        rcParams["keybinding"]["elevation_plus"]["value"],
+        rcParams["keybinding"]["distance_plus"]["value"],
+        rcParams["keybinding"]["distance_minus"]["value"],
     ]
     for key in keys:
         qtbot.keyPress(

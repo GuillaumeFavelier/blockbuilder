@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import (QPushButton, QToolButton, QButtonGroup,
                              QVBoxLayout, QHBoxLayout, QListWidget,
                              QStackedWidget, QWidget, QLabel,
                              QDoubleSpinBox, QSpinBox, QCheckBox,
-                             QGroupBox)
+                             QGroupBox, QComboBox)
 
 from .element import ElementId
 from .selector import Symmetry, SymmetrySelector
@@ -455,6 +455,20 @@ class MainPlotter(InteractivePlotter):
 
         copy_params = dict(self.params)
 
+        def _create_dropdown(layout, value, path):
+            def _atomic_set(value):
+                local_params = copy_params
+                for path_element in path:
+                    local_params = local_params[path_element]
+                local_params["value"] = value
+
+            widget = QComboBox()
+            for element in value["range"]:
+                widget.addItem(element)
+            widget.setCurrentText(value["value"])
+            widget.currentTextChanged.connect(_atomic_set)
+            layout.addWidget(widget)
+
         def _create_form_field_layout(layout, widget, name):
             if isinstance(name, str):
                 widget_layout = QHBoxLayout()
@@ -506,12 +520,18 @@ class MainPlotter(InteractivePlotter):
             value = local_params
 
             if isinstance(value, dict):
-                group = QGroupBox(path[-1])
-                vlayout = QVBoxLayout()
-                for key in value.keys():
-                    _create_form(vlayout, path + [key])
-                group.setLayout(vlayout)
-                layout.addWidget(group)
+                if "dropdown" in value:
+                    hlayout = QHBoxLayout()
+                    hlayout.addWidget(QLabel(path[-1]))
+                    _create_dropdown(hlayout, value, path)
+                    layout.addLayout(hlayout)
+                else:
+                    vlayout = QVBoxLayout()
+                    group = QGroupBox(path[-1])
+                    for key in value.keys():
+                        _create_form(vlayout, path + [key])
+                    group.setLayout(vlayout)
+                    layout.addWidget(group)
             else:
                 _create_form_field(layout, value, path, path[-1])
 
