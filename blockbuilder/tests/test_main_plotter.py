@@ -16,7 +16,7 @@ from blockbuilder.main_plotter import (MainPlotter, BlockMode, Action, Toggle,
                                        _get_toolbar_area, _rgb2str, _qrgb2rgb)
 
 rcParams["dimensions"] = [8, 8, 8]
-event_delay = 300
+event_delay = 500
 
 
 def test_main_plotter(qtbot):
