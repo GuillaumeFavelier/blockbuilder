@@ -68,9 +68,10 @@ rcParams = {
         },
     },
     "setting": {
-        "graphics": ["plotter"],
+        "graphics": ["plotter", "camera"],
+        "keys": ["keybinding"],
         "scene": ["dimensions", "grid", "plane", "selector", "block"],
-        "dev": ["unit", "origin"],
+        "dev": ["unit", "origin", "element", "builder", "app"],
     },
     "app": {
         "name": "BlockBuilder",
