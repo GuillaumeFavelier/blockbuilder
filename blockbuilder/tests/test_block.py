@@ -32,7 +32,7 @@ def test_block():
     assert "edge_color" in plotting
     assert "rgba" in plotting
 
-    merge_policies = rcParams["block"]["merge_policies"]
+    merge_policies = rcParams["block"]["merge_policy"]["range"]
     for policy in merge_policies:
         for visible in [False, True]:
             external_block = Block(params=rcParams, dimensions=[2, 2, 2])

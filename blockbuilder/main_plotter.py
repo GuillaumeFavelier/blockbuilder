@@ -59,7 +59,6 @@ class MainPlotter(InteractivePlotter):
         self.unit = self.params["unit"]
         self.dimensions = self.params["dimensions"]
         self.default_block_color = self.params["block"]["color"]
-        self.toolbar_area = self.params["builder"]["toolbar"]["area"]
         self.icon_size = self.params["builder"]["toolbar"]["icon_size"]
         self.button_pressed = False
         self.button_released = False
@@ -259,8 +258,8 @@ class MainPlotter(InteractivePlotter):
     def load_toolbar(self):
         """Initialize the toolbar."""
         self.toolbar = self.addToolBar("toolbar")
-        toolbar_areas = self.params["builder"]["toolbar"]["areas"]
-        toolbar_area = self.params["builder"]["toolbar"]["area"]
+        toolbar_areas = self.params["builder"]["toolbar"]["area"]["range"]
+        toolbar_area = self.params["builder"]["toolbar"]["area"]["value"]
         self.addToolBar(
             _get_toolbar_area(toolbar_area, toolbar_areas),
             self.toolbar,

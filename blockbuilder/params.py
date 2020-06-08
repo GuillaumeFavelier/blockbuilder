@@ -38,8 +38,11 @@ rcParams = {
         "color_array_name": "color",
         "color": [.7, .7, .7],
         "edge_color": [.0, .0, .0],
-        "merge_policies": ["external", "internal"],
-        "merge_policy": "external",
+        "merge_policy": {
+            "dropdown": True,
+            "range": ["external", "internal"],
+            "value": "external",
+        },
     },
     "camera": {
         "view_up": [0, 0, 1],
@@ -62,8 +65,11 @@ rcParams = {
             "edges": True,
         },
         "toolbar": {
-            "areas": ["left", "right", "top", "bottom"],
-            "area": "top",
+            "area": {
+                "dropdown": True,
+                "range": ["left", "right", "top", "bottom"],
+                "value": "top",
+            },
             "icon_size": [36, 36],
         },
     },

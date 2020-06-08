@@ -215,7 +215,7 @@ def test_main_plotter_coverage(qtbot):
 
 
 def test_get_toolbar_area():
-    toolbar_areas = rcParams["builder"]["toolbar"]["areas"]
+    toolbar_areas = rcParams["builder"]["toolbar"]["area"]["range"]
     for area in toolbar_areas:
         _get_toolbar_area(area, toolbar_areas)
     with pytest.raises(TypeError, match="type"):
