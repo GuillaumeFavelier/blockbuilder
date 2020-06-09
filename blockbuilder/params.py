@@ -1,5 +1,9 @@
 """Module about the default values."""
 
+import os
+from pathlib import Path
+import json
+
 
 rcParams = {
     "unit": 1.,
@@ -109,31 +113,25 @@ rcParams = {
 }
 
 
+def get_config_path():
+    home_path = Path.home()
+    env_variable = "BB_TESTING"
+    config_file = "blockbuilder.json"
+    config_name = os.environ.get(env_variable, config_file)
+    return home_path.joinpath(config_name)
+
+
 def set_params(params):
     """Create the default configuration settings."""
-    import os
-    from pathlib import Path
-    import json
-
-    home_path = Path.home()
-    config_name = os.environ.get("BB_TESTING", "blockbuilder.json")
-    config_path = home_path.joinpath(config_name)
-
+    config_path = get_config_path()
     with open(config_path, 'w') as fp:
         json.dump(params, fp)
 
 
 def get_params():
     """Create or load the default configuration settings."""
-    import os
-    from pathlib import Path
-    import json
-
     params = rcParams
-    home_path = Path.home()
-    config_name = os.environ.get("BB_TESTING", "blockbuilder.json")
-    config_path = home_path.joinpath(config_name)
-
+    config_path = get_config_path()
     if config_path.exists():
         with open(config_path, 'r') as fp:
             params = json.loads(fp.read())
