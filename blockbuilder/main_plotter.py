@@ -68,20 +68,6 @@ class MainPlotter(InteractivePlotter):
         self.mode_functions = None
         self.set_dimensions(self.dimensions)
 
-        # dialogs
-        self.color_dialog = QColorDialog(self)
-        self.export_dialog = QFileDialog(self)
-        self.export_dialog.setWindowTitle("Export")
-        self.export_dialog.setNameFilter("Blockset (*.vts *.vtk)")
-        # XXX: Fails on CI if modal
-        # self.export_dialog.setModal(True)
-        self.import_dialog = QFileDialog(self)
-        self.import_dialog.setNameFilter("Blockset (*.vts *.vtk)")
-        self.import_dialog.setWindowTitle("Import")
-        # XXX: Fails on CI if modal
-        # self.import_dialog.setModal(True)
-        self.setting_dialog = SettingDialog(self.params, self)
-
         # configuration
         self.show()
         self.load_elements()
@@ -89,6 +75,7 @@ class MainPlotter(InteractivePlotter):
         self.load_block_modes()
         self.load_icons()
         self.load_toolbar()
+        self.load_dialogs()
         self.selector.hide()
         self.update_camera()
         self.render_scene()
@@ -289,6 +276,24 @@ class MainPlotter(InteractivePlotter):
         )
         self.toolbar.addSeparator()
         self._add_toolbar_actions()
+
+    def load_dialogs(self):
+        """Load the dialogs."""
+        self.color_dialog = QColorDialog(self)
+        self.export_dialog = QFileDialog(self)
+        self.export_dialog.setWindowTitle("Export")
+        self.export_dialog.setNameFilter("Blockset (*.vts *.vtk)")
+        self.export_dialog.setWindowIcon(self.icons[Action.EXPORT])
+        # XXX: Fails on CI if modal
+        # self.export_dialog.setModal(True)
+        self.import_dialog = QFileDialog(self)
+        self.import_dialog.setNameFilter("Blockset (*.vts *.vtk)")
+        self.import_dialog.setWindowTitle("Import")
+        self.import_dialog.setWindowIcon(self.icons[Action.IMPORT])
+        # XXX: Fails on CI if modal
+        # self.import_dialog.setModal(True)
+        self.setting_dialog = SettingDialog(self.params, self)
+        self.setting_dialog.setWindowIcon(self.icons[Action.SETTING])
 
     def set_dimensions(self, dimensions):
         """Set the current dimensions."""
