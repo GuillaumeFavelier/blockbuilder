@@ -1,5 +1,6 @@
 """Module about the application settings."""
 
+from .params import rcParams, set_params
 from PyQt5.QtWidgets import (QPushButton, QDialog, QVBoxLayout, QHBoxLayout,
                              QListWidget, QStackedWidget, QWidget, QLabel,
                              QDoubleSpinBox, QSpinBox, QCheckBox,
@@ -12,6 +13,9 @@ class SettingDialog(QDialog):
     def __init__(self, params, parent=None):
         """Initialize the SettingDialog."""
         super().__init__(parent)
+        self.setWindowTitle("Setting")
+        self.setModal(True)
+
         self.params = params
         self.copy_params = dict(self.params)
 
@@ -22,7 +26,7 @@ class SettingDialog(QDialog):
         hlayout = QHBoxLayout()
         list_widget = QListWidget()
         stacked_widget = QStackedWidget()
-        for idx, key in enumerate(setting.keys()):
+        for key in setting.keys():
             list_widget.addItem(key)
             widget = QWidget()
             widget_layout = QVBoxLayout()
@@ -41,11 +45,17 @@ class SettingDialog(QDialog):
         list_widget.setCurrentRow(0)
 
         # buttons
+        def _reset_params():
+            set_params(rcParams)
+
+        def _apply_params():
+            set_params(self.copy_params)
+
         button_layout = QHBoxLayout()
         self.apply_button = QPushButton("Apply", self)
-        self.apply_button.clicked.connect(self._apply_params)
+        self.apply_button.clicked.connect(_apply_params)
         self.reset_button = QPushButton("Reset", self)
-        self.reset_button.clicked.connect(self._reset_params)
+        self.reset_button.clicked.connect(_reset_params)
         self.ok_button = QPushButton("OK", self)
         self.ok_button.clicked.connect(self.close)
         button_layout.addStretch()
@@ -143,11 +153,3 @@ class SettingDialog(QDialog):
                 layout.addWidget(group)
         else:
             self._create_form_field(layout, value, path, path[-1])
-
-    def _reset_params(self):
-        from .params import rcParams, set_params
-        set_params(rcParams)
-
-    def _apply_params(self):
-        from .params import set_params
-        set_params(self.copy_params)
