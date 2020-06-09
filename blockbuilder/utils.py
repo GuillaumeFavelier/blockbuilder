@@ -58,9 +58,9 @@ def get_structured_grid(dimensions=(2, 2, 2), origin=(0., 0., 0.),
     number_of_points = np.prod(dimensions)
     points = vtk.vtkPoints()
     points.SetNumberOfPoints(number_of_points)
-    for k in range(dimensions[0]):
+    for k in range(dimensions[2]):
         for j in range(dimensions[1]):
-            for i in range(dimensions[2]):
+            for i in range(dimensions[0]):
                 point = origin + np.multiply([i, j, k], spacing)
                 points.SetPoint(counter, point)
                 counter += 1
