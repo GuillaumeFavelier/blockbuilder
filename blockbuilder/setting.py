@@ -127,9 +127,10 @@ class SettingDialog(QDialog):
         elif isinstance(value, list):
             widget_layout = QHBoxLayout()
             widget_layout.addWidget(QLabel(name))
-            widget_layout.setStretch(0, len(value))
             for idx, element in enumerate(value):
                 self._create_form_field(widget_layout, element, path, idx)
+            widget_layout.setStretch(0, len(value))
+            for idx, _ in enumerate(value):
                 widget_layout.setStretch(1 + idx, 1)
             layout.addLayout(widget_layout)
 
