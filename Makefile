@@ -5,6 +5,15 @@ all: doctest
 
 style: codespell pydocstyle
 
+pip:
+	@echo "Check pip version"
+	@which pip
+	@pip --version
+
+install: pip
+	@echo "Run pip install -e ."
+	@pip install -e .
+
 codespell:
 	@echo "Run codespell"
 	@codespell $(CODESPELL_DIRS) -S $(CODESPELL_SKIP)
