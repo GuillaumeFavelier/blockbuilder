@@ -47,6 +47,7 @@ class SettingDialog(QDialog):
         # buttons
         def _reset_params():
             set_params(rcParams)
+            self.copy_params = dict(rcParams)
 
         def _apply_params():
             set_params(self.copy_params)
