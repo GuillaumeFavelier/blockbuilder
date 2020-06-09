@@ -246,13 +246,13 @@ class MainPlotter(InteractivePlotter):
             button.setIcon(icon)
             button.setCheckable(True)
             toggle_name = toggle.name.lower()
+            default_value = self.params["builder"]["toggles"][toggle_name]
             func_name = "toggle_{}".format(toggle_name)
             func = getattr(self, func_name, None)
-            assert callable(func)
-            button.toggled.connect(func)
-            default_value = self.params["builder"]["toggles"][toggle_name]
-            button.setChecked(default_value)
-            func(default_value)
+            if callable(func):
+                button.toggled.connect(func)
+                button.setChecked(default_value)
+                func(default_value)
             self.toolbar.addWidget(button)
 
     def _add_toolbar_color_button(self):

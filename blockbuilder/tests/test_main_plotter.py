@@ -192,6 +192,22 @@ def test_main_plotter_action_export_dialog(qtbot):
     plotter.close()
 
 
+def test_main_plotter_action_setting(qtbot, tmpdir):
+    # use a temporary configuration file to avoid
+    # modifying the default one.
+    output_dir = str(tmpdir.mkdir("tmpdir"))
+    assert os.path.isdir(output_dir)
+    filename = str(os.path.join(output_dir, "tmp.json"))
+    os.environ["BB_TESTING"] = filename
+
+    plotter = MainPlotter(params=rcParams, testing=True)
+    qtbot.addWidget(plotter)
+    with qtbot.wait_exposed(plotter.setting_dialog, event_delay):
+        plotter.action_setting(True)
+    plotter.setting_dialog.ok_button.click()
+    plotter.close()
+
+
 def test_main_plotter_coverage(qtbot):
     plotter = MainPlotter(params=rcParams, testing=True)
     qtbot.addWidget(plotter)
