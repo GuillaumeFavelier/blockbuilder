@@ -345,6 +345,7 @@ class MainPlotter(InteractivePlotter):
         intersection = Intersection(vtk_picker)
         if not intersection.exist():
             self.selector.hide()
+            self.selector.reset_area()
             self.render_scene()
             return
 
