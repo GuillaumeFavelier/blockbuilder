@@ -22,5 +22,5 @@ def test_main_plotter_action_setting_dialog(qtbot, tmpdir):
     dialog.test_dropdown.setItemText(0, "foo")
     dialog.apply_button.click()
     dialog.reset_button.click()
-    dialog.cancel_button.click()
+    dialog.ok_button.click()
     dialog.close()
