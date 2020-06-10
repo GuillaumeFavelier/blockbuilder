@@ -114,6 +114,7 @@ rcParams = {
 
 
 def get_config_path():
+    """Get the default config path."""
     home_path = Path.home()
     env_variable = "BB_TESTING"
     config_file = "blockbuilder.json"
