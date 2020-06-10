@@ -206,9 +206,12 @@ class SettingDialog(QDialog):
 
 
 class ColorButton(QPushButton):
+    """Select a color interactively."""
+
     colorChanged = pyqtSignal(list)
 
     def __init__(self, parent=None):
+        """Initialize the ColorButton."""
         super().__init__(parent=parent)
         self.color_dialog = QColorDialog(self)
         self.clicked.connect(self.color_dialog.show)
