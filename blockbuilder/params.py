@@ -105,10 +105,10 @@ rcParams = {
         "name": "BlockBuilder",
     },
     "setting": {
-        "interface": ["plotter", "builder", "camera"],
+        "interface": ["plotter", "builder"],
         "scene": ["dimensions", "grid", "plane", "selector", "block"],
         "keys": ["keybinding"],
-        "dev": ["unit", "origin", "element", "app"],
+        "dev": ["unit", "origin", "element", "camera", "app"],
     },
 }
 
