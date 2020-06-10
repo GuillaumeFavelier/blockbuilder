@@ -12,6 +12,7 @@ def test_block():
     block = Block(params=rcParams, dimensions=dimensions, mesh=mesh)
 
     assert _hasattr(block, "actor", type(None))
+    assert _hasattr(block, "show_edges", bool)
     assert _hasattr(block, "element_id", ElementId)
     assert _hasattr(block, "unit", float)
     assert _hasattr(block, "origin", np.ndarray)
@@ -34,12 +35,13 @@ def test_block():
 
     merge_policies = rcParams["block"]["merge_policy"]["range"]
     for policy in merge_policies:
+        external_block = Block(params=rcParams, dimensions=[2, 2, 2])
+        external_block.add_all()
         for visible in [False, True]:
-            external_block = Block(params=rcParams, dimensions=[2, 2, 2])
             if visible:
-                external_block.add_all()
+                block.add_all()
             else:
-                external_block.remove_all()
+                block.remove_all()
             block.merge_policy = policy
             block.merge(external_block)
     assert all(block.dimensions == dimensions)

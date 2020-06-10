@@ -426,6 +426,9 @@ class MainPlotter(InteractivePlotter):
                     self.set_dimensions(final_dimensions)
                     self.load_elements()
                     self.add_elements()
+                    # restore edge visibility
+                    self.block.toggle_edges(old_block.show_edges)
+                    # restore block mode
                     self.set_block_mode()
                     self.block.merge(old_block)
                     self.block.merge(imported_block)

@@ -11,6 +11,7 @@ class Block(object):
     def __init__(self, params, dimensions, mesh=None):
         """Initialize the block manager."""
         self.actor = None
+        self.show_edges = True
         self.element_id = ElementId.BLOCK
         self.params = params
         self.unit = self.params["unit"]
@@ -110,6 +111,7 @@ class Block(object):
 
     def toggle_edges(self, value):
         """Toggle visibility of the block edges."""
+        self.show_edges = value
         prop = self.actor.GetProperty()
         prop.SetEdgeVisibility(value)
 
