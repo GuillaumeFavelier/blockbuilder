@@ -21,10 +21,10 @@ class CorePlotter(MinimalPlotter):
             advanced = self.params["plotter"]["advanced"]
         if background_top_color is None:
             background_top_color = \
-                self.params["plotter"]["background_top_color"]
+                self.params["plotter"]["background"]["color"]["top"]
         if background_bottom_color is None:
             background_bottom_color = \
-                self.params["plotter"]["background_bottom_color"]
+                self.params["plotter"]["background"]["color"]["bottom"]
         self.window_size = window_size
         if testing:
             # On Azure, AA and smoothing cause segfaults (access violation)

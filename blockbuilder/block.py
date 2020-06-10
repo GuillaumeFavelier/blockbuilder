@@ -18,7 +18,7 @@ class Block(object):
         self.origin = np.asarray(self.params["origin"])
         self.color_array_name = self.params["block"]["color_array_name"]
         self.color = np.asarray(self.params["block"]["color"])
-        self.edge_color = np.asarray(self.params["block"]["edge_color"])
+        self.edge_color = np.asarray(self.params["block"]["edge"]["color"])
         self.merge_policy = self.params["block"]["merge_policy"]["value"]
         # we assume that the input mesh respect the spacing
         self.spacing = np.asarray([self.unit, self.unit, self.unit])

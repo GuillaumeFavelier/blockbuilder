@@ -75,3 +75,18 @@ def get_structured_grid(dimensions=(2, 2, 2), origin=(0., 0., 0.),
     )
     mesh.Modified()
     return mesh
+
+
+def _rgb2str(color, is_int=False):
+    if not is_int:
+        color = np.asarray(color) * 255
+        color = color.astype(np.uint8)
+    return str(tuple(color))
+
+
+def _qrgb2rgb(color):
+    return (
+        color.red(),
+        color.green(),
+        color.blue()
+    )

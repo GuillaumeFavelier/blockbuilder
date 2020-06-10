@@ -11,6 +11,7 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import (QPushButton, QToolButton, QButtonGroup,
                              QColorDialog, QFileDialog)
 
+from .utils import _rgb2str, _qrgb2rgb
 from .element import ElementId
 from .selector import Symmetry, SymmetrySelector
 from .grid import Grid
@@ -492,18 +493,3 @@ def _get_toolbar_area(area, areas):
     area = ''.join(area)
     area = area + 'ToolBarArea'
     return getattr(QtCore.Qt, area)
-
-
-def _rgb2str(color, is_int=False):
-    if not is_int:
-        color = np.asarray(color) * 255
-        color = color.astype(np.uint8)
-    return str(tuple(color))
-
-
-def _qrgb2rgb(color):
-    return (
-        color.red(),
-        color.green(),
-        color.blue()
-    )

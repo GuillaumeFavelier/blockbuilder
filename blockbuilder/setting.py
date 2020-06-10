@@ -1,10 +1,15 @@
 """Module about the application settings."""
 
-from .params import rcParams, set_params
+import numpy as np
+from PyQt5.QtGui import QColor
+from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import (QPushButton, QDialog, QVBoxLayout, QHBoxLayout,
                              QListWidget, QStackedWidget, QWidget, QLabel,
                              QDoubleSpinBox, QSpinBox, QCheckBox,
-                             QGroupBox, QComboBox, QLineEdit, QMessageBox)
+                             QGroupBox, QComboBox, QLineEdit, QMessageBox,
+                             QColorDialog)
+from .utils import _rgb2str, _qrgb2rgb
+from .params import rcParams, set_params
 
 
 class SettingDialog(QDialog):
@@ -135,7 +140,9 @@ class SettingDialog(QDialog):
             local_params = self.copy_params
             for path_element in path[:-1]:
                 local_params = local_params[path_element]
-            if isinstance(name, str):
+            if isinstance(name, list):
+                local_params[path[-1]] = value
+            elif isinstance(name, str):
                 local_params[path[-1]] = value
             else:
                 local_params[path[-1]][name] = value
@@ -163,13 +170,19 @@ class SettingDialog(QDialog):
             widget.valueChanged.connect(_atomic_set)
             self._create_form_field_layout(layout, widget, name)
         elif isinstance(value, list):
-            widget_layout = QHBoxLayout()
-            widget_layout.addWidget(QLabel(name))
-            widget_layout.setStretch(0, len(value))
-            for idx, element in enumerate(value):
-                self._create_form_field(widget_layout, element, path, idx)
-                widget_layout.setStretch(1 + idx, 1)
-            layout.addLayout(widget_layout)
+            if len(value) == 3 and "color" in path:
+                widget = ColorButton()
+                widget.setColor(value, is_int=False)
+                widget.colorChanged.connect(_atomic_set)
+                self._create_form_field_layout(layout, widget, name)
+            else:
+                widget_layout = QHBoxLayout()
+                widget_layout.addWidget(QLabel(name))
+                widget_layout.setStretch(0, len(value))
+                for idx, element in enumerate(value):
+                    self._create_form_field(widget_layout, element, path, idx)
+                    widget_layout.setStretch(1 + idx, 1)
+                layout.addLayout(widget_layout)
 
     def _create_form(self, layout, path):
         local_params = self.params
@@ -192,3 +205,24 @@ class SettingDialog(QDialog):
                 layout.addWidget(group)
         else:
             self._create_form_field(layout, value, path, path[-1])
+
+
+class ColorButton(QPushButton):
+    colorChanged = pyqtSignal(list)
+
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.color_dialog = QColorDialog(self)
+        self.clicked.connect(self.color_dialog.show)
+        self.setObjectName("ColorButton")
+        self.color_dialog.colorSelected.connect(self.setColor)
+
+    def setColor(self, color, is_int=True):
+        """Set the current button color."""
+        if isinstance(color, QColor):
+            color = _qrgb2rgb(color)
+        color = np.asarray(color)
+        self.setStyleSheet(
+            "#ColorButton{background-color: rgb" +
+            _rgb2str(color, is_int) + "}")
+        self.colorChanged.emit(list(color / 255.))

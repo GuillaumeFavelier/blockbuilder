@@ -14,8 +14,12 @@ rcParams = {
         "show_edges": True,
         "line_width": 3,
         "advanced": True,
-        "background_top_color": [0.05, 0.05, 0.05],
-        "background_bottom_color": [0., 0., .35],
+        "background": {
+            "color": {
+                "top": [0.05, 0.05, 0.05],
+                "bottom": [0., 0., .35],
+            },
+        },
     },
     "element": {
         "edge_color_offset": [.15, .15, .15],
@@ -41,7 +45,9 @@ rcParams = {
     "block": {
         "color_array_name": "color",
         "color": [.7, .7, .7],
-        "edge_color": [.0, .0, .0],
+        "edge": {
+            "color": [.0, .0, .0],
+        },
         "merge_policy": {
             "dropdown": True,
             "range": ["external", "internal"],

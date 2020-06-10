@@ -3,7 +3,6 @@ import numpy as np
 import pytest
 
 from PyQt5 import QtCore
-from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QColorDialog, QFileDialog
 
 from blockbuilder.params import rcParams
@@ -13,7 +12,7 @@ from blockbuilder.grid import Grid
 from blockbuilder.plane import Plane
 from blockbuilder.selector import Symmetry, SymmetrySelector
 from blockbuilder.main_plotter import (MainPlotter, BlockMode, Action, Toggle,
-                                       _get_toolbar_area, _rgb2str, _qrgb2rgb)
+                                       _get_toolbar_area)
 
 rcParams["dimensions"] = [8, 8, 8]
 event_delay = 300
@@ -239,18 +238,6 @@ def test_get_toolbar_area():
         _get_toolbar_area(-1, toolbar_areas)
     with pytest.raises(ValueError, match="area"):
         _get_toolbar_area("foo", toolbar_areas)
-
-
-def test_rgb2str():
-    white = (1., 1., 1.)
-    assert isinstance(_rgb2str(white, is_int=False), str)
-    white = (255, 255, 255)
-    assert isinstance(_rgb2str(white, is_int=True), str)
-
-
-def test_qrgb2rgb():
-    white = QColor(255, 255, 255)
-    assert isinstance(_qrgb2rgb(white), tuple)
 
 
 def _play_block_scenario(qtbot, plotter):
