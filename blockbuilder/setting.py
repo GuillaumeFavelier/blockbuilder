@@ -146,7 +146,8 @@ class SettingDialog(QDialog):
             self._create_form_field_layout(layout, widget, name)
         elif isinstance(value, int):
             widget = QSpinBox()
-            widget.setMaximum(5 * value)
+            # XXX: this could be improved surely
+            widget.setMaximum(2000)
             widget.setValue(value)
             widget.valueChanged.connect(_atomic_set)
             self._create_form_field_layout(layout, widget, name)
