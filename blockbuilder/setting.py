@@ -32,18 +32,24 @@ class SettingDialog(QDialog):
 
     def _load_buttons(self):
         self.reset_dialog = QMessageBox(self)
-        self.reset_dialog.setWindowTitle("Reset Warning")
+        self.reset_dialog.setWindowTitle("Warning - Reset")
         self.reset_dialog.setText(
             "Are you sure that you want to reset the setting?"
+        )
+        self.reset_dialog.setInformativeText(
+            "<b>Restart required to update the changes.</b>"
         )
         self.reset_dialog.setStandardButtons(
             QMessageBox.Cancel | QMessageBox.Ok
         )
 
         self.apply_dialog = QMessageBox(self)
-        self.apply_dialog.setWindowTitle("Apply Warning")
+        self.apply_dialog.setWindowTitle("Warning - Apply")
         self.apply_dialog.setText(
             "Are you sure that you want to apply this setting?"
+        )
+        self.apply_dialog.setInformativeText(
+            "<b>Restart required to update the changes.</b>"
         )
         self.apply_dialog.setStandardButtons(
             QMessageBox.Cancel | QMessageBox.Ok
