@@ -1,11 +1,12 @@
 import os
+from PyQt5.QtWidgets import QMessageBox
 from blockbuilder.params import rcParams
 from blockbuilder.setting import SettingDialog
 
 event_delay = 300
 
 
-def test_main_plotter_action_setting_dialog(qtbot, tmpdir):
+def test_setting_dialog(qtbot, tmpdir):
     # use a temporary configuration file to avoid
     # modifying the default one.
     output_dir = str(tmpdir.mkdir("tmpdir"))
@@ -15,12 +16,25 @@ def test_main_plotter_action_setting_dialog(qtbot, tmpdir):
 
     dialog = SettingDialog(rcParams)
     qtbot.addWidget(dialog)
+
+    assert not dialog.isVisible()
     with qtbot.wait_exposed(dialog, event_delay):
         dialog.show()
+    assert dialog.isVisible()
     dialog.test_input_field.setText("foo")
     dialog.test_input_vector_field.setValue(0)
     dialog.test_dropdown.setItemText(0, "foo")
-    dialog.apply_button.click()
-    dialog.reset_button.click()
+
+    _dialog_scenario(qtbot, dialog.apply_button, dialog.apply_dialog)
+    _dialog_scenario(qtbot, dialog.reset_button, dialog.reset_dialog)
+
     dialog.ok_button.click()
+    assert not dialog.isVisible()
     dialog.close()
+
+
+def _dialog_scenario(qtbot, button, dialog):
+    for msg in [QMessageBox.Ok, QMessageBox.Cancel]:
+        with qtbot.wait_exposed(dialog, event_delay):
+            button.click()
+        dialog.button(msg).click()

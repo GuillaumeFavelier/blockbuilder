@@ -4,7 +4,7 @@ from .params import rcParams, set_params
 from PyQt5.QtWidgets import (QPushButton, QDialog, QVBoxLayout, QHBoxLayout,
                              QListWidget, QStackedWidget, QWidget, QLabel,
                              QDoubleSpinBox, QSpinBox, QCheckBox,
-                             QGroupBox, QComboBox, QLineEdit)
+                             QGroupBox, QComboBox, QLineEdit, QMessageBox)
 
 
 class SettingDialog(QDialog):
@@ -13,15 +13,69 @@ class SettingDialog(QDialog):
     def __init__(self, params, parent=None):
         """Initialize the SettingDialog."""
         super().__init__(parent)
-        self.setWindowTitle("Setting")
-        self.setModal(True)
-
         self.params = params
         self.copy_params = dict(self.params)
 
         vlayout = QVBoxLayout()
 
-        # list widgets
+        # core widget
+        core_layout = self._load_core_widget()
+        vlayout.addLayout(core_layout)
+
+        # buttons
+        button_layout = self._load_buttons()
+        vlayout.addLayout(button_layout)
+
+        self.setWindowTitle("Setting")
+        self.setModal(True)
+        self.setLayout(vlayout)
+
+    def _load_buttons(self):
+        self.reset_dialog = QMessageBox(self)
+        self.reset_dialog.setWindowTitle("Reset Warning")
+        self.reset_dialog.setText(
+            "Are you sure that you want to reset the setting?"
+        )
+        self.reset_dialog.setStandardButtons(
+            QMessageBox.Cancel | QMessageBox.Ok
+        )
+
+        self.apply_dialog = QMessageBox(self)
+        self.apply_dialog.setWindowTitle("Apply Warning")
+        self.apply_dialog.setText(
+            "Are you sure that you want to apply this setting?"
+        )
+        self.apply_dialog.setStandardButtons(
+            QMessageBox.Cancel | QMessageBox.Ok
+        )
+
+        def _reset_params(button):
+            if self.reset_dialog.standardButton(button) == QMessageBox.Ok:
+                set_params(rcParams)
+                self.copy_params = dict(rcParams)
+            self.reset_dialog.close()
+        self.reset_dialog.buttonClicked.connect(_reset_params)
+
+        def _apply_params(button):
+            if self.apply_dialog.standardButton(button) == QMessageBox.Ok:
+                set_params(self.copy_params)
+            self.apply_dialog.close()
+        self.apply_dialog.buttonClicked.connect(_apply_params)
+
+        button_layout = QHBoxLayout()
+        self.apply_button = QPushButton("Apply")
+        self.apply_button.clicked.connect(self.apply_dialog.show)
+        self.reset_button = QPushButton("Reset")
+        self.reset_button.clicked.connect(self.reset_dialog.show)
+        self.ok_button = QPushButton("OK")
+        self.ok_button.clicked.connect(self.close)
+        button_layout.addStretch()
+        button_layout.addWidget(self.apply_button)
+        button_layout.addWidget(self.reset_button)
+        button_layout.addWidget(self.ok_button)
+        return button_layout
+
+    def _load_core_widget(self):
         setting = self.params["setting"]
         hlayout = QHBoxLayout()
         list_widget = QListWidget()
@@ -39,33 +93,10 @@ class SettingDialog(QDialog):
         hlayout.addWidget(stacked_widget)
         hlayout.setStretch(0, 1)
         hlayout.setStretch(1, 5)
-        vlayout.addLayout(hlayout)
 
         list_widget.currentRowChanged.connect(stacked_widget.setCurrentIndex)
         list_widget.setCurrentRow(0)
-
-        # buttons
-        def _reset_params():
-            set_params(rcParams)
-            self.copy_params = dict(rcParams)
-
-        def _apply_params():
-            set_params(self.copy_params)
-
-        button_layout = QHBoxLayout()
-        self.apply_button = QPushButton("Apply", self)
-        self.apply_button.clicked.connect(_apply_params)
-        self.reset_button = QPushButton("Reset", self)
-        self.reset_button.clicked.connect(_reset_params)
-        self.ok_button = QPushButton("OK", self)
-        self.ok_button.clicked.connect(self.close)
-        button_layout.addStretch()
-        button_layout.addWidget(self.apply_button)
-        button_layout.addWidget(self.reset_button)
-        button_layout.addWidget(self.ok_button)
-        vlayout.addLayout(button_layout)
-
-        self.setLayout(vlayout)
+        return hlayout
 
     def _create_dropdown(self, layout, value, path):
         def _atomic_set_str(value):
