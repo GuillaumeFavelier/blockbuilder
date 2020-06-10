@@ -163,16 +163,6 @@ def test_main_plotter_move_camera(qtbot):
     plotter.close()
 
 
-def test_main_plotter_set_block_color_dialog(qtbot):
-    plotter = MainPlotter(params=rcParams, testing=True)
-    qtbot.addWidget(plotter)
-    plotter.set_block_color([1., 0., 0.])
-    with qtbot.wait_exposed(plotter.color_dialog, event_delay):
-        plotter.set_block_color(True)
-    plotter.color_dialog.accept()
-    plotter.close()
-
-
 def test_main_plotter_action_import_dialog(qtbot):
     plotter = MainPlotter(params=rcParams, testing=True)
     qtbot.addWidget(plotter)

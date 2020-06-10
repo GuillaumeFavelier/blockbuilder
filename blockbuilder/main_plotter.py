@@ -7,11 +7,9 @@ import vtk
 
 from PyQt5 import QtCore
 from PyQt5.Qt import QIcon, QSize
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import (QPushButton, QToolButton, QButtonGroup,
+from PyQt5.QtWidgets import (QToolButton, QButtonGroup,
                              QColorDialog, QFileDialog)
 
-from .utils import _rgb2str, _qrgb2rgb
 from .element import ElementId
 from .selector import Symmetry, SymmetrySelector
 from .grid import Grid
@@ -19,7 +17,7 @@ from .plane import Plane
 from .block import Block
 from .intersection import Intersection
 from .interactive_plotter import InteractivePlotter
-from .setting import SettingDialog
+from .setting import SettingDialog, ColorButton
 
 
 @enum.unique
@@ -244,9 +242,9 @@ class MainPlotter(InteractivePlotter):
             self.toolbar.addWidget(button)
 
     def _add_toolbar_color_button(self):
-        self.color_button = QPushButton()
+        self.color_button = ColorButton()
         self.color_button.setFixedSize(QSize(*self.icon_size))
-        self.color_button.clicked.connect(self.set_block_color)
+        self.color_button.colorChanged.connect(self.set_block_color)
         self.toolbar.addWidget(self.color_button)
         self.set_block_color(self.default_block_color, is_int=False)
 
@@ -320,19 +318,7 @@ class MainPlotter(InteractivePlotter):
 
     def set_block_color(self, value=None, is_int=True):
         """Set the current block color."""
-        def _set_color(color):
-            if isinstance(color, QColor):
-                color = _qrgb2rgb(color)
-            color = np.asarray(color)
-            self.color_button.setStyleSheet(
-                "background-color: rgb" + _rgb2str(color, is_int))
-            self.block.set_color(color, is_int)
-
-        if isinstance(value, bool):
-            self.color_dialog.colorSelected.connect(_set_color)
-            self.color_dialog.show()
-        else:
-            _set_color(value)
+        self.block.set_color(value)
 
     def use_delete_mode(self, vtk_picker):
         """Use the delete mode."""
