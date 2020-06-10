@@ -1,7 +1,7 @@
 import os
 from PyQt5.QtWidgets import QMessageBox
 from blockbuilder.params import rcParams
-from blockbuilder.setting import SettingDialog
+from blockbuilder.setting import SettingDialog, ColorButton
 
 event_delay = 300
 
@@ -38,3 +38,12 @@ def _dialog_scenario(qtbot, button, dialog):
         with qtbot.wait_exposed(dialog, event_delay):
             button.click()
         dialog.button(msg).click()
+
+
+def test_color_button(qtbot):
+    button = ColorButton()
+    qtbot.addWidget(button)
+    with qtbot.wait_exposed(button.color_dialog, event_delay):
+        button.click()
+    button.color_dialog.accept()
+    button.close()

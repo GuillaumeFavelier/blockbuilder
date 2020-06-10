@@ -140,9 +140,7 @@ class SettingDialog(QDialog):
             local_params = self.copy_params
             for path_element in path[:-1]:
                 local_params = local_params[path_element]
-            if isinstance(name, list):
-                local_params[path[-1]] = value
-            elif isinstance(name, str):
+            if isinstance(name, str):
                 local_params[path[-1]] = value
             else:
                 local_params[path[-1]][name] = value
