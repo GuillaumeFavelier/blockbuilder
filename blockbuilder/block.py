@@ -50,19 +50,19 @@ class Block(object):
     def merge(self, block):
         """Merge the input block properties."""
         color_array = block.color_array
-        for cell_id in range(block.number_of_cells):
-            if block.mesh.IsCellVisible(cell_id):
-                if self.merge_policy == "external" or \
-                   (self.merge_policy == "internal" and
-                        not self.mesh.IsCellVisible(cell_id)):
-                    # get original color and coords
-                    color = color_array.GetTuple3(cell_id)
-                    coords = _cell_to_coords(cell_id, block.dimensions)
-
-                    # change coordinates
-                    cell_id = _coords_to_cell(coords, self.dimensions)
+        for block_cell_id in range(block.number_of_cells):
+            if block.mesh.IsCellVisible(block_cell_id):
+                # get original color
+                block_color = color_array.GetTuple3(block_cell_id)
+                # change coordinates
+                coords = _cell_to_coords(block_cell_id, block.dimensions)
+                cell_id = _coords_to_cell(coords, self.dimensions)
+                if self.mesh.IsCellVisible(cell_id):
+                    if self.merge_policy == "external":
+                        self.color_array.SetTuple3(cell_id, *block_color)
+                else:
                     self.mesh.UnBlankCell(cell_id)
-                    self.color_array.SetTuple3(cell_id, *color)
+                    self.color_array.SetTuple3(cell_id, *block_color)
         self.mesh.Modified()
 
     def add(self, coords):
