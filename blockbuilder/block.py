@@ -55,8 +55,11 @@ class Block(object):
                 if self.merge_policy == "external" or \
                    (self.merge_policy == "internal" and
                         not self.mesh.IsCellVisible(cell_id)):
+                    # get original color and coords
                     color = color_array.GetTuple3(cell_id)
                     coords = _cell_to_coords(cell_id, block.dimensions)
+
+                    # change coordinates
                     cell_id = _coords_to_cell(coords, self.dimensions)
                     self.mesh.UnBlankCell(cell_id)
                     self.color_array.SetTuple3(cell_id, *color)
