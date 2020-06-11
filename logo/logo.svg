@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   inkscape:version="1.0 (4035a4fb49, 2020-05-01)"
+   sodipodi:docname="logo.svg"
+   id="svg87"
+   version="1.1"
+   height="216"
+   width="320"
+   fill="#000000"
+   viewBox="0 0 320 216"
+   inkscape:export-filename="/home/guillaume/source/blockbuilder/logo/logo.png"
+   inkscape:export-xdpi="800.09998"
+   inkscape:export-ydpi="800.09998">
+  <metadata
+     id="metadata93">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs91">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="-245.93768 : 294.39705 : 1"
+       inkscape:vp_y="0 : 1062.4125 : 0"
+       inkscape:vp_z="537.54191 : 294.28628 : 1"
+       inkscape:persp3d-origin="91.958305 : 55.024671 : 1"
+       id="perspective243" />
+  </defs>
+  <sodipodi:namedview
+     inkscape:current-layer="svg87"
+     inkscape:window-maximized="1"
+     inkscape:window-y="0"
+     inkscape:window-x="0"
+     inkscape:cy="108.39905"
+     inkscape:cx="154.53719"
+     inkscape:zoom="3.0052038"
+     showgrid="false"
+     id="namedview89"
+     inkscape:window-height="1076"
+     inkscape:window-width="1916"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0"
+     guidetolerance="10"
+     gridtolerance="10"
+     objecttolerance="10"
+     borderopacity="1"
+     bordercolor="#666666"
+     pagecolor="#ffffff"
+     inkscape:document-rotation="0" />
+  <path
+     id="path83"
+     fill="none"
+     d="M 0,0 H 24 V 24 H 0 Z" />
+  <g
+     sodipodi:type="inkscape:box3d"
+     id="g245"
+     style="fill:#000000;stroke:#000000;stroke-width:0.188976;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
+     inkscape:perspectiveID="#perspective243"
+     inkscape:corner0="0.3095467 : 0.050835353 : 0 : 1"
+     inkscape:corner7="0.10024492 : -0.034969163 : 0.14933303 : 1"
+     inkscape:export-filename="/home/guillaume/source/blockbuilder/logo/g245.png"
+     inkscape:export-xdpi="800"
+     inkscape:export-ydpi="800">
+    <path
+       sodipodi:type="inkscape:box3dside"
+       id="path257"
+       style="fill:#e9e9ff;fill-rule:evenodd;stroke:#000000;stroke-width:1.72006;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
+       inkscape:box3dsidetype="11"
+       d="M 65.873744,48.673607 118.10153,69.957685 V 142.91015 L 65.873744,111.15977 Z"
+       points="118.10153,69.957685 118.10153,142.91015 65.873744,111.15977 65.873744,48.673607 " />
+    <path
+       sodipodi:type="inkscape:box3dside"
+       id="path247"
+       style="fill:#353564;fill-rule:evenodd;stroke:#000000;stroke-width:1.72006;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
+       inkscape:box3dsidetype="6"
+       d="M 12.087471,63.151369 V 132.76308 L 65.873744,111.15977 V 48.673607 Z"
+       points="12.087471,132.76308 65.873744,111.15977 65.873744,48.673607 12.087471,63.151369 " />
+    <path
+       sodipodi:type="inkscape:box3dside"
+       id="path255"
+       style="fill:#afafde;fill-rule:evenodd;stroke:#000000;stroke-width:1.72006;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
+       inkscape:box3dsidetype="13"
+       d="M 12.087471,132.76308 61.172109,172.93249 118.10153,142.91015 65.873744,111.15977 Z"
+       points="61.172109,172.93249 118.10153,142.91015 65.873744,111.15977 12.087471,132.76308 " />
+    <path
+       sodipodi:type="inkscape:box3dside"
+       id="path249"
+       style="fill:#cccccc;fill-rule:evenodd;stroke:#000000;stroke-width:1.72006;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
+       inkscape:box3dsidetype="5"
+       d="M 12.087471,63.151369 61.172109,90.078406 118.10153,69.957685 65.873744,48.673607 Z"
+       points="61.172109,90.078406 118.10153,69.957685 65.873744,48.673607 12.087471,63.151369 " />
+    <path
+       sodipodi:type="inkscape:box3dside"
+       id="path253"
+       style="fill:#e6e6e6;fill-rule:evenodd;stroke:#000000;stroke-width:1.72006;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
+       inkscape:box3dsidetype="14"
+       d="M 61.172109,90.078406 V 172.93249 L 118.10153,142.91015 V 69.957685 Z"
+       points="61.172109,172.93249 118.10153,142.91015 118.10153,69.957685 61.172109,90.078406 " />
+    <path
+       sodipodi:type="inkscape:box3dside"
+       id="path251"
+       style="fill:#808080;fill-rule:evenodd;stroke:#000000;stroke-width:1.72006;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
+       inkscape:box3dsidetype="3"
+       d="M 12.087471,63.151369 61.172109,90.078406 V 172.93249 L 12.087471,132.76308 Z"
+       points="61.172109,90.078406 61.172109,172.93249 12.087471,132.76308 12.087471,63.151369 " />
+  </g>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:condensed;font-size:44.0271px;line-height:1.25;font-family:Inconsolata;-inkscape-font-specification:'Inconsolata, Light Condensed';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.918538"
+     x="126.63449"
+     y="134.0352"
+     id="text879"
+     transform="scale(0.96852131,1.0325018)"
+     inkscape:export-filename="/home/guillaume/source/blockbuilder/logo/g245.png"
+     inkscape:export-xdpi="800"
+     inkscape:export-ydpi="800"><tspan
+       style="stroke-width:0.918538"
+       sodipodi:role="line"
+       id="tspan899"
+       x="126.63449"
+       y="134.0352">lockBuilder</tspan></text>
+  <text
+     inkscape:export-ydpi="800"
+     inkscape:export-xdpi="800"
+     inkscape:export-filename="/home/guillaume/source/blockbuilder/logo/logo.png"
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:condensed;font-size:104.916px;line-height:1.25;font-family:Inconsolata;-inkscape-font-specification:'Inconsolata, Light Condensed';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:2.62292"
+     x="57.449696"
+     y="170.90009"
+     id="text903"
+     transform="scale(1.1618494,0.86069673)"><tspan
+       sodipodi:role="line"
+       id="tspan901"
+       x="57.449696"
+       y="170.90009"
+       style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:condensed;font-size:104.916px;font-family:Inconsolata;-inkscape-font-specification:'Inconsolata, Light Condensed';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:2.62292">B</tspan></text>
+</svg>

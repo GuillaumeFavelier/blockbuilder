@@ -1,5 +1,6 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
+	<file alias="blockbuilder.svg">blockbuilder.svg</file>
 	<file alias="build.svg">build.svg</file>
 	<file alias="delete.svg">delete.svg</file>
 	<file alias="edges.svg">edges.svg</file>
