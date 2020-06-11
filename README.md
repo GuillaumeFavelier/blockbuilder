@@ -4,7 +4,7 @@
 [![Build Status](https://dev.azure.com/guillaumefavelier/blockbuilder/_apis/build/status/GuillaumeFavelier.blockbuilder?branchName=master)](https://dev.azure.com/guillaumefavelier/blockbuilder/_build/latest?definitionId=2&branchName=master)
 ![Testing](https://github.com/GuillaumeFavelier/blockbuilder/workflows/Testing/badge.svg)
 
-![logo](logo.svg)
+![logo](logo/logo.png)
 
 ### BlockBuilder
 
