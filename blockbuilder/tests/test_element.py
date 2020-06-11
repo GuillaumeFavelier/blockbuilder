@@ -1,6 +1,8 @@
 import numpy as np
 import vtk
 import pytest
+
+from blockbuilder.params import rcParams
 from blockbuilder.utils import _hasattr
 from blockbuilder.element import ElementId, Element
 
@@ -12,15 +14,17 @@ def test_element():
     white = (1., 1., 1.)
     opacity = 1.
     element = Element(
+        params=rcParams,
         element_id=element_id,
         dimensions=dimensions,
         color=white,
         opacity=opacity,
     )
     assert _hasattr(element, "actor", type(None))
+    assert _hasattr(element, "params", dict)
     assert _hasattr(element, "element_id", ElementId)
     assert _hasattr(element, "unit", float)
-    assert _hasattr(element, "edge_color_offset", tuple)
+    assert _hasattr(element, "edge_color_offset", list)
     assert _hasattr(element, "dimensions", np.ndarray)
     assert _hasattr(element, "origin", np.ndarray)
     assert _hasattr(element, "spacing", np.ndarray)

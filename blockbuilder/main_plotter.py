@@ -5,7 +5,11 @@ from functools import partial
 import numpy as np
 import vtk
 
-from .params import rcParams
+from PyQt5 import QtCore
+from PyQt5.Qt import QIcon, QSize
+from PyQt5.QtWidgets import (QToolButton, QButtonGroup,
+                             QColorDialog, QFileDialog)
+
 from .element import ElementId
 from .selector import Symmetry, SymmetrySelector
 from .grid import Grid
@@ -13,12 +17,7 @@ from .plane import Plane
 from .block import Block
 from .intersection import Intersection
 from .interactive_plotter import InteractivePlotter
-
-from PyQt5 import QtCore
-from PyQt5.Qt import QIcon, QSize
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import (QPushButton, QToolButton, QButtonGroup,
-                             QColorDialog, QFileDialog)
+from .setting import SettingDialog, ColorButton
 
 
 @enum.unique
@@ -36,6 +35,7 @@ class Action(enum.Enum):
     RESET = enum.auto()
     IMPORT = enum.auto()
     EXPORT = enum.auto()
+    SETTING = enum.auto()
 
 
 @enum.unique
@@ -49,14 +49,13 @@ class Toggle(enum.Enum):
 class MainPlotter(InteractivePlotter):
     """Main application."""
 
-    def __init__(self, parent=None, testing=False):
+    def __init__(self, params, parent=None, testing=False):
         """Initialize the MainPlotter."""
-        super().__init__(parent=parent, testing=testing)
-        self.unit = rcParams["unit"]
-        self.default_block_color = rcParams["block"]["color"]
-        self.toolbar_area = rcParams["builder"]["toolbar"]["area"]
-        self.icon_size = rcParams["builder"]["toolbar"]["icon_size"]
-        self.dimensions = rcParams["builder"]["dimensions"]
+        super().__init__(params, parent=parent, testing=testing)
+        self.unit = self.params["unit"]
+        self.dimensions = self.params["dimensions"]
+        self.default_block_color = self.params["block"]["color"]
+        self.icon_size = self.params["builder"]["toolbar"]["icon_size"]
         self.button_pressed = False
         self.button_released = False
         self.area_selection = False
@@ -68,11 +67,6 @@ class MainPlotter(InteractivePlotter):
         self.mode_functions = None
         self.set_dimensions(self.dimensions)
 
-        # dialogs
-        self.color_dialog = QColorDialog(self)
-        self.file_dialog = QFileDialog(self)
-        self.file_dialog.setNameFilter("Blockset (*.vts *.vtk)")
-
         # configuration
         self.show()
         self.load_elements()
@@ -80,6 +74,7 @@ class MainPlotter(InteractivePlotter):
         self.load_block_modes()
         self.load_icons()
         self.load_toolbar()
+        self.load_dialogs()
         self.selector.hide()
         self.update_camera()
         self.render_scene()
@@ -180,10 +175,10 @@ class MainPlotter(InteractivePlotter):
 
     def load_elements(self):
         """Load the default elements."""
-        self.block = Block(self.dimensions)
-        self.grid = Grid(self.dimensions)
-        self.plane = Plane(self.dimensions)
-        self.selector = SymmetrySelector(self.dimensions)
+        self.block = Block(self.params, self.dimensions)
+        self.grid = Grid(self.params, self.dimensions)
+        self.plane = Plane(self.params, self.dimensions)
+        self.selector = SymmetrySelector(self.params, self.dimensions)
 
     def load_icons(self):
         """Load the icons.
@@ -193,7 +188,7 @@ class MainPlotter(InteractivePlotter):
         also defines aliases for their use in the code.
 
         To automatically generate the resource file in ``blockbuilder/icons``:
-        pyrcc5 -o blockbuilder/icons/resources.py blockbuilder/icons/mne.qrc
+        pyrcc5 -o resources.py blockbuilder.qrc
         """
         from .icons import resources
         resources.qInitResources()
@@ -237,24 +232,29 @@ class MainPlotter(InteractivePlotter):
             button.setIcon(icon)
             button.setCheckable(True)
             toggle_name = toggle.name.lower()
+            default_value = self.params["builder"]["toggles"][toggle_name]
             func_name = "toggle_{}".format(toggle_name)
             func = getattr(self, func_name, None)
+            assert callable(func)
             button.toggled.connect(func)
-            button.setChecked(rcParams["builder"]["toggles"][toggle_name])
+            button.setChecked(default_value)
+            func(default_value)
             self.toolbar.addWidget(button)
 
     def _add_toolbar_color_button(self):
-        self.color_button = QPushButton()
+        self.color_button = ColorButton()
         self.color_button.setFixedSize(QSize(*self.icon_size))
-        self.color_button.clicked.connect(self.set_block_color)
+        self.color_button.colorChanged.connect(self.set_block_color)
         self.toolbar.addWidget(self.color_button)
         self.set_block_color(self.default_block_color, is_int=False)
 
     def load_toolbar(self):
         """Initialize the toolbar."""
         self.toolbar = self.addToolBar("toolbar")
+        toolbar_areas = self.params["builder"]["toolbar"]["area"]["range"]
+        toolbar_area = self.params["builder"]["toolbar"]["area"]["value"]
         self.addToolBar(
-            _get_toolbar_area(self.toolbar_area),
+            _get_toolbar_area(toolbar_area, toolbar_areas),
             self.toolbar,
         )
         self.toolbar.setIconSize(QSize(*self.icon_size))
@@ -275,6 +275,24 @@ class MainPlotter(InteractivePlotter):
         )
         self.toolbar.addSeparator()
         self._add_toolbar_actions()
+
+    def load_dialogs(self):
+        """Load the dialogs."""
+        self.color_dialog = QColorDialog(self)
+        self.export_dialog = QFileDialog(self)
+        self.export_dialog.setWindowTitle("Export")
+        self.export_dialog.setNameFilter("Blockset (*.vts *.vtk)")
+        self.export_dialog.setWindowIcon(self.icons[Action.EXPORT])
+        # XXX: Fails on CI if modal
+        # self.export_dialog.setModal(True)
+        self.import_dialog = QFileDialog(self)
+        self.import_dialog.setNameFilter("Blockset (*.vts *.vtk)")
+        self.import_dialog.setWindowTitle("Import")
+        self.import_dialog.setWindowIcon(self.icons[Action.IMPORT])
+        # XXX: Fails on CI if modal
+        # self.import_dialog.setModal(True)
+        self.setting_dialog = SettingDialog(self.params, self)
+        self.setting_dialog.setWindowIcon(self.icons[Action.SETTING])
 
     def set_dimensions(self, dimensions):
         """Set the current dimensions."""
@@ -300,19 +318,7 @@ class MainPlotter(InteractivePlotter):
 
     def set_block_color(self, value=None, is_int=True):
         """Set the current block color."""
-        def _set_color(color):
-            if isinstance(color, QColor):
-                color = _qrgb2rgb(color)
-            color = np.asarray(color)
-            self.color_button.setStyleSheet(
-                "background-color: rgb" + _rgb2str(color, is_int))
-            self.block.set_color(color, is_int)
-
-        if isinstance(value, bool):
-            self.color_dialog.colorSelected.connect(_set_color)
-            self.color_dialog.show()
-        else:
-            _set_color(value)
+        self.block.set_color(value)
 
     def use_delete_mode(self, vtk_picker):
         """Use the delete mode."""
@@ -326,6 +332,7 @@ class MainPlotter(InteractivePlotter):
         intersection = Intersection(vtk_picker)
         if not intersection.exist():
             self.selector.hide()
+            self.selector.reset_area()
             self.render_scene()
             return
 
@@ -380,42 +387,46 @@ class MainPlotter(InteractivePlotter):
     def action_import(self, value=None):
         """Import an external blockset."""
         def _import(filename):
-            if len(filename) > 0:
-                reader = vtk.vtkXMLStructuredGridReader()
-                reader.SetFileName(filename)
-                reader.Update()
-                mesh = reader.GetOutput()
-                dimensions = mesh.GetDimensions()
-                imported_block = Block(dimensions, mesh)
-                if all(np.equal(dimensions, self.dimensions)):
+            if len(filename) == 0:
+                raise ValueError("The input filename string is empty")
+            reader = vtk.vtkXMLStructuredGridReader()
+            reader.SetFileName(filename)
+            reader.Update()
+            mesh = reader.GetOutput()
+            dimensions = mesh.GetDimensions()
+            imported_block = Block(self.params, dimensions, mesh)
+            if all(np.equal(dimensions, self.dimensions)):
+                self.block.merge(imported_block)
+            else:
+                final_dimensions = [
+                    self.block.dimensions,
+                    imported_block.dimensions
+                ]
+                final_dimensions = np.max(final_dimensions, axis=0)
+
+                if all(np.equal(self.dimensions, final_dimensions)):
                     self.block.merge(imported_block)
                 else:
-                    final_dimensions = [
-                        self.block.dimensions,
-                        imported_block.dimensions
-                    ]
-                    final_dimensions = np.max(final_dimensions, axis=0)
+                    self.remove_elements()
 
-                    if all(np.equal(self.dimensions, final_dimensions)):
-                        self.block.merge(imported_block)
-                    else:
-                        self.remove_elements()
+                    old_block = self.block
+                    self.set_dimensions(final_dimensions)
+                    self.load_elements()
+                    self.add_elements()
+                    # restore edge visibility
+                    self.block.toggle_edges(old_block.show_edges)
+                    # restore block mode
+                    self.set_block_mode()
+                    self.block.merge(old_block)
+                    self.block.merge(imported_block)
 
-                        old_block = self.block
-                        self.set_dimensions(final_dimensions)
-                        self.load_elements()
-                        self.add_elements()
-                        self.set_block_mode()
-                        self.block.merge(old_block)
-                        self.block.merge(imported_block)
-
-                        self.selector.hide()
-                        self.update_camera()
+                    self.selector.hide()
+                    self.update_camera()
                 self.render_scene()
 
         if isinstance(value, bool):
-            self.file_dialog.fileSelected.connect(_import)
-            self.file_dialog.show()
+            self.import_dialog.fileSelected.connect(_import)
+            self.import_dialog.show()
         elif isinstance(value, str):
             _import(value)
         else:
@@ -425,20 +436,26 @@ class MainPlotter(InteractivePlotter):
     def action_export(self, value=None):
         """Export the internal blockset."""
         def _export(filename):
-            if len(filename) > 0:
-                writer = vtk.vtkXMLStructuredGridWriter()
-                writer.SetFileName(filename)
-                writer.SetInputData(self.block.mesh)
-                writer.Write()
+            if len(filename) == 0:
+                raise ValueError("The output filename string is empty")
+            writer = vtk.vtkXMLStructuredGridWriter()
+            writer.SetFileName(filename)
+            writer.SetInputData(self.block.mesh)
+            writer.Write()
 
         if isinstance(value, bool):
-            self.file_dialog.fileSelected.connect(_export)
-            self.file_dialog.show()
+            self.export_dialog.fileSelected.connect(_export)
+            self.export_dialog.show()
         elif isinstance(value, str):
             _export(value)
         else:
             raise TypeError("Expected type for ``filename``is ``str``"
                             " but {} was given.".format(type(value)))
+
+    def action_setting(self, value=None):
+        """Open the settings menu."""
+        del value
+        self.setting_dialog.show()
 
     def toggle_select(self, value):
         """Toggle area selection."""
@@ -450,31 +467,15 @@ class MainPlotter(InteractivePlotter):
         self.render_scene()
 
 
-def _get_toolbar_area(area):
+def _get_toolbar_area(area, areas):
     if not isinstance(area, str):
         raise TypeError("Expected type for ``area`` is ``str`` but {}"
                         " was given.".format(type(area)))
-    toolbar_areas = rcParams["builder"]["toolbar"]["areas"]
-    if area not in toolbar_areas:
+    if area not in areas:
         raise ValueError("Expected value for ``area`` in"
-                         " {} but {} was given.".format(toolbar_areas, area))
+                         " {} but {} was given.".format(areas, area))
     area = list(area)
     area[0] = area[0].upper()
     area = ''.join(area)
     area = area + 'ToolBarArea'
     return getattr(QtCore.Qt, area)
-
-
-def _rgb2str(color, is_int=False):
-    if not is_int:
-        color = np.asarray(color) * 255
-        color = color.astype(np.uint8)
-    return str(tuple(color))
-
-
-def _qrgb2rgb(color):
-    return (
-        color.red(),
-        color.green(),
-        color.blue()
-    )

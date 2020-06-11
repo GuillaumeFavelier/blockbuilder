@@ -1,15 +1,16 @@
 from PyQt5.QtWidgets import QApplication
 from blockbuilder import __version__
+from blockbuilder.params import get_params
 from blockbuilder.main_plotter import MainPlotter
-from blockbuilder.params import rcParams
 
 
 def main(testing=False):
     """Start BlockBuilder application."""
     if not testing:
         app = QApplication([''])
-    plotter = MainPlotter(testing=testing)
-    app_name = rcParams["app"]["name"]
+    params = get_params()
+    app_name = params["app"]["name"]
+    plotter = MainPlotter(params=params, testing=testing)
     title = app_name + ' - ' + __version__
     plotter.setWindowTitle(title)
     if testing:

@@ -1,29 +1,30 @@
 """Module about core visual properties."""
 
 import vtk
-from .params import rcParams
 from .minimal_plotter import MinimalPlotter
 
 
 class CorePlotter(MinimalPlotter):
     """Plotter specialized in low-level operations."""
 
-    def __init__(self, parent=None, window_size=None,
+    def __init__(self, params, parent=None, window_size=None,
                  advanced=None, background_top_color=None,
                  background_bottom_color=None, testing=False):
         """Initialize the CorePlotter."""
         super().__init__(parent=parent)
-        self.show_edges = rcParams["plotter"]["show_edges"]
-        self.line_width = rcParams["plotter"]["line_width"]
+        self.params = params
+        self.show_edges = self.params["plotter"]["show_edges"]
+        self.line_width = self.params["plotter"]["line_width"]
         if window_size is None:
-            window_size = rcParams["plotter"]["window_size"]
+            window_size = self.params["plotter"]["window_size"]
         if advanced is None:
-            advanced = rcParams["plotter"]["advanced"]
+            advanced = self.params["plotter"]["advanced"]
         if background_top_color is None:
-            background_top_color = rcParams["plotter"]["background_top_color"]
+            background_top_color = \
+                self.params["plotter"]["background"]["color"]["top"]
         if background_bottom_color is None:
             background_bottom_color = \
-                rcParams["plotter"]["background_bottom_color"]
+                self.params["plotter"]["background"]["color"]["bottom"]
         self.window_size = window_size
         if testing:
             # On Azure, AA and smoothing cause segfaults (access violation)

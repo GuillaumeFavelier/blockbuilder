@@ -5,6 +5,7 @@
 	<file alias="edges.svg">edges.svg</file>
 	<file alias="export.svg">export.svg</file>
 	<file alias="import.svg">import.svg</file>
+	<file alias="setting.svg">setting.svg</file>
 	<file alias="reset.svg">reset.svg</file>
 	<file alias="select.svg">select.svg</file>
 	<file alias="symmetry_none.svg">symmetry_none.svg</file>

@@ -1,7 +1,6 @@
 """Module about the block element."""
 
 import numpy as np
-from .params import rcParams
 from .element import ElementId
 from .utils import get_structured_grid, get_mesh_cell_array
 
@@ -9,16 +8,18 @@ from .utils import get_structured_grid, get_mesh_cell_array
 class Block(object):
     """Main block manager."""
 
-    def __init__(self, dimensions, mesh=None):
+    def __init__(self, params, dimensions, mesh=None):
         """Initialize the block manager."""
         self.actor = None
+        self.show_edges = True
         self.element_id = ElementId.BLOCK
-        self.unit = rcParams["unit"]
-        self.origin = np.asarray(rcParams["origin"])
-        self.color_array_name = rcParams["block"]["color_array_name"]
-        self.color = np.asarray(rcParams["block"]["color"])
-        self.edge_color = np.asarray(rcParams["block"]["edge_color"])
-        self.merge_policy = rcParams["block"]["merge_policy"]
+        self.params = params
+        self.unit = self.params["unit"]
+        self.origin = np.asarray(self.params["origin"])
+        self.color_array_name = self.params["block"]["color_array_name"]
+        self.color = np.asarray(self.params["block"]["color"])
+        self.edge_color = np.asarray(self.params["block"]["edge"]["color"])
+        self.merge_policy = self.params["block"]["merge_policy"]["value"]
         # we assume that the input mesh respect the spacing
         self.spacing = np.asarray([self.unit, self.unit, self.unit])
 
@@ -50,16 +51,19 @@ class Block(object):
     def merge(self, block):
         """Merge the input block properties."""
         color_array = block.color_array
-        for cell_id in range(block.number_of_cells):
-            if block.mesh.IsCellVisible(cell_id):
-                if self.merge_policy == "external" or \
-                   (self.merge_policy == "internal" and
-                        not self.mesh.IsCellVisible(cell_id)):
-                    coords = _cell_to_coords(cell_id, block.dimensions)
-                    cell_id = _coords_to_cell(coords, self.dimensions)
+        for block_cell_id in range(block.number_of_cells):
+            if block.mesh.IsCellVisible(block_cell_id):
+                # get original color
+                block_color = color_array.GetTuple3(block_cell_id)
+                # change coordinates
+                coords = _cell_to_coords(block_cell_id, block.dimensions)
+                cell_id = _coords_to_cell(coords, self.dimensions)
+                if self.mesh.IsCellVisible(cell_id):
+                    if self.merge_policy == "external":
+                        self.color_array.SetTuple3(cell_id, *block_color)
+                else:
                     self.mesh.UnBlankCell(cell_id)
-                    color = color_array.GetTuple3(cell_id)
-                    self.color_array.SetTuple3(cell_id, *color)
+                    self.color_array.SetTuple3(cell_id, *block_color)
         self.mesh.Modified()
 
     def add(self, coords):
@@ -107,6 +111,7 @@ class Block(object):
 
     def toggle_edges(self, value):
         """Toggle visibility of the block edges."""
+        self.show_edges = value
         prop = self.actor.GetProperty()
         prop.SetEdgeVisibility(value)
 
