@@ -49,7 +49,7 @@ The minimum required [dependencies](requirements.txt) to run BlockBuilder are:
 
 BlockBuilder is [BSD-licenced (3 clause)](LICENSE):
 
-```
+```txt
 BSD 3-Clause License
 
 Copyright (c) 2020, Guillaume Favelier
