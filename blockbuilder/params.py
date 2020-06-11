@@ -109,6 +109,7 @@ rcParams = {
     },
     "app": {
         "name": "BlockBuilder",
+        "icon": "blockbuilder.svg",
     },
     "setting": {
         "interface": ["plotter", "builder"],

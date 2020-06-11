@@ -6,7 +6,8 @@ import numpy as np
 import vtk
 
 from PyQt5 import QtCore
-from PyQt5.Qt import QIcon, QSize
+from PyQt5.QtCore import QSize
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QToolButton, QButtonGroup,
                              QColorDialog, QFileDialog)
 
@@ -190,8 +191,6 @@ class MainPlotter(InteractivePlotter):
         To automatically generate the resource file in ``blockbuilder/icons``:
         pyrcc5 -o resources.py blockbuilder.qrc
         """
-        from .icons import resources
-        resources.qInitResources()
         self.icons = dict()
         for category in (BlockMode, Action, Toggle, Symmetry):
             for element in category:
