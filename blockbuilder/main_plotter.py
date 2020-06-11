@@ -5,66 +5,68 @@ from functools import partial
 import numpy as np
 import vtk
 
-from .params import rcParams
-from .elements import Element, Symmetry, SymmetrySelector, Grid, Plane, Block
+from PyQt5 import QtCore
+from PyQt5.QtCore import QSize
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import (QToolButton, QButtonGroup,
+                             QColorDialog, QFileDialog)
+
+from .element import ElementId
+from .selector import Symmetry, SymmetrySelector
+from .grid import Grid
+from .plane import Plane
+from .block import Block
 from .intersection import Intersection
 from .interactive_plotter import InteractivePlotter
-
-from PyQt5 import QtCore
-from PyQt5.Qt import QIcon, QSize
-from PyQt5.QtWidgets import (QPushButton, QToolButton, QButtonGroup,
-                             QColorDialog, QFileDialog)
+from .setting import SettingDialog, ColorButton
 
 
 @enum.unique
 class BlockMode(enum.Enum):
-    """List the modes available in Builder."""
+    """List the modes available in MainPlotter."""
 
     BUILD = enum.auto()
     DELETE = enum.auto()
-    # CAMERA = enum.auto()
-    # LIBRARY = enum.auto()
-    # SETTINGS = enum.auto()
-    # HELP = enum.auto()
 
 
 @enum.unique
 class Action(enum.Enum):
-    """List the actions available in Builder."""
+    """List the actions available in MainPlotter."""
 
     RESET = enum.auto()
     IMPORT = enum.auto()
     EXPORT = enum.auto()
+    SETTING = enum.auto()
 
 
 @enum.unique
 class Toggle(enum.Enum):
-    """List the toggles available in Builder."""
+    """List the toggles available in MainPlotter."""
 
     SELECT = enum.auto()
     EDGES = enum.auto()
 
 
-class Builder(InteractivePlotter):
+class MainPlotter(InteractivePlotter):
     """Main application."""
 
-    def __init__(self, parent=None, testing=False):
-        """Initialize the Builder."""
-        super().__init__(parent=parent, testing=testing)
-        self.unit = rcParams["unit"]
-        self.default_block_color = rcParams["block"]["color"]
-        self.toolbar_area = rcParams["app"]["toolbar"]["area"]
-        self.icon_size = rcParams["app"]["toolbar"]["icon_size"]
-        self.dimensions = rcParams["builder"]["dimensions"]
-        self.set_dimensions(self.dimensions)
+    def __init__(self, params, parent=None, testing=False):
+        """Initialize the MainPlotter."""
+        super().__init__(params, parent=parent, testing=testing)
+        self.unit = self.params["unit"]
+        self.dimensions = self.params["dimensions"]
+        self.default_block_color = self.params["block"]["color"]
+        self.icon_size = self.params["builder"]["toolbar"]["icon_size"]
         self.button_pressed = False
         self.button_released = False
         self.area_selection = False
-        self.floor = 0.
+        self.floor = None
+        self.ceiling = None
         self.icons = None
         self.toolbar = None
         self.current_block_mode = None
         self.mode_functions = None
+        self.set_dimensions(self.dimensions)
 
         # configuration
         self.show()
@@ -73,6 +75,7 @@ class Builder(InteractivePlotter):
         self.load_block_modes()
         self.load_icons()
         self.load_toolbar()
+        self.load_dialogs()
         self.selector.hide()
         self.update_camera()
         self.render_scene()
@@ -130,8 +133,7 @@ class Builder(InteractivePlotter):
     def on_pick(self, vtk_picker, event):
         """Process pick events."""
         func = self.mode_functions.get(self.current_block_mode, None)
-        if func is not None:
-            func(vtk_picker)
+        func(vtk_picker)
 
     def load_block_modes(self):
         """Load the block modes."""
@@ -139,8 +141,7 @@ class Builder(InteractivePlotter):
         self.mode_functions = dict()
         for mode in BlockMode:
             func_name = "use_{}_mode".format(mode.name.lower())
-            if hasattr(self, func_name):
-                self.mode_functions[mode] = getattr(self, func_name)
+            self.mode_functions[mode] = getattr(self, func_name)
 
     def add_element(self, element):
         """Add an element to the scene."""
@@ -158,22 +159,27 @@ class Builder(InteractivePlotter):
         self.add_element(self.selector.selector_y)
         self.add_element(self.selector.selector_xy)
 
+    def remove_element(self, element):
+        """Remove an elements from the scene."""
+        self.renderer.RemoveActor(element.actor)
+        element.actor = None
+
     def remove_elements(self):
         """Remove all the default elements of the scene."""
-        self.renderer.RemoveActor(self.block.actor)
-        self.renderer.RemoveActor(self.grid.actor)
-        self.renderer.RemoveActor(self.plane.actor)
-        self.renderer.RemoveActor(self.selector.actor)
-        self.renderer.RemoveActor(self.selector.selector_x.actor)
-        self.renderer.RemoveActor(self.selector.selector_y.actor)
-        self.renderer.RemoveActor(self.selector.selector_xy.actor)
+        self.remove_element(self.block)
+        self.remove_element(self.grid)
+        self.remove_element(self.plane)
+        self.remove_element(self.selector)
+        self.remove_element(self.selector.selector_x)
+        self.remove_element(self.selector.selector_y)
+        self.remove_element(self.selector.selector_xy)
 
     def load_elements(self):
         """Load the default elements."""
-        self.block = Block(self.dimensions)
-        self.grid = Grid(self.dimensions)
-        self.plane = Plane(self.dimensions)
-        self.selector = SymmetrySelector(self.dimensions)
+        self.block = Block(self.params, self.dimensions)
+        self.grid = Grid(self.params, self.dimensions)
+        self.plane = Plane(self.params, self.dimensions)
+        self.selector = SymmetrySelector(self.params, self.dimensions)
 
     def load_icons(self):
         """Load the icons.
@@ -183,10 +189,8 @@ class Builder(InteractivePlotter):
         also defines aliases for their use in the code.
 
         To automatically generate the resource file in ``blockbuilder/icons``:
-        pyrcc5 -o blockbuilder/icons/resources.py blockbuilder/icons/mne.qrc
+        pyrcc5 -o resources.py blockbuilder.qrc
         """
-        from .icons import resources
-        resources.qInitResources()
         self.icons = dict()
         for category in (BlockMode, Action, Toggle, Symmetry):
             for element in category:
@@ -197,59 +201,59 @@ class Builder(InteractivePlotter):
         button_group = QButtonGroup(parent=self.toolbar)
         for element in group:
             icon = self.icons.get(element, None)
-            if icon is not None:
-                button = QToolButton()
-                button.setFixedSize(QSize(*self.icon_size))
-                button.setIcon(icon)
-                button.setCheckable(True)
-                if default_value is not None and element is default_value:
-                    button.setChecked(True)
-                button.toggled.connect(
-                    partial(func, value=element))
-                button_group.addButton(button)
-                self.toolbar.addWidget(button)
+            button = QToolButton()
+            button.setFixedSize(QSize(*self.icon_size))
+            button.setIcon(icon)
+            button.setCheckable(True)
+            if default_value is not None and element is default_value:
+                button.setChecked(True)
+            button.toggled.connect(
+                partial(func, value=element))
+            button_group.addButton(button)
+            self.toolbar.addWidget(button)
 
     def _add_toolbar_actions(self):
         for action in Action:
             icon = self.icons.get(action, None)
-            if icon is not None:
-                button = QToolButton()
-                button.setFixedSize(QSize(*self.icon_size))
-                button.setIcon(icon)
-                func_name = "action_{}".format(action.name.lower())
-                func = getattr(self, func_name, None)
-                if func is not None:
-                    button.clicked.connect(func)
-                self.toolbar.addWidget(button)
+            button = QToolButton()
+            button.setFixedSize(QSize(*self.icon_size))
+            button.setIcon(icon)
+            func_name = "action_{}".format(action.name.lower())
+            func = getattr(self, func_name, None)
+            button.clicked.connect(func)
+            self.toolbar.addWidget(button)
 
     def _add_toolbar_toggles(self):
         for toggle in Toggle:
             icon = self.icons.get(toggle, None)
-            if icon is not None:
-                button = QToolButton()
-                button.setFixedSize(QSize(*self.icon_size))
-                button.setIcon(icon)
-                button.setCheckable(True)
-                toggle_name = toggle.name.lower()
-                func_name = "toggle_{}".format(toggle_name)
-                func = getattr(self, func_name, None)
-                if func is not None:
-                    button.toggled.connect(func)
-                button.setChecked(rcParams["builder"]["toggles"][toggle_name])
-                self.toolbar.addWidget(button)
+            button = QToolButton()
+            button.setFixedSize(QSize(*self.icon_size))
+            button.setIcon(icon)
+            button.setCheckable(True)
+            toggle_name = toggle.name.lower()
+            default_value = self.params["builder"]["toggles"][toggle_name]
+            func_name = "toggle_{}".format(toggle_name)
+            func = getattr(self, func_name, None)
+            assert callable(func)
+            button.toggled.connect(func)
+            button.setChecked(default_value)
+            func(default_value)
+            self.toolbar.addWidget(button)
 
     def _add_toolbar_color_button(self):
-        self.color_button = QPushButton()
+        self.color_button = ColorButton()
         self.color_button.setFixedSize(QSize(*self.icon_size))
-        self.color_button.clicked.connect(self.set_block_color)
+        self.color_button.colorChanged.connect(self.set_block_color)
         self.toolbar.addWidget(self.color_button)
         self.set_block_color(self.default_block_color, is_int=False)
 
     def load_toolbar(self):
         """Initialize the toolbar."""
         self.toolbar = self.addToolBar("toolbar")
+        toolbar_areas = self.params["builder"]["toolbar"]["area"]["range"]
+        toolbar_area = self.params["builder"]["toolbar"]["area"]["value"]
         self.addToolBar(
-            _get_toolbar_area(self.toolbar_area),
+            _get_toolbar_area(toolbar_area, toolbar_areas),
             self.toolbar,
         )
         self.toolbar.setIconSize(QSize(*self.icon_size))
@@ -271,9 +275,28 @@ class Builder(InteractivePlotter):
         self.toolbar.addSeparator()
         self._add_toolbar_actions()
 
+    def load_dialogs(self):
+        """Load the dialogs."""
+        self.color_dialog = QColorDialog(self)
+        self.export_dialog = QFileDialog(self)
+        self.export_dialog.setWindowTitle("Export")
+        self.export_dialog.setNameFilter("Blockset (*.vts *.vtk)")
+        self.export_dialog.setWindowIcon(self.icons[Action.EXPORT])
+        # XXX: Fails on CI if modal
+        # self.export_dialog.setModal(True)
+        self.import_dialog = QFileDialog(self)
+        self.import_dialog.setNameFilter("Blockset (*.vts *.vtk)")
+        self.import_dialog.setWindowTitle("Import")
+        self.import_dialog.setWindowIcon(self.icons[Action.IMPORT])
+        # XXX: Fails on CI if modal
+        # self.import_dialog.setModal(True)
+        self.setting_dialog = SettingDialog(self.params, self)
+        self.setting_dialog.setWindowIcon(self.icons[Action.SETTING])
+
     def set_dimensions(self, dimensions):
         """Set the current dimensions."""
         self.dimensions = np.asarray(dimensions)
+        self.floor = 0.
         self.ceiling = (self.dimensions[2] - 2) * self.unit
         self.distance = np.max(self.dimensions) * 2 * self.unit
         self.distance_rng = [4 * self.unit, 2 * self.distance]
@@ -288,24 +311,13 @@ class Builder(InteractivePlotter):
             value = self.current_block_mode
         else:
             self.current_block_mode = value
-        if value in BlockMode:
-            if self.grid is not None:
-                self.grid.set_block_mode(value)
-            if self.selector is not None:
-                self.selector.set_block_mode(value)
+        self.grid.set_block_mode(value)
+        self.selector.set_block_mode(value)
         self.render_scene()
 
     def set_block_color(self, value=None, is_int=True):
         """Set the current block color."""
-        if isinstance(value, bool):
-            color = QColorDialog.getColor()
-            color = _qrgb2rgb(color)
-        else:
-            color = value
-        color = np.asarray(color)
-        self.color_button.setStyleSheet(
-            "background-color: rgb" + _rgb2str(color, is_int))
-        self.block.set_color(color, is_int)
+        self.block.set_color(value)
 
     def use_delete_mode(self, vtk_picker):
         """Use the delete mode."""
@@ -319,13 +331,14 @@ class Builder(InteractivePlotter):
         intersection = Intersection(vtk_picker)
         if not intersection.exist():
             self.selector.hide()
+            self.selector.reset_area()
             self.render_scene()
             return
 
-        if not intersection.element(Element.GRID):
+        if not intersection.element(ElementId.GRID):
             return
 
-        grid_ipoint = intersection.point(Element.GRID)
+        grid_ipoint = intersection.point(ElementId.GRID)
 
         coords = np.floor(grid_ipoint / self.unit)
         coords[2] = self.grid.origin[2] / self.unit
@@ -370,22 +383,17 @@ class Builder(InteractivePlotter):
         self.set_block_color(self.default_block_color, is_int=False)
         self.render_scene()
 
-    def action_import(self, unused):
+    def action_import(self, value=None):
         """Import an external blockset."""
-        del unused
-        filename = QFileDialog.getOpenFileName(
-            None,
-            "Import Blockset",
-            filter="Blockset (*.vts *.vtk)",
-        )
-        filename = filename[0]
-        if len(filename) > 0:
+        def _import(filename):
+            if len(filename) == 0:
+                raise ValueError("The input filename string is empty")
             reader = vtk.vtkXMLStructuredGridReader()
             reader.SetFileName(filename)
             reader.Update()
             mesh = reader.GetOutput()
             dimensions = mesh.GetDimensions()
-            imported_block = Block(dimensions, mesh)
+            imported_block = Block(self.params, dimensions, mesh)
             if all(np.equal(dimensions, self.dimensions)):
                 self.block.merge(imported_block)
             else:
@@ -404,28 +412,49 @@ class Builder(InteractivePlotter):
                     self.set_dimensions(final_dimensions)
                     self.load_elements()
                     self.add_elements()
+                    # restore edge visibility
+                    self.block.toggle_edges(old_block.show_edges)
+                    # restore block mode
                     self.set_block_mode()
                     self.block.merge(old_block)
                     self.block.merge(imported_block)
 
                     self.selector.hide()
                     self.update_camera()
-            self.render_scene()
+                self.render_scene()
 
-    def action_export(self, unused):
+        if isinstance(value, bool):
+            self.import_dialog.fileSelected.connect(_import)
+            self.import_dialog.show()
+        elif isinstance(value, str):
+            _import(value)
+        else:
+            raise TypeError("Expected type for ``filename``is ``str``"
+                            " but {} was given.".format(type(value)))
+
+    def action_export(self, value=None):
         """Export the internal blockset."""
-        filename = QFileDialog.getSaveFileName(
-            None,
-            "Export Blockset",
-            "Untitled.vts",
-            "Blockset (*.vts *.vtk)",
-        )
-        filename = filename[0]
-        if len(filename) > 0:
+        def _export(filename):
+            if len(filename) == 0:
+                raise ValueError("The output filename string is empty")
             writer = vtk.vtkXMLStructuredGridWriter()
             writer.SetFileName(filename)
             writer.SetInputData(self.block.mesh)
             writer.Write()
+
+        if isinstance(value, bool):
+            self.export_dialog.fileSelected.connect(_export)
+            self.export_dialog.show()
+        elif isinstance(value, str):
+            _export(value)
+        else:
+            raise TypeError("Expected type for ``filename``is ``str``"
+                            " but {} was given.".format(type(value)))
+
+    def action_setting(self, value=None):
+        """Open the settings menu."""
+        del value
+        self.setting_dialog.show()
 
     def toggle_select(self, value):
         """Toggle area selection."""
@@ -437,27 +466,15 @@ class Builder(InteractivePlotter):
         self.render_scene()
 
 
-def _get_toolbar_area(area):
-    if area == "left":
-        return QtCore.Qt.LeftToolBarArea
-    if area == "right":
-        return QtCore.Qt.RightToolBarArea
-    if area == "top":
-        return QtCore.Qt.TopToolBarArea
-    if area == "bottom":
-        return QtCore.Qt.BottomToolBarArea
-
-
-def _rgb2str(color, is_int=False):
-    if not is_int:
-        color = np.asarray(color) * 255
-        color = color.astype(np.uint8)
-    return str(tuple(color))
-
-
-def _qrgb2rgb(color):
-    return (
-        color.red(),
-        color.green(),
-        color.blue()
-    )
+def _get_toolbar_area(area, areas):
+    if not isinstance(area, str):
+        raise TypeError("Expected type for ``area`` is ``str`` but {}"
+                        " was given.".format(type(area)))
+    if area not in areas:
+        raise ValueError("Expected value for ``area`` in"
+                         " {} but {} was given.".format(areas, area))
+    area = list(area)
+    area[0] = area[0].upper()
+    area = ''.join(area)
+    area = area + 'ToolBarArea'
+    return getattr(QtCore.Qt, area)

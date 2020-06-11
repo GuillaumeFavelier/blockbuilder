@@ -1,5 +1,6 @@
 .gitignore
 .coverage
+cobertura.xml
 __pycache__
 build
 *.egg*

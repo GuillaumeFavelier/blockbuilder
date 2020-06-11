@@ -20,6 +20,10 @@ CLASSIFIERS = [
     'Topic :: Software Development',
 ]
 
+REQUIREMENTS = None
+with open('requirements.txt') as f:
+    REQUIREMENTS = [line.rstrip('\n') for line in f]
+
 # Adapted from MNE
 VERSION = None
 with open(op.join(NAME, '__init__.py'), 'r') as fid:
@@ -58,8 +62,9 @@ setup_args = dict(
     license=LICENSE,
     download_url=DOWNLOAD_URL,
     url=DOWNLOAD_URL,
-    keywords='PyQt5 widgets IPython vtk',
     platforms=["Windows", "Linux"],
+    python_requires='>=3.7',
+    install_requires=REQUIREMENTS,
     packages=package_tree(NAME),
     scripts=[op.join('scripts', fname) for fname in SCRIPTS],
     classifiers=CLASSIFIERS,

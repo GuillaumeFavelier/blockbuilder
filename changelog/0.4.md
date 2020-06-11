@@ -1,21 +1,21 @@
 ## Milestone 0.4
 
--   Follow semantic versioning meta
--   The title of the window show Python enhancement
--   Refactor interaction support into a dedicated class refactor
--   Use pytest-xdist plugin to better manage segfaults enhancement
--   Migrate from Azure to Github Actions testing
--   Send coverage report to Codacy testing
--   Add an option to import/export a blockset (PoC) enhancement
--   Resize the block dimensions at runtime enhancement
--   Dependency to plotter refactor
--   Add support for pytest enhancement
--   Add support for Windows app bug
--   Set the project as an app enhancement
--   Make Builder inherits from Plotter enhancement refactor
--   Update gitignore enhancement
--   Use Qt resources package to organize icons enhancement
--   Add a license meta
--   Placement of the toolbar enhancement
--   Add support for 3D area selection enhancement
--   Add a paint mode enhancement
+-   Follow semantic versioning
+-   The title of the window show Python
+-   Refactor interaction support into a dedicated class
+-   Use pytest-xdist plugin to better manage segfaults
+-   Migrate from Azure to Github Actions
+-   Send coverage report to Codacy
+-   Add an option to import/export a blockset (PoC)
+-   Resize the block dimensions at runtime
+-   Dependency to plotter
+-   Add support for pytest
+-   Add support for Windows app
+-   Set the project as an app
+-   Make Builder inherits from Plotter
+-   Update gitignore
+-   Use Qt resources package to organize icons
+-   Add a license
+-   Placement of the toolbar
+-   Add support for 3D area selection
+-   Add a paint mode
