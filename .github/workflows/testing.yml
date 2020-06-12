@@ -53,21 +53,19 @@ jobs:
         name: 'Install dependencies'
       - run: pip install -e .
         name: 'Install blockbuilder'
-      - run: make coverage
-        name: 'Calculate coverage'
-      - uses: codecov/codecov-action@v1
-        if: success()
-        with:
-          token: ${{ secrets.CODECOV_UPLOAD_TOKEN }}
-        name: 'Upload coverage to CodeCov'
       - run: make coverage-codacy
-        name: 'Format coverage for Codacy'
+        name: 'Run tests'
       - uses: codacy/codacy-coverage-reporter-action@master
         if: success()
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           coverage-reports: cobertura.xml
         name: 'Upload coverage to Codacy'
+      - uses: codecov/codecov-action@v1
+        if: success()
+        with:
+          token: ${{ secrets.CODECOV_UPLOAD_TOKEN }}
+        name: 'Upload coverage to CodeCov'
 
   windows-py38-64bit:
     runs-on: windows-latest
