@@ -68,13 +68,12 @@ jobs:
         name: 'Upload coverage to CodeCov'
 
   windows-64bit:
-    name: windows-${{ matrix.python.name }}-${{ matrix.qt_api.name }}-${{ matrix.qt_version.name }}
+    name: windows py${{ matrix.python.name }} ${{ matrix.qt_api.name }}=${{ matrix.qt_version.name }}
     runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
         python:
-          - name: '3.6'
           - name: '3.7'
           - name: '3.8'
         qt_api:
@@ -103,13 +102,12 @@ jobs:
         name: 'Run tests'
 
   ubuntu-64bit:
-    name: ubuntu-${{ matrix.python.name }}-${{ matrix.qt_api.name }}-${{ matrix.qt_version.name }}
+    name: ubuntu py${{ matrix.python.name }} ${{ matrix.qt_api.name }}=${{ matrix.qt_version.name }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         python:
-          - name: '3.6'
           - name: '3.7'
         qt_api:
           - name: 'PyQt5'
