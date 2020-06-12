@@ -39,7 +39,7 @@ git clone git://github.com/GuillaumeFavelier/blockbuilder.git
 
 ### Usage
 
-To launch BlockBuilder once it is installed it is as easy at using:
+To launch BlockBuilder once it is installed, it is as easy as using:
 
 ```sh
 blockbuilder
