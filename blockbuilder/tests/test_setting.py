@@ -1,5 +1,5 @@
 import os
-from PyQt5.QtWidgets import QMessageBox
+from qtpy.QtWidgets import QMessageBox
 from blockbuilder.params import rcParams
 from blockbuilder.setting import SettingDialog, ColorButton
 

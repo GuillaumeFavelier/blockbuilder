@@ -2,8 +2,8 @@ import os
 import numpy as np
 import pytest
 
-from PyQt5 import QtCore
-from PyQt5.QtWidgets import QColorDialog, QFileDialog
+from qtpy import QtCore
+from qtpy.QtWidgets import QColorDialog, QFileDialog
 
 from blockbuilder.params import rcParams
 from blockbuilder.utils import _hasattr

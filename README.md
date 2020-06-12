@@ -3,7 +3,8 @@
 [![codecov](https://codecov.io/gh/GuillaumeFavelier/blockbuilder/branch/master/graph/badge.svg?token=AjF30DFi0b)](https://codecov.io/gh/GuillaumeFavelier/blockbuilder)
 [![Build Status](https://dev.azure.com/guillaumefavelier/blockbuilder/_apis/build/status/blockbuilder?branchName=master)](https://dev.azure.com/guillaumefavelier/blockbuilder/_build/latest?definitionId=2&branchName=master)
 ![Maintenance](https://github.com/GuillaumeFavelier/blockbuilder/workflows/Maintenance/badge.svg)
-![Testing](https://github.com/GuillaumeFavelier/blockbuilder/workflows/Testing/badge.svg)
+![Windows](https://github.com/GuillaumeFavelier/blockbuilder/workflows/Windows/badge.svg)
+![Linux](https://github.com/GuillaumeFavelier/blockbuilder/workflows/Linux/badge.svg)
 
 ![logo](https://raw.githubusercontent.com/GuillaumeFavelier/blockbuilder/master/logo/logo.png)
 
@@ -62,7 +63,8 @@ The minimum required [dependencies](requirements.txt) to run BlockBuilder are:
 
 -   numpy>=1.18.5
 -   vtk>=8.1.2
--   PyQt5>=5.15.0
+-   qtpy>=1.9.0
+-   PyQt5>=5.14.0 or PySide2>=5.14.0
 
 ### Licensing
 

@@ -1,13 +1,13 @@
 """Module about the application settings."""
 
 import numpy as np
-from PyQt5.QtGui import QColor
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import (QPushButton, QDialog, QVBoxLayout, QHBoxLayout,
-                             QListWidget, QStackedWidget, QWidget, QLabel,
-                             QDoubleSpinBox, QSpinBox, QCheckBox,
-                             QGroupBox, QComboBox, QLineEdit, QMessageBox,
-                             QColorDialog)
+from qtpy.QtGui import QColor
+from qtpy.QtCore import Signal
+from qtpy.QtWidgets import (QPushButton, QDialog, QVBoxLayout, QHBoxLayout,
+                            QListWidget, QStackedWidget, QWidget, QLabel,
+                            QDoubleSpinBox, QSpinBox, QCheckBox,
+                            QGroupBox, QComboBox, QLineEdit, QMessageBox,
+                            QColorDialog)
 from .utils import _rgb2str, _qrgb2rgb
 from .params import rcParams, set_params
 
@@ -208,7 +208,7 @@ class SettingDialog(QDialog):
 class ColorButton(QPushButton):
     """Select a color interactively."""
 
-    colorChanged = pyqtSignal(list)
+    colorChanged = Signal(list)
 
     def __init__(self, parent=None):
         """Initialize the ColorButton."""

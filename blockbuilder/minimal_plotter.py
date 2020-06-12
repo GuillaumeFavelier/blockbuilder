@@ -2,7 +2,7 @@
 
 import vtk
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from PyQt5.QtWidgets import QMainWindow
+from qtpy.QtWidgets import QMainWindow
 
 
 class MinimalPlotter(QMainWindow):
