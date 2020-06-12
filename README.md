@@ -23,8 +23,8 @@ pip install -U blockbuilder
 ```
 
 Although both `PyQt5` and `PySide2` are supported, BlockBuilder does not install
-Python bindings for Qt by default. One of the these two packages should be installed
-but this choice is made by the user. Take a look at [dependencies section](#dependencies)
+Python bindings for Qt by default. At least one of these two packages should be installed
+but this choice is made by the user. Take a look at the [dependencies section](#dependencies)
 to see the tested versions.
 
 ### Get the latest code
