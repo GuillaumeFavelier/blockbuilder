@@ -10,7 +10,7 @@ on:
 
 jobs:
   ubuntu-64bit:
-    name: py${{ matrix.python.name }}-${{ matrix.qt_api.name }}-qt${{ matrix.qt_version.name }}
+    name: py${{ matrix.python.name }}-${{ matrix.qt_api.name }}-qt${{ matrix.qt_version.name }}-vtk${{ matrix.vtk_version.name }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -19,10 +19,11 @@ jobs:
           - name: '3.7'
         qt_api:
           - name: 'PyQt5'
-          - name: 'PySide2'
         qt_version:
           - name: '5.14.0'
           - name: '5.15.0'
+        vtk_version:
+          - name: '8.1.2'
     defaults:
       run:
         shell: bash
@@ -43,6 +44,7 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           pip install ${{ matrix.qt_api.name }}==${{ matrix.qt_version.name }}
           pip install -r requirements_testing.txt
+          pip install vtk==${{ matrix.vtk_version.name }}
         name: 'Install dependencies'
       - run: pip install -e .
         name: 'Install blockbuilder'

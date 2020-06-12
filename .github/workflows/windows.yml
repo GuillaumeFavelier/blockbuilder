@@ -10,7 +10,7 @@ on:
 
 jobs:
   windows-64bit:
-    name: py${{ matrix.python.name }}-${{ matrix.qt_api.name }}-qt${{ matrix.qt_version.name }}
+    name: py${{ matrix.python.name }}-${{ matrix.qt_api.name }}-qt${{ matrix.qt_version.name }}-vtk${{ matrix.vtk_version.name }}
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -24,6 +24,8 @@ jobs:
         qt_version:
           - name: '5.14.0'
           - name: '5.15.0'
+        vtk_version:
+          - name: '9.0.0'
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -38,6 +40,7 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           pip install ${{ matrix.qt_api.name }}==${{ matrix.qt_version.name }}
           pip install -r requirements_testing.txt
+          pip install vtk==${{ matrix.vtk_version.name }}
         name: 'Install dependencies'
       - run: pip install -e .
         name: 'Install blockbuilder'
