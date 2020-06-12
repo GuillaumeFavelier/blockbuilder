@@ -19,7 +19,7 @@ jobs:
         qt_api:
           - name: 'PyQt5'
         qt_version:
-          - name: '5.14.0'
+          - name: '5.14.2'
           - name: '5.15.0'
         vtk_version:
           - name: '8.1.2'
