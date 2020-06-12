@@ -67,9 +67,11 @@ jobs:
           token: ${{ secrets.CODECOV_UPLOAD_TOKEN }}
         name: 'Upload coverage to CodeCov'
 
-  windows-py38-64bit:
+  windows-64bit:
+    name: windows-${{ matrix.python.name }}-${{ matrix.qt_api.name }}-${{ matrix.qt_version.name }}
     runs-on: windows-latest
     strategy:
+      fail-fast: false
       matrix:
         python:
           - name: '3.6'
@@ -93,16 +95,18 @@ jobs:
       - run: |
           python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements_testing.txt
-          pip install ${{ matrix.qt_api.name }}==${{ matrix.qt_version }}
+          pip install ${{ matrix.qt_api.name }}==${{ matrix.qt_version.name }}
         name: 'Install dependencies'
       - run: pip install -e .
         name: 'Install blockbuilder'
       - run: pytest -v blockbuilder -n 1
         name: 'Run tests'
 
-  ubuntu-py37-64bit:
+  ubuntu-64bit:
+    name: ubuntu-${{ matrix.python.name }}-${{ matrix.qt_api.name }}-${{ matrix.qt_version.name }}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python:
           - name: '3.6'
@@ -131,7 +135,7 @@ jobs:
       - run: |
           python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements_testing.txt
-          pip install ${{ matrix.qt_api.name }}==${{ matrix.qt_version }}
+          pip install ${{ matrix.qt_api.name }}==${{ matrix.qt_version.name }}
         name: 'Install dependencies'
       - run: pip install -e .
         name: 'Install blockbuilder'
