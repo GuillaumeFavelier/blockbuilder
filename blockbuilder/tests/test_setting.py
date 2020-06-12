@@ -1,9 +1,7 @@
 import os
-from PyQt5.QtWidgets import QMessageBox
+from qtpy.QtWidgets import QMessageBox
 from blockbuilder.params import rcParams
 from blockbuilder.setting import SettingDialog, ColorButton
-
-event_delay = 300
 
 
 def test_setting_dialog(qtbot, tmpdir):
@@ -18,8 +16,8 @@ def test_setting_dialog(qtbot, tmpdir):
     qtbot.addWidget(dialog)
 
     assert not dialog.isVisible()
-    with qtbot.wait_exposed(dialog, event_delay):
-        dialog.show()
+    dialog.show()
+    qtbot.waitForWindowShown(dialog)
     assert dialog.isVisible()
     dialog.test_input_field.setText("foo")
     dialog.test_input_vector_field.setValue(0)
@@ -35,15 +33,15 @@ def test_setting_dialog(qtbot, tmpdir):
 
 def _dialog_scenario(qtbot, button, dialog):
     for msg in [QMessageBox.Ok, QMessageBox.Cancel]:
-        with qtbot.wait_exposed(dialog, event_delay):
-            button.click()
+        button.click()
+        qtbot.waitForWindowShown(dialog)
         dialog.button(msg).click()
 
 
 def test_color_button(qtbot):
     button = ColorButton()
     qtbot.addWidget(button)
-    with qtbot.wait_exposed(button.color_dialog, event_delay):
-        button.click()
+    button.click()
+    qtbot.waitForWindowShown(button.color_dialog)
     button.color_dialog.accept()
     button.close()

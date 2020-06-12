@@ -1,5 +1,5 @@
 import vtk
-from PyQt5.QtGui import QColor
+from qtpy.QtGui import QColor
 from blockbuilder.utils import (_hasattr, get_poly_data, get_uniform_grid,
                                 get_structured_grid, get_mesh_cell_array,
                                 _rgb2str, _qrgb2rgb)

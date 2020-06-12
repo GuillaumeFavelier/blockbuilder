@@ -1,9 +1,9 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/2b132b99d65b4b358148b8284cdbf184)](https://www.codacy.com?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=GuillaumeFavelier/blockbuilder&amp;utm_campaign=Badge_Grade)
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/2b132b99d65b4b358148b8284cdbf184)](https://www.codacy.com?utm_source=github.com&utm_medium=referral&utm_content=GuillaumeFavelier/blockbuilder&utm_campaign=Badge_Coverage)
 [![codecov](https://codecov.io/gh/GuillaumeFavelier/blockbuilder/branch/master/graph/badge.svg?token=AjF30DFi0b)](https://codecov.io/gh/GuillaumeFavelier/blockbuilder)
-[![Build Status](https://dev.azure.com/guillaumefavelier/blockbuilder/_apis/build/status/blockbuilder?branchName=master)](https://dev.azure.com/guillaumefavelier/blockbuilder/_build/latest?definitionId=2&branchName=master)
 ![Maintenance](https://github.com/GuillaumeFavelier/blockbuilder/workflows/Maintenance/badge.svg)
-![Testing](https://github.com/GuillaumeFavelier/blockbuilder/workflows/Testing/badge.svg)
+![Windows](https://github.com/GuillaumeFavelier/blockbuilder/workflows/Windows/badge.svg)
+![Linux](https://github.com/GuillaumeFavelier/blockbuilder/workflows/Linux/badge.svg)
 
 ![logo](https://raw.githubusercontent.com/GuillaumeFavelier/blockbuilder/master/logo/logo.png)
 
@@ -21,6 +21,11 @@ To install the latest stable version of BlockBuilder, you can use `pip` in a ter
 ```sh
 pip install -U blockbuilder
 ```
+
+Although both `PyQt5` and `PySide2` are supported, BlockBuilder does not install
+Python bindings for Qt by default. One of the these two packages should be installed
+but this choice is made by the user. Take a look at [dependencies section](#dependencies)
+to see the tested versions.
 
 ### Get the latest code
 
@@ -62,7 +67,8 @@ The minimum required [dependencies](requirements.txt) to run BlockBuilder are:
 
 -   numpy>=1.18.5
 -   vtk>=8.1.2
--   PyQt5>=5.15.0
+-   qtpy>=1.9.0
+-   PyQt5>=5.14.2 or PySide2>=5.14.2
 
 ### Licensing
 

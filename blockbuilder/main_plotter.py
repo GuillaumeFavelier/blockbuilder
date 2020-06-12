@@ -5,11 +5,11 @@ from functools import partial
 import numpy as np
 import vtk
 
-from PyQt5 import QtCore
-from PyQt5.QtCore import QSize
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (QToolButton, QButtonGroup,
-                             QColorDialog, QFileDialog)
+from qtpy import QtCore
+from qtpy.QtCore import QSize
+from qtpy.QtGui import QIcon
+from qtpy.QtWidgets import (QToolButton, QButtonGroup,
+                            QColorDialog, QFileDialog)
 
 from .element import ElementId
 from .selector import Symmetry, SymmetrySelector
