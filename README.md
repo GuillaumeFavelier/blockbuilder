@@ -53,6 +53,8 @@ script/blockbuilder
 
 ![screenshot](https://raw.githubusercontent.com/GuillaumeFavelier/blockbuilder/master/screenshot.png)
 
+More details about the features will be available soon in the wiki.
+
 ### Dependencies
 
 The minimum required [dependencies](requirements.txt) to run BlockBuilder are:
