@@ -37,6 +37,22 @@ To get the latest code using `git`, open a terminal and type:
 git clone git://github.com/GuillaumeFavelier/blockbuilder.git
 ```
 
+### Usage
+
+To launch BlockBuilder once it is installed it is as easy at using:
+
+```sh
+blockbuilder
+```
+
+Or from the source code using the standard starting script:
+
+```sh
+script/blockbuilder
+```
+
+![screenshot](https://raw.githubusercontent.com/GuillaumeFavelier/blockbuilder/master/screenshot.png)
+
 ### Dependencies
 
 The minimum required [dependencies](requirements.txt) to run BlockBuilder are:
