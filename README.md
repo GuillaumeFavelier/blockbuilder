@@ -1,9 +1,10 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/2b132b99d65b4b358148b8284cdbf184)](https://www.codacy.com?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=GuillaumeFavelier/blockbuilder&amp;utm_campaign=Badge_Grade)
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/2b132b99d65b4b358148b8284cdbf184)](https://www.codacy.com?utm_source=github.com&utm_medium=referral&utm_content=GuillaumeFavelier/blockbuilder&utm_campaign=Badge_Coverage)
 [![codecov](https://codecov.io/gh/GuillaumeFavelier/blockbuilder/branch/master/graph/badge.svg?token=AjF30DFi0b)](https://codecov.io/gh/GuillaumeFavelier/blockbuilder)
-![Maintenance](https://github.com/GuillaumeFavelier/blockbuilder/workflows/Maintenance/badge.svg)
-![Windows](https://github.com/GuillaumeFavelier/blockbuilder/workflows/Windows/badge.svg)
-![Linux](https://github.com/GuillaumeFavelier/blockbuilder/workflows/Linux/badge.svg)
+[![Maintenance](https://github.com/GuillaumeFavelier/blockbuilder/workflows/Maintenance/badge.svg)](https://github.com/GuillaumeFavelier/blockbuilder/actions?query=workflow%3AMaintenance)
+[![Windows](https://github.com/GuillaumeFavelier/blockbuilder/workflows/Windows/badge.svg)](https://github.com/GuillaumeFavelier/blockbuilder/actions?query=workflow%3AWindows)
+[![Linux](https://github.com/GuillaumeFavelier/blockbuilder/workflows/Linux/badge.svg)](https://github.com/GuillaumeFavelier/blockbuilder/actions?query=workflow%3ALinux)
+[![PyPi](https://img.shields.io/pypi/v/blockbuilder?color=%231bcc1b)](https://pypi.org/project/blockbuilder/)
 
 ![logo](https://raw.githubusercontent.com/GuillaumeFavelier/blockbuilder/master/logo/logo.png)
 
