@@ -9,7 +9,7 @@ on:
       - master
 
 jobs:
-  windows-64bit:
+  windows-pip:
     name: py${{ matrix.python.name }}-${{ matrix.qt_api.name }}-qt${{ matrix.qt_version.name }}-vtk${{ matrix.vtk_version.name }}
     runs-on: windows-latest
     strategy:
@@ -40,6 +40,26 @@ jobs:
           pip install ${{ matrix.qt_api.name }}==${{ matrix.qt_version.name }}
           pip install -r requirements_testing.txt
           pip install vtk==${{ matrix.vtk_version.name }}
+        name: 'Install dependencies'
+      - run: pip install -e .
+        name: 'Install blockbuilder'
+      - run: pytest -v blockbuilder -n 1
+        name: 'Run tests'
+
+  windows-conda:
+    name: conda-pyside2
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: s-weigand/setup-conda@v1
+        name: 'Setup conda'
+      - run: .\install_opengl.ps1
+        shell: pwsh
+        name: 'Install opengl'
+      - run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install PySide2 pytest pytest-qt pytest-cov pytest-sugar pytest-xdist coverage
+          conda env update --file environment.yml
         name: 'Install dependencies'
       - run: pip install -e .
         name: 'Install blockbuilder'
