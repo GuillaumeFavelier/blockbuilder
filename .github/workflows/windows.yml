@@ -9,7 +9,7 @@ on:
       - master
 
 jobs:
-  windows-64bit:
+  windows-pip:
     name: py${{ matrix.python.name }}-${{ matrix.qt_api.name }}-qt${{ matrix.qt_version.name }}-vtk${{ matrix.vtk_version.name }}
     runs-on: windows-latest
     strategy:
