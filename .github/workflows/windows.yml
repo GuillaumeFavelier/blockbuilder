@@ -45,22 +45,3 @@ jobs:
         name: 'Install blockbuilder'
       - run: pytest -v blockbuilder -n 1
         name: 'Run tests'
-
-  windows-conda:
-    name: conda-pyside2
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: s-weigand/setup-conda@v1
-        name: 'Setup conda'
-      - run: .\install_opengl.ps1
-        shell: pwsh
-        name: 'Install opengl'
-      - run: |
-          conda env update --file environment.yml
-          pip install PySide2 pytest pytest-qt pytest-cov pytest-sugar pytest-xdist coverage
-        name: 'Install dependencies'
-      - run: pip install -e .
-        name: 'Install blockbuilder'
-      - run: pytest -v blockbuilder -n 1
-        name: 'Run tests'

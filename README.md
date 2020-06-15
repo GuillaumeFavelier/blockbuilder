@@ -23,6 +23,14 @@ To install the latest stable version of BlockBuilder, you can use `pip` in a ter
 pip install -U blockbuilder
 ```
 
+To create an environment with BlockBuilder installed, you can use `conda` in a terminal:
+
+```sh
+conda env create -f environment.yml
+```
+
+This should create a new environment called `blockbuilder`.
+
 Although both `PyQt5` and `PySide2` are supported, BlockBuilder does not install
 Python bindings for Qt by default. At least one of these two packages should be installed
 but this choice is made by the user. Take a look at the [dependencies section](#dependencies)
