@@ -9,7 +9,7 @@ on:
       - master
 
 jobs:
-  ubuntu-64bit:
+  ubuntu-pip:
     name: py${{ matrix.python.name }}-${{ matrix.qt_api.name }}-qt${{ matrix.qt_version.name }}-vtk${{ matrix.vtk_version.name }}
     runs-on: ubuntu-latest
     strategy:
@@ -50,7 +50,7 @@ jobs:
       - run: pytest -v blockbuilder -n 1
         name: 'Run tests'
 
-  ubuntu-64bit:
+  ubuntu-conda:
     name: conda-pyqt5
     runs-on: ubuntu-latest
     defaults:
