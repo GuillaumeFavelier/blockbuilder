@@ -68,7 +68,7 @@ jobs:
         name: 'Setup conda'
       - run: |
           python -m pip install --upgrade pip setuptools wheel
-          pip install PyQt5
+          pip install PyQt5 pytest pytest-xdist
           conda env update --file environment.yml
         name: 'Install dependencies'
       - run: pip install -e .
