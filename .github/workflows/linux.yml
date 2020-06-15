@@ -50,6 +50,32 @@ jobs:
       - run: pytest -v blockbuilder -n 1
         name: 'Run tests'
 
+  ubuntu-64bit:
+    name: conda-pyqt5
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      DISPLAY: ':99'
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          sudo apt-get install -y libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
+          /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1400x900x24 -ac +extension GLX +render -noreset;
+        name: 'Setup xvfb'
+      - uses: s-weigand/setup-conda@v1
+        name: 'Setup conda'
+      - run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install PyQt5
+          conda env update --file environment.yml
+        name: 'Install dependencies'
+      - run: pip install -e .
+        name: 'Install blockbuilder'
+      - run: pytest -v blockbuilder -n 1
+        name: 'Run tests'
+
   # Linux test with pytest-xvfb
   # ---
   # ubuntu-py37-64bit:
