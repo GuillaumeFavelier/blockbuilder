@@ -57,8 +57,8 @@ jobs:
         shell: pwsh
         name: 'Install opengl'
       - run: |
-          pip install PySide2 pytest pytest-qt pytest-cov pytest-sugar pytest-xdist coverage
           conda env update --file environment.yml
+          pip install PySide2 pytest pytest-qt pytest-cov pytest-sugar pytest-xdist coverage
         name: 'Install dependencies'
       - run: pip install -e .
         name: 'Install blockbuilder'
