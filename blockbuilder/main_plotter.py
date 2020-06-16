@@ -1,7 +1,6 @@
 """Module about the main application."""
 
 import enum
-from functools import partial
 import numpy as np
 import vtk
 
@@ -207,8 +206,15 @@ class MainPlotter(InteractivePlotter):
             button.setCheckable(True)
             if default_value is not None and element is default_value:
                 button.setChecked(True)
-            button.toggled.connect(
-                partial(func, value=element))
+
+            class _func():
+                def __init__(self, default_value):
+                    self.default_value = default_value
+
+                def __call__(self, value):
+                    func(self.default_value)
+
+            button.toggled.connect(_func(element))
             button_group.addButton(button)
             self.toolbar.addWidget(button)
 
