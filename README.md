@@ -4,6 +4,7 @@
 [![Maintenance](https://github.com/GuillaumeFavelier/blockbuilder/workflows/Maintenance/badge.svg)](https://github.com/GuillaumeFavelier/blockbuilder/actions?query=workflow%3AMaintenance)
 [![Windows](https://github.com/GuillaumeFavelier/blockbuilder/workflows/Windows/badge.svg)](https://github.com/GuillaumeFavelier/blockbuilder/actions?query=workflow%3AWindows)
 [![Linux](https://github.com/GuillaumeFavelier/blockbuilder/workflows/Linux/badge.svg)](https://github.com/GuillaumeFavelier/blockbuilder/actions?query=workflow%3ALinux)
+[![MacOS](https://github.com/GuillaumeFavelier/blockbuilder/workflows/MacOS/badge.svg)](https://github.com/GuillaumeFavelier/blockbuilder/actions?query=workflow%3AMacOS)
 [![PyPi](https://img.shields.io/pypi/v/blockbuilder?color=%231bcc1b)](https://pypi.org/project/blockbuilder/)
 
 ![logo](https://raw.githubusercontent.com/GuillaumeFavelier/blockbuilder/master/logo/logo.png)

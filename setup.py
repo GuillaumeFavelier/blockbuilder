@@ -12,6 +12,8 @@ DOWNLOAD_URL = 'http://github.com/GuillaumeFavelier/blockbuilder'
 CLASSIFIERS = [
     'Operating System :: Microsoft :: Windows',
     'Operating System :: POSIX :: Linux',
+    'Operating System :: MacOS :: MacOS X',
+    'License :: OSI Approved :: BSD License',
     'Programming Language :: Python :: 3',
     'Development Status :: 2 - Pre-Alpha',
     'Intended Audience :: End Users/Desktop',
@@ -62,7 +64,7 @@ setup_args = dict(
     license=LICENSE,
     download_url=DOWNLOAD_URL,
     url=DOWNLOAD_URL,
-    platforms=["Windows", "Linux"],
+    platforms=["Windows", "Linux", "MacOS"],
     python_requires='>=3.7',
     install_requires=REQUIREMENTS,
     packages=package_tree(NAME),
