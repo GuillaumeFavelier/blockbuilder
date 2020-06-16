@@ -16,13 +16,14 @@ jobs:
       matrix:
         python:
           - name: '3.7'
+          - name: '3.8'
         qt_api:
           - name: 'PyQt5'
+          - name: 'PySide2'
         qt_version:
           - name: '5.14.2'
           - name: '5.15.0'
         vtk_version:
-          - name: '8.1.2'
           - name: '9.0.0'
     steps:
       - uses: actions/checkout@v2
