@@ -194,7 +194,7 @@ class MainPlotter(InteractivePlotter):
         pyrcc5 -o resources.py blockbuilder.qrc
         """
         self.icons = dict()
-        for category in (BlockMode, Action, Toggle, Symmetry):
+        for category in (BlockMode, Toggle, Symmetry, Action):
             for element in category:
                 icon_resource = ":/{}.svg".format(element.name.lower())
                 self.icons[element] = QIcon(icon_resource)
@@ -278,22 +278,64 @@ class MainPlotter(InteractivePlotter):
 
     def load_dialogs(self):
         """Load the dialogs."""
+        # color dialog
         self.color_dialog = QColorDialog(self)
+
+        # export dialog
         self.export_dialog = QFileDialog(self)
         self.export_dialog.setWindowTitle("Export")
         self.export_dialog.setNameFilter("Blockset (*.vts *.vtk)")
         self.export_dialog.setWindowIcon(self.icons[Action.EXPORT])
         # XXX: Fails on CI if modal
         # self.export_dialog.setModal(True)
+
+        # import dialog
         self.import_dialog = QFileDialog(self)
         self.import_dialog.setNameFilter("Blockset (*.vts *.vtk)")
         self.import_dialog.setWindowTitle("Import")
         self.import_dialog.setWindowIcon(self.icons[Action.IMPORT])
         # XXX: Fails on CI if modal
         # self.import_dialog.setModal(True)
+
+        # setting dialog
         self.setting_dialog = SettingDialog(self.params, self)
         self.setting_dialog.setWindowIcon(self.icons[Action.SETTING])
-        self.help_dialog = HelpDialog(self)
+
+        # help dialog
+        short_desc = [
+            "Build mode",
+            "Delete mode",
+            "Area selection",
+            "Edge visibility",
+            "Symmetry Off",
+            "Symmetry X",
+            "Symmetry Y",
+            "Symmetry XY",
+            "Reset",
+            "Import",
+            "Export",
+            "Setting",
+            "Help",
+        ]
+
+        long_desc = [
+            "Enable the build mode",
+            "Enable the delete mode",
+            "Toggle the area selection",
+            "Toggle the edge visibility",
+            "Disable the the symmetry",
+            "Enable symmetry along the X axis",
+            "Enable symmetry along the Y axis",
+            "Enable symmetry along X and Y axis",
+            "Reset the scene",
+            "Import a blockset",
+            "Export a blockset",
+            "Open the setting dialog",
+            "Open the help dialog",
+        ]
+
+        self.help_dialog = HelpDialog(self.icons, self.icon_size, short_desc,
+                                      long_desc, self)
         self.help_dialog.setWindowIcon(self.icons[Action.HELP])
 
     def set_dimensions(self, dimensions):
