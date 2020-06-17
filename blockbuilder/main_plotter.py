@@ -10,6 +10,7 @@ from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import (QToolButton, QButtonGroup,
                             QColorDialog, QFileDialog)
 
+from .utils import DefaultFunction
 from .element import ElementId
 from .selector import Symmetry, SymmetrySelector
 from .grid import Grid
@@ -206,15 +207,8 @@ class MainPlotter(InteractivePlotter):
             button.setCheckable(True)
             if default_value is not None and element is default_value:
                 button.setChecked(True)
-
-            class _func():
-                def __init__(self, default_value):
-                    self.default_value = default_value
-
-                def __call__(self, value):
-                    func(self.default_value)
-
-            button.toggled.connect(_func(element))
+            my_func = DefaultFunction(func, element)
+            button.toggled.connect(my_func)
             button_group.addButton(button)
             self.toolbar.addWidget(button)
 
