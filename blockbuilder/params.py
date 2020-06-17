@@ -95,7 +95,7 @@ rcParams = {
     },
     "builder": {
         "toggles": {
-            "select": False,
+            "area": False,
             "edges": True,
         },
         "toolbar": {

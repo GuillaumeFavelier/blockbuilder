@@ -43,7 +43,7 @@ class Action(enum.Enum):
 class Toggle(enum.Enum):
     """List the toggles available in MainPlotter."""
 
-    SELECT = enum.auto()
+    AREA = enum.auto()
     EDGES = enum.auto()
 
 
@@ -455,7 +455,7 @@ class MainPlotter(InteractivePlotter):
         del value
         self.setting_dialog.show()
 
-    def toggle_select(self, value):
+    def toggle_area(self, value):
         """Toggle area selection."""
         self.area_selection = value
 
