@@ -136,7 +136,7 @@ def set_params(params):
         json.dump(params, fp)
 
 
-def signature(params):
+def signature(params, separator='/'):
     """Create a params str signature."""
     def _signature(params, sig):
         for key in params.keys():
@@ -146,19 +146,23 @@ def signature(params):
 
     my_list = list()
     _signature(params, my_list)
-    return '/'.join(my_list)
+    return separator.join(my_list)
 
 
-def get_params():
+def get_params(ref_params=None):
     """Create or load the default configuration settings."""
-    params = rcParams
+    if ref_params is None:
+        ref_params = rcParams
     config_path = get_config_path()
     if config_path.exists():
+        print(config_path)
         with open(config_path, 'r') as fp:
             params = json.loads(fp.read())
-        if signature(params) != signature(rcParams):
-            set_params(rcParams)
-            return rcParams
+        if signature(params) != signature(ref_params):
+            set_params(ref_params)
+            return ref_params
+        else:
+            return params
     else:
-        set_params(params)
-    return params
+        set_params(ref_params)
+        return ref_params
