@@ -19,11 +19,11 @@ def test_params(tmpdir):
     assert params
     assert os.path.isfile(filename)
 
-    # reset the params in case of conflicts
+    # create conflicts to reset the params
     test_params = {"foo": -1}
     params = get_params(test_params)
     assert signature(params) == signature(test_params)
 
-    # load the params
+    # just load the params
     params = get_params(test_params)
     assert signature(params) == signature(test_params)

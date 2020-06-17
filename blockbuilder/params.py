@@ -129,11 +129,22 @@ def get_config_path():
     return home_path.joinpath(config_name)
 
 
-def set_params(params):
-    """Create the default configuration settings."""
+def write_params(params):
+    """Write the default configuration settings."""
     config_path = get_config_path()
     with open(config_path, 'w') as fp:
         json.dump(params, fp)
+
+
+def read_params():
+    """Read the default configuration file."""
+    config_path = get_config_path()
+    if config_path.exists():
+        with open(config_path, 'r') as fp:
+            params = json.loads(fp.read())
+        return params
+    else:
+        return None
 
 
 def signature(params, separator='/'):
@@ -153,16 +164,9 @@ def get_params(ref_params=None):
     """Create or load the default configuration settings."""
     if ref_params is None:
         ref_params = rcParams
-    config_path = get_config_path()
-    if config_path.exists():
-        print(config_path)
-        with open(config_path, 'r') as fp:
-            params = json.loads(fp.read())
-        if signature(params) != signature(ref_params):
-            set_params(ref_params)
-            return ref_params
-        else:
-            return params
-    else:
-        set_params(ref_params)
+    params = read_params()
+    if params is None or signature(params) != signature(ref_params):
+        write_params(ref_params)
         return ref_params
+    else:
+        return params
