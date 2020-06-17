@@ -11,6 +11,8 @@ from blockbuilder.block import Block
 from blockbuilder.grid import Grid
 from blockbuilder.plane import Plane
 from blockbuilder.selector import Symmetry, SymmetrySelector
+from blockbuilder.setting import SettingDialog
+from blockbuilder.help import HelpDialog
 from blockbuilder.main_plotter import (MainPlotter, BlockMode, Action, Toggle,
                                        _get_toolbar_area)
 
@@ -39,6 +41,8 @@ def test_main_plotter(qtbot):
     _hasattr(plotter, "color_dialog", QColorDialog)
     _hasattr(plotter, "import_dialog", QFileDialog)
     _hasattr(plotter, "export_dialog", QFileDialog)
+    _hasattr(plotter, "setting_dialog", SettingDialog)
+    _hasattr(plotter, "help_dialog", HelpDialog)
 
     # block mode
     assert plotter.current_block_mode == BlockMode.BUILD
@@ -194,6 +198,15 @@ def test_main_plotter_action_setting(qtbot, tmpdir):
     plotter.action_setting(True)
     qtbot.waitForWindowShown(plotter.setting_dialog)
     plotter.setting_dialog.ok_button.click()
+    plotter.close()
+
+
+def test_main_plotter_action_help(qtbot, tmpdir):
+    plotter = MainPlotter(params=rcParams, testing=True)
+    qtbot.addWidget(plotter)
+    plotter.action_help(True)
+    qtbot.waitForWindowShown(plotter.help_dialog)
+    plotter.help_dialog.ok_button.click()
     plotter.close()
 
 
