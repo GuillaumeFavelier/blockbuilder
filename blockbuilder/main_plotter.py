@@ -207,8 +207,7 @@ class MainPlotter(InteractivePlotter):
             button.setCheckable(True)
             if default_value is not None and element is default_value:
                 button.setChecked(True)
-            my_func = DefaultFunction(func, element)
-            button.toggled.connect(my_func)
+            button.toggled.connect(DefaultFunction(func, element))
             button_group.addButton(button)
             self.toolbar.addWidget(button)
 
