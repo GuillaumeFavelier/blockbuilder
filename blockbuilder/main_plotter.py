@@ -1,7 +1,6 @@
 """Module about the main application."""
 
 import enum
-from functools import partial
 import numpy as np
 import vtk
 
@@ -11,6 +10,7 @@ from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import (QToolButton, QButtonGroup,
                             QColorDialog, QFileDialog)
 
+from .utils import DefaultFunction
 from .element import ElementId
 from .selector import Symmetry, SymmetrySelector
 from .grid import Grid
@@ -207,8 +207,7 @@ class MainPlotter(InteractivePlotter):
             button.setCheckable(True)
             if default_value is not None and element is default_value:
                 button.setChecked(True)
-            button.toggled.connect(
-                partial(func, value=element))
+            button.toggled.connect(DefaultFunction(func, element))
             button_group.addButton(button)
             self.toolbar.addWidget(button)
 
