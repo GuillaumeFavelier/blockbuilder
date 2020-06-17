@@ -19,6 +19,7 @@ from .block import Block
 from .intersection import Intersection
 from .interactive_plotter import InteractivePlotter
 from .setting import SettingDialog, ColorButton
+from .help import HelpDialog
 
 
 @enum.unique
@@ -37,6 +38,7 @@ class Action(enum.Enum):
     IMPORT = enum.auto()
     EXPORT = enum.auto()
     SETTING = enum.auto()
+    HELP = enum.auto()
 
 
 @enum.unique
@@ -291,6 +293,8 @@ class MainPlotter(InteractivePlotter):
         # self.import_dialog.setModal(True)
         self.setting_dialog = SettingDialog(self.params, self)
         self.setting_dialog.setWindowIcon(self.icons[Action.SETTING])
+        self.help_dialog = HelpDialog(self)
+        self.help_dialog.setWindowIcon(self.icons[Action.HELP])
 
     def set_dimensions(self, dimensions):
         """Set the current dimensions."""
@@ -454,6 +458,11 @@ class MainPlotter(InteractivePlotter):
         """Open the settings menu."""
         del value
         self.setting_dialog.show()
+
+    def action_help(self, value=None):
+        """Display the help menu."""
+        del value
+        self.help_dialog.show()
 
     def toggle_area(self, value):
         """Toggle area selection."""
