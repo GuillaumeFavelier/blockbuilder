@@ -69,7 +69,7 @@ script/blockbuilder
 
 ![screenshot](https://raw.githubusercontent.com/GuillaumeFavelier/blockbuilder/master/screenshot.png)
 
-More details about the features will be available soon in the wiki.
+More details about the features are available in the [Wiki](https://github.com/GuillaumeFavelier/blockbuilder/wiki).
 
 ### Dependencies
 
