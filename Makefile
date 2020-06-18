@@ -1,5 +1,5 @@
 PYTHON ?= python
-CODESPELL_DIRS ?= blockbuilder/ examples/
+CODESPELL_DIRS ?= blockbuilder/
 CODESPELL_SKIP ?= "*.pyc"
 
 all: doctest
