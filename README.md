@@ -80,6 +80,10 @@ The minimum required [dependencies](requirements.txt) to run BlockBuilder are:
 -   qtpy>=1.9.0
 -   PyQt5>=5.14.2 or PySide2>=5.14.2
 
+### Resources
+
+Many of the icons used in this project come from [material.io](https://material.io/resources/icons/?style=outline)
+
 ### Licensing
 
 BlockBuilder is [BSD-licenced (3 clause)](LICENSE):
