@@ -1,3 +1,4 @@
+PYTHON ?= python
 CODESPELL_DIRS ?= blockbuilder/ examples/
 CODESPELL_SKIP ?= "*.pyc"
 
@@ -29,6 +30,10 @@ codespell:
 pydocstyle:
 	@echo "Run pydocstyle"
 	@pydocstyle blockbuilder
+
+wheel:
+	@echo "Build wheel"
+	$(PYTHON) setup.py sdist bdist_wheel
 
 tests:
 	@echo "Run tests"
