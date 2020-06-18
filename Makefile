@@ -3,7 +3,7 @@ CODESPELL_SKIP ?= "*.pyc"
 
 all: doctest
 
-style: codespell pydocstyle
+style: flake8 codespell pydocstyle
 
 pip:
 	@echo "Check pip version"
@@ -17,6 +17,10 @@ install: pip
 archive:
 	@echo "Create archive"
 	@git archive HEAD --format=zip > archive.zip
+
+flake8:
+	@echo "Run flake8"
+	@flake8 --count blockbuilder setup.py
 
 codespell:
 	@echo "Run codespell"
