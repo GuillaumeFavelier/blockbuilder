@@ -1,9 +1,10 @@
-CODESPELL_DIRS ?= blockbuilder/ examples/
+PYTHON ?= python
+CODESPELL_DIRS ?= blockbuilder/
 CODESPELL_SKIP ?= "*.pyc"
 
 all: doctest
 
-style: codespell pydocstyle
+style: flake8 codespell pydocstyle
 
 pip:
 	@echo "Check pip version"
@@ -18,6 +19,10 @@ archive:
 	@echo "Create archive"
 	@git archive HEAD --format=zip > archive.zip
 
+flake8:
+	@echo "Run flake8"
+	@flake8 --count blockbuilder setup.py
+
 codespell:
 	@echo "Run codespell"
 	@codespell $(CODESPELL_DIRS) -S $(CODESPELL_SKIP)
@@ -25,6 +30,10 @@ codespell:
 pydocstyle:
 	@echo "Run pydocstyle"
 	@pydocstyle blockbuilder
+
+wheel:
+	@echo "Build wheel"
+	$(PYTHON) setup.py sdist bdist_wheel
 
 tests:
 	@echo "Run tests"
