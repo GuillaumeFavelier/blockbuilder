@@ -17,4 +17,5 @@ labels:
     message: "You asked me to remind you about this yesterday."
 comments: []
 commits: []
-merges: []
+merges:
+  - action: delete_branch
