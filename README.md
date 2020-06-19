@@ -68,7 +68,7 @@ Or from the source code using the standard starting script:
 script/blockbuilder
 ```
 
-![screenshot](https://raw.githubusercontent.com/GuillaumeFavelier/blockbuilder/master/screenshot.png)
+![demo](https://raw.githubusercontent.com/GuillaumeFavelier/blockbuilder/master/demo.gif)
 
 More details about the features are available in the [Wiki](https://github.com/GuillaumeFavelier/blockbuilder/wiki).
 

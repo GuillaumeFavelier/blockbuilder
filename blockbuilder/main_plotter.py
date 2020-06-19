@@ -323,7 +323,7 @@ class MainPlotter(InteractivePlotter):
             "Enable the delete mode",
             "Toggle the area selection",
             "Toggle the edge visibility",
-            "Disable the the symmetry",
+            "Disable the symmetry",
             "Enable symmetry along the X axis",
             "Enable symmetry along the Y axis",
             "Enable symmetry along X and Y axis",
