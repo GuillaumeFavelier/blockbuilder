@@ -278,9 +278,6 @@ class MainPlotter(InteractivePlotter):
 
     def load_dialogs(self):
         """Load the dialogs."""
-        # color dialog
-        self.color_dialog = QColorDialog(self)
-
         # export dialog
         self.export_dialog = QFileDialog(self)
         self.export_dialog.setWindowTitle("Export")
