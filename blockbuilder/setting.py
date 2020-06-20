@@ -9,7 +9,7 @@ from qtpy.QtWidgets import (QPushButton, QDialog, QVBoxLayout, QHBoxLayout,
                             QGroupBox, QComboBox, QLineEdit, QMessageBox,
                             QColorDialog)
 from .utils import _rgb2str, _qrgb2rgb
-from .params import rcParams, set_params
+from .params import rcParams, write_params
 
 
 class SettingDialog(QDialog):
@@ -62,14 +62,14 @@ class SettingDialog(QDialog):
 
         def _reset_params(button):
             if self.reset_dialog.standardButton(button) == QMessageBox.Ok:
-                set_params(rcParams)
+                write_params(rcParams)
                 self.copy_params = dict(rcParams)
             self.reset_dialog.close()
         self.reset_dialog.buttonClicked.connect(_reset_params)
 
         def _apply_params(button):
             if self.apply_dialog.standardButton(button) == QMessageBox.Ok:
-                set_params(self.copy_params)
+                write_params(self.copy_params)
             self.apply_dialog.close()
         self.apply_dialog.buttonClicked.connect(_apply_params)
 

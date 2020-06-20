@@ -95,7 +95,7 @@ rcParams = {
     },
     "builder": {
         "toggles": {
-            "select": False,
+            "area": False,
             "edges": True,
         },
         "toolbar": {
@@ -129,20 +129,44 @@ def get_config_path():
     return home_path.joinpath(config_name)
 
 
-def set_params(params):
-    """Create the default configuration settings."""
+def write_params(params):
+    """Write the default configuration settings."""
     config_path = get_config_path()
     with open(config_path, 'w') as fp:
         json.dump(params, fp)
 
 
-def get_params():
-    """Create or load the default configuration settings."""
-    params = rcParams
+def read_params():
+    """Read the default configuration file."""
     config_path = get_config_path()
     if config_path.exists():
         with open(config_path, 'r') as fp:
             params = json.loads(fp.read())
+        return params
     else:
-        set_params(params)
-    return params
+        return None
+
+
+def signature(params, separator='/'):
+    """Create a params str signature."""
+    def _signature(params, sig):
+        for key in params.keys():
+            sig.append(key)
+            if isinstance(params[key], dict):
+                _signature(params[key], sig)
+
+    my_list = list()
+    _signature(params, my_list)
+    return separator.join(my_list)
+
+
+def get_params(ref_params=None):
+    """Create or load the default configuration settings."""
+    if ref_params is None:
+        ref_params = rcParams
+    params = read_params()
+    if params is None or signature(params) != signature(ref_params):
+        write_params(ref_params)
+        return ref_params
+    else:
+        return params

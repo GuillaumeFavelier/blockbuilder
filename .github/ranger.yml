@@ -1,0 +1,21 @@
+default:
+  close:
+    comment: This has been marked to be closed in $DELAY.
+    delay: 7d
+labels:
+  duplicate: close
+  wontfix: close
+  invalid: close
+  "squash when passing": merge
+  "next week":
+    action: comment
+    delay: 7d
+    message: "You asked me to remind you about this last week."
+  tomorrow:
+    action: comment
+    delay: 1d
+    message: "You asked me to remind you about this yesterday."
+comments: []
+commits: []
+merges:
+  - action: delete_branch
