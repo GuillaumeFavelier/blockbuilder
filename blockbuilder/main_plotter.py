@@ -8,7 +8,7 @@ from qtpy import QtCore
 from qtpy.QtCore import QSize
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import (QToolButton, QButtonGroup,
-                            QColorDialog, QFileDialog)
+                            QFileDialog)
 
 from .utils import DefaultFunction
 from .element import ElementId
@@ -278,9 +278,6 @@ class MainPlotter(InteractivePlotter):
 
     def load_dialogs(self):
         """Load the dialogs."""
-        # color dialog
-        self.color_dialog = QColorDialog(self)
-
         # export dialog
         self.export_dialog = QFileDialog(self)
         self.export_dialog.setWindowTitle("Export")
@@ -426,6 +423,7 @@ class MainPlotter(InteractivePlotter):
         del unused
         self.block.remove_all()
         self.set_block_color(self.default_block_color, is_int=False)
+        self.color_button.setColor(self.default_block_color, is_int=False)
         self.render_scene()
 
     def action_import(self, value=None):

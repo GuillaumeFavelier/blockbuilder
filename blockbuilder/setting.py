@@ -226,4 +226,5 @@ class ColorButton(QPushButton):
         self.setStyleSheet(
             "#ColorButton{background-color: rgb" +
             _rgb2str(color, is_int) + "}")
-        self.colorChanged.emit(list(color / 255.))
+        if is_int:
+            self.colorChanged.emit(list(color / 255.))

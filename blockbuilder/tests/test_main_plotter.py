@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 from qtpy import QtCore
-from qtpy.QtWidgets import QColorDialog, QFileDialog
+from qtpy.QtWidgets import QFileDialog
 
 from blockbuilder.params import rcParams
 from blockbuilder.utils import _hasattr
@@ -38,7 +38,6 @@ def test_main_plotter(qtbot):
     _hasattr(plotter, "toolbar", type(None))
     _hasattr(plotter, "current_block_mode", type(None))
     _hasattr(plotter, "mode_functions", type(None))
-    _hasattr(plotter, "color_dialog", QColorDialog)
     _hasattr(plotter, "import_dialog", QFileDialog)
     _hasattr(plotter, "export_dialog", QFileDialog)
     _hasattr(plotter, "setting_dialog", SettingDialog)
