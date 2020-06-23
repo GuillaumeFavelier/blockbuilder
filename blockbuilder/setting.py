@@ -1,15 +1,15 @@
 """Module about the application settings."""
 
 import numpy as np
-from PyQt5.QtGui import QColor
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import (QPushButton, QDialog, QVBoxLayout, QHBoxLayout,
-                             QListWidget, QStackedWidget, QWidget, QLabel,
-                             QDoubleSpinBox, QSpinBox, QCheckBox,
-                             QGroupBox, QComboBox, QLineEdit, QMessageBox,
-                             QColorDialog)
+from qtpy.QtGui import QColor
+from qtpy.QtCore import Signal
+from qtpy.QtWidgets import (QPushButton, QDialog, QVBoxLayout, QHBoxLayout,
+                            QListWidget, QStackedWidget, QWidget, QLabel,
+                            QDoubleSpinBox, QSpinBox, QCheckBox,
+                            QGroupBox, QComboBox, QLineEdit, QMessageBox,
+                            QColorDialog)
 from .utils import _rgb2str, _qrgb2rgb
-from .params import rcParams, set_params
+from .params import rcParams, write_params
 
 
 class SettingDialog(QDialog):
@@ -62,14 +62,14 @@ class SettingDialog(QDialog):
 
         def _reset_params(button):
             if self.reset_dialog.standardButton(button) == QMessageBox.Ok:
-                set_params(rcParams)
+                write_params(rcParams)
                 self.copy_params = dict(rcParams)
             self.reset_dialog.close()
         self.reset_dialog.buttonClicked.connect(_reset_params)
 
         def _apply_params(button):
             if self.apply_dialog.standardButton(button) == QMessageBox.Ok:
-                set_params(self.copy_params)
+                write_params(self.copy_params)
             self.apply_dialog.close()
         self.apply_dialog.buttonClicked.connect(_apply_params)
 
@@ -208,7 +208,7 @@ class SettingDialog(QDialog):
 class ColorButton(QPushButton):
     """Select a color interactively."""
 
-    colorChanged = pyqtSignal(list)
+    colorChanged = Signal(list)
 
     def __init__(self, parent=None):
         """Initialize the ColorButton."""
@@ -226,4 +226,5 @@ class ColorButton(QPushButton):
         self.setStyleSheet(
             "#ColorButton{background-color: rgb" +
             _rgb2str(color, is_int) + "}")
-        self.colorChanged.emit(list(color / 255.))
+        if is_int:
+            self.colorChanged.emit(list(color / 255.))

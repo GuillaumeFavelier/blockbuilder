@@ -1,7 +1,29 @@
-from blockbuilder.params import rcParams
+import os
+
+from blockbuilder.params import get_params, signature
 
 
-def test_params():
-    assert isinstance(rcParams, dict)
+def test_params(tmpdir):
+    # use a temporary configuration file to avoid
+    # modifying the default one.
+    output_dir = str(tmpdir.mkdir("tmpdir"))
+    assert os.path.isdir(output_dir)
+    filename = str(os.path.join(output_dir, "tmp.json"))
+    os.environ["BB_TESTING"] = filename
+
+    # create default config file
+    assert not os.path.exists(filename)
+    params = get_params()
+    assert isinstance(params, dict)
     # Empty dictionaries evaluate to False in Python
-    assert rcParams
+    assert params
+    assert os.path.isfile(filename)
+
+    # create conflicts to reset the params
+    test_params = {"foo": -1}
+    params = get_params(test_params)
+    assert signature(params) == signature(test_params)
+
+    # just load the params
+    params = get_params(test_params)
+    assert signature(params) == signature(test_params)

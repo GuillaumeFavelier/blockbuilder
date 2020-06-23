@@ -1,14 +1,15 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
+	<file alias="area.svg">area.svg</file>
 	<file alias="blockbuilder.svg">blockbuilder.svg</file>
 	<file alias="build.svg">build.svg</file>
 	<file alias="delete.svg">delete.svg</file>
 	<file alias="edges.svg">edges.svg</file>
 	<file alias="export.svg">export.svg</file>
+	<file alias="help.svg">help.svg</file>
 	<file alias="import.svg">import.svg</file>
-	<file alias="setting.svg">setting.svg</file>
 	<file alias="reset.svg">reset.svg</file>
-	<file alias="select.svg">select.svg</file>
+	<file alias="setting.svg">setting.svg</file>
 	<file alias="symmetry_none.svg">symmetry_none.svg</file>
 	<file alias="symmetry_x.svg">symmetry_x.svg</file>
 	<file alias="symmetry_xy.svg">symmetry_xy.svg</file>

@@ -1,0 +1,98 @@
+name: Linux
+on:
+  push:
+    branches:
+      - master
+      - release
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  ubuntu-pip:
+    name: py${{ matrix.python.name }}-${{ matrix.qt_api.name }}-qt${{ matrix.qt_version.name }}-vtk${{ matrix.vtk_version.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python:
+          - name: '3.7'
+        qt_api:
+          - name: 'PyQt5'
+        qt_version:
+          - name: '5.14.2'
+          - name: '5.15.0'
+        vtk_version:
+          - name: '8.1.2'
+    defaults:
+      run:
+        shell: bash
+    env:
+      DISPLAY: ':99'
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          sudo apt-get install -y libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
+          /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1400x900x24 -ac +extension GLX +render -noreset;
+        name: 'Setup xvfb'
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python.name }}
+          architecture: 'x64'
+        name: 'Setup python'
+      - run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install ${{ matrix.qt_api.name }}==${{ matrix.qt_version.name }}
+          pip install -r requirements_testing.txt
+          pip install vtk==${{ matrix.vtk_version.name }}
+        name: 'Install dependencies'
+      - run: pip install -e .
+        name: 'Install blockbuilder'
+      - run: pytest -v blockbuilder -n 1
+        name: 'Run tests'
+
+  ubuntu-conda:
+    name: conda-pyqt5
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      DISPLAY: ':99'
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          sudo apt-get install -y libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0 libopengl0
+          /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1400x900x24 -ac +extension GLX +render -noreset;
+        name: 'Setup xvfb'
+      - uses: s-weigand/setup-conda@v1
+        name: 'Setup conda'
+      - run: |
+          conda env update --file environment.yml
+          pip install PyQt5 pytest pytest-qt pytest-cov pytest-sugar pytest-xdist coverage
+        name: 'Install dependencies'
+      - run: pip install -e .
+        name: 'Install blockbuilder'
+      - run: pytest -v blockbuilder -n 1
+        name: 'Run tests'
+
+  # Linux test with pytest-xvfb
+  # ---
+  # ubuntu-py37-64bit:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - run: sudo apt install libxkbcommon-x11-0
+  #       name: 'Install libxkbcommon-x11-0'
+  #     - uses: actions/setup-python@v2
+  #       with:
+  #         python-version: '3.7'
+  #         architecture: 'x64'
+  #     - run: |
+  #         python -m pip install --upgrade pip setuptools wheel
+  #         pip install -r requirements_testing.txt
+  #         pip install pytest-faulthandler pytest-xvfb
+  #       name: 'Install dependencies'
+  #     - run: pip install -e .
+  #       name: 'Install blockbuilder'
+  #     - run: pytest -v blockbuilder -n 1
+  #       name: 'Run tests'

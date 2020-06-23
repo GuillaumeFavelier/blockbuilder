@@ -45,6 +45,7 @@ jobs:
   - bash: |
       python -m pip install --upgrade pip setuptools wheel
       pip install -r requirements_testing.txt
+      pip install PyQt5
     displayName: 'Install dependencies'
   - bash: pip install -e .
     displayName: 'Install blockbuilder'
@@ -70,6 +71,7 @@ jobs:
   - bash: |
       python -m pip install --upgrade pip setuptools wheel
       pip install -r requirements_testing.txt
+      pip install PyQt5
     displayName: 'Install dependencies'
   - bash: pip install -e .
     displayName: 'Install blockbuilder'

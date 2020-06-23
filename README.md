@@ -1,8 +1,12 @@
+[![PyPi](https://img.shields.io/pypi/v/blockbuilder?color=%231bcc1b)](https://pypi.org/project/blockbuilder/)
+[![code style](https://img.shields.io/badge/code%20style-PEP8-green)](https://www.python.org/dev/peps/pep-0008/)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/2b132b99d65b4b358148b8284cdbf184)](https://www.codacy.com?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=GuillaumeFavelier/blockbuilder&amp;utm_campaign=Badge_Grade)
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/2b132b99d65b4b358148b8284cdbf184)](https://www.codacy.com?utm_source=github.com&utm_medium=referral&utm_content=GuillaumeFavelier/blockbuilder&utm_campaign=Badge_Coverage)
 [![codecov](https://codecov.io/gh/GuillaumeFavelier/blockbuilder/branch/master/graph/badge.svg?token=AjF30DFi0b)](https://codecov.io/gh/GuillaumeFavelier/blockbuilder)
-[![Build Status](https://dev.azure.com/guillaumefavelier/blockbuilder/_apis/build/status/GuillaumeFavelier.blockbuilder?branchName=master)](https://dev.azure.com/guillaumefavelier/blockbuilder/_build/latest?definitionId=2&branchName=master)
-![Testing](https://github.com/GuillaumeFavelier/blockbuilder/workflows/Testing/badge.svg)
+[![Maintenance](https://github.com/GuillaumeFavelier/blockbuilder/workflows/Maintenance/badge.svg)](https://github.com/GuillaumeFavelier/blockbuilder/actions?query=workflow%3AMaintenance)
+[![Windows](https://github.com/GuillaumeFavelier/blockbuilder/workflows/Windows/badge.svg)](https://github.com/GuillaumeFavelier/blockbuilder/actions?query=workflow%3AWindows)
+[![Linux](https://github.com/GuillaumeFavelier/blockbuilder/workflows/Linux/badge.svg)](https://github.com/GuillaumeFavelier/blockbuilder/actions?query=workflow%3ALinux)
+[![MacOS](https://github.com/GuillaumeFavelier/blockbuilder/workflows/MacOS/badge.svg)](https://github.com/GuillaumeFavelier/blockbuilder/actions?query=workflow%3AMacOS)
 
 ![logo](https://raw.githubusercontent.com/GuillaumeFavelier/blockbuilder/master/logo/logo.png)
 
@@ -21,6 +25,19 @@ To install the latest stable version of BlockBuilder, you can use `pip` in a ter
 pip install -U blockbuilder
 ```
 
+To create an environment with BlockBuilder installed, you can use `conda` in a terminal:
+
+```sh
+conda env create -f environment.yml
+```
+
+This should create a new environment called `blockbuilder`.
+
+Although both `PyQt5` and `PySide2` are supported, BlockBuilder does not install
+Python bindings for Qt by default. At least one of these two packages should be installed
+but this choice is made by the user. Take a look at the [dependencies section](#dependencies)
+to see the tested versions.
+
 ### Get the latest code
 
 The latest changes are [available here](changelog/latest.md).
@@ -37,13 +54,36 @@ To get the latest code using `git`, open a terminal and type:
 git clone git://github.com/GuillaumeFavelier/blockbuilder.git
 ```
 
+### Usage
+
+To launch BlockBuilder once it is installed, it is as easy as using:
+
+```sh
+blockbuilder
+```
+
+Or from the source code using the standard starting script:
+
+```sh
+script/blockbuilder
+```
+
+![demo](https://raw.githubusercontent.com/GuillaumeFavelier/blockbuilder/master/demo.gif)
+
+More details about the features are available in the [Wiki](https://github.com/GuillaumeFavelier/blockbuilder/wiki).
+
 ### Dependencies
 
 The minimum required [dependencies](requirements.txt) to run BlockBuilder are:
 
 -   numpy>=1.18.5
 -   vtk>=8.1.2
--   PyQt5>=5.15.0
+-   qtpy>=1.9.0
+-   PyQt5>=5.14.2 or PySide2>=5.14.2
+
+### Resources
+
+Many of the icons used in this project come from [material.io](https://material.io/resources/icons/?style=outline)
 
 ### Licensing
 

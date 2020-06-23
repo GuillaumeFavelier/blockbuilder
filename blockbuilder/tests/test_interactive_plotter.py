@@ -1,6 +1,6 @@
 import pytest
 
-from PyQt5 import QtCore
+from qtpy import QtCore
 
 from blockbuilder.params import rcParams
 from blockbuilder.interactive_plotter import InteractivePlotter

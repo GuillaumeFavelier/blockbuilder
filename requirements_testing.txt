@@ -1,6 +1,7 @@
 numpy
 vtk
-PyQt5
+qtpy
+flake8
 codespell
 pydocstyle
 pytest

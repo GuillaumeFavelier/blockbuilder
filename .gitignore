@@ -4,5 +4,6 @@ cobertura.xml
 __pycache__
 build
 *.egg*
+*.zip
 dist/
 htmlcov/

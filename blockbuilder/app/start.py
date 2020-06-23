@@ -1,5 +1,5 @@
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QApplication
+from qtpy.QtGui import QIcon
+from qtpy.QtWidgets import QApplication
 from blockbuilder import __version__
 from blockbuilder.icons import resources
 from blockbuilder.params import get_params

@@ -4,6 +4,20 @@ import numpy as np
 import vtk
 
 
+class DefaultFunction():
+    """Function called with its default value."""
+
+    def __init__(self, func, default_value):
+        """Initialize the DefaultFunction."""
+        self.func = func
+        self.default_value = default_value
+
+    def __call__(self, unused=None):
+        """Call the DefaultFunction."""
+        del unused
+        return self.func(self.default_value)
+
+
 def _hasattr(variable, attribute_name, variable_type):
     if not hasattr(variable, attribute_name):
         return False

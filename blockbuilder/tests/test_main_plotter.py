@@ -2,8 +2,8 @@ import os
 import numpy as np
 import pytest
 
-from PyQt5 import QtCore
-from PyQt5.QtWidgets import QColorDialog, QFileDialog
+from qtpy import QtCore
+from qtpy.QtWidgets import QFileDialog
 
 from blockbuilder.params import rcParams
 from blockbuilder.utils import _hasattr
@@ -11,6 +11,8 @@ from blockbuilder.block import Block
 from blockbuilder.grid import Grid
 from blockbuilder.plane import Plane
 from blockbuilder.selector import Symmetry, SymmetrySelector
+from blockbuilder.setting import SettingDialog
+from blockbuilder.help import HelpDialog
 from blockbuilder.main_plotter import (MainPlotter, BlockMode, Action, Toggle,
                                        _get_toolbar_area)
 
@@ -36,9 +38,10 @@ def test_main_plotter(qtbot):
     _hasattr(plotter, "toolbar", type(None))
     _hasattr(plotter, "current_block_mode", type(None))
     _hasattr(plotter, "mode_functions", type(None))
-    _hasattr(plotter, "color_dialog", QColorDialog)
     _hasattr(plotter, "import_dialog", QFileDialog)
     _hasattr(plotter, "export_dialog", QFileDialog)
+    _hasattr(plotter, "setting_dialog", SettingDialog)
+    _hasattr(plotter, "help_dialog", HelpDialog)
 
     # block mode
     assert plotter.current_block_mode == BlockMode.BUILD
@@ -139,9 +142,9 @@ def test_main_plotter_block_scenario(qtbot):
     plotter = MainPlotter(params=rcParams, testing=True)
     qtbot.addWidget(plotter)
     plotter.set_symmetry(Symmetry.SYMMETRY_XY)
-    plotter.toggle_select(False)
+    plotter.toggle_area(False)
     _play_block_scenario(qtbot, plotter)
-    plotter.toggle_select(True)
+    plotter.toggle_area(True)
     _play_block_scenario(qtbot, plotter)
     _play_area_scenario(qtbot, plotter)
     plotter.close()
@@ -166,8 +169,8 @@ def test_main_plotter_move_camera(qtbot):
 def test_main_plotter_action_import_dialog(qtbot):
     plotter = MainPlotter(params=rcParams, testing=True)
     qtbot.addWidget(plotter)
-    with qtbot.wait_exposed(plotter.import_dialog, event_delay):
-        plotter.action_import(True)
+    plotter.action_import(True)
+    qtbot.waitForWindowShown(plotter.import_dialog)
     plotter.import_dialog.accept()
     plotter.close()
 
@@ -175,8 +178,8 @@ def test_main_plotter_action_import_dialog(qtbot):
 def test_main_plotter_action_export_dialog(qtbot):
     plotter = MainPlotter(params=rcParams, testing=True)
     qtbot.addWidget(plotter)
-    with qtbot.wait_exposed(plotter.export_dialog, event_delay):
-        plotter.action_export(True)
+    plotter.action_export(True)
+    qtbot.waitForWindowShown(plotter.export_dialog)
     plotter.export_dialog.accept()
     plotter.close()
 
@@ -191,9 +194,18 @@ def test_main_plotter_action_setting(qtbot, tmpdir):
 
     plotter = MainPlotter(params=rcParams, testing=True)
     qtbot.addWidget(plotter)
-    with qtbot.wait_exposed(plotter.setting_dialog, event_delay):
-        plotter.action_setting(True)
+    plotter.action_setting(True)
+    qtbot.waitForWindowShown(plotter.setting_dialog)
     plotter.setting_dialog.ok_button.click()
+    plotter.close()
+
+
+def test_main_plotter_action_help(qtbot, tmpdir):
+    plotter = MainPlotter(params=rcParams, testing=True)
+    qtbot.addWidget(plotter)
+    plotter.action_help(True)
+    qtbot.waitForWindowShown(plotter.help_dialog)
+    plotter.help_dialog.ok_button.click()
     plotter.close()
 
 
