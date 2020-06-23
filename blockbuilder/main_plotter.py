@@ -247,6 +247,7 @@ class MainPlotter(InteractivePlotter):
         self.color_button.colorChanged.connect(self.set_block_color)
         self.toolbar.addWidget(self.color_button)
         self.set_block_color(self.default_block_color, is_int=False)
+        self.color_button.setColor(self.default_block_color, is_int=False)
 
     def load_toolbar(self):
         """Initialize the toolbar."""
