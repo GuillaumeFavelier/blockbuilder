@@ -15,6 +15,7 @@ jobs:
     strategy:
       matrix:
         python:
+          - name: '3.7'
           - name: '3.8'
         qt_api:
           - name: 'PyQt5'
