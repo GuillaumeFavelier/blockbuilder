@@ -2,10 +2,10 @@ name: blockbuilder
 channels:
 - defaults
 dependencies:
-- python>=3.7
+- python>=3.8
 - pip
 - numpy
 - qtpy
 - pip:
-  - -f "https://vtk.org/download"
+  - vtk
   - blockbuilder

@@ -65,7 +65,7 @@ setup_args = dict(
     download_url=DOWNLOAD_URL,
     url=DOWNLOAD_URL,
     platforms=["Windows", "Linux", "MacOS"],
-    python_requires='>=3.7',
+    python_requires='>=3.8',
     install_requires=REQUIREMENTS,
     packages=package_tree(NAME),
     scripts=[op.join('scripts', fname) for fname in SCRIPTS],
