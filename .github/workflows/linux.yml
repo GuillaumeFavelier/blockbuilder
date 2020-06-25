@@ -15,6 +15,7 @@ jobs:
     strategy:
       matrix:
         python:
+          - name: '3.7'
           - name: '3.8'
         qt_api:
           - name: 'PyQt5'
@@ -66,8 +67,6 @@ jobs:
           /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1400x900x24 -ac +extension GLX +render -noreset;
         name: 'Setup xvfb'
       - uses: s-weigand/setup-conda@v1
-        with:
-          python-version: '3.8'
         name: 'Setup conda'
       - run: |
           conda env update --file environment.yml
