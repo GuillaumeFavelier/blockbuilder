@@ -15,7 +15,6 @@ jobs:
     strategy:
       matrix:
         python:
-          - name: '3.7'
           - name: '3.8'
         qt_api:
           - name: 'PyQt5'
@@ -24,7 +23,7 @@ jobs:
           - name: '5.14.2'
           - name: '5.15.0'
         vtk_version:
-          - name: '9.0.0'
+          - name: '9.0.1'
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
