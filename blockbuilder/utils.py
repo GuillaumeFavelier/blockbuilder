@@ -1,7 +1,9 @@
 """Module about shared utility features."""
 
+from pathlib import Path
 import numpy as np
 import vtk
+import scooby
 
 
 class DefaultFunction():
@@ -16,6 +18,33 @@ class DefaultFunction():
         """Call the DefaultFunction."""
         del unused
         return self.func(self.default_value)
+
+
+def report():
+    """Return the report."""
+    def _readline(p):
+        with open(p) as f:
+            lst = [line.rstrip('\n') for line in f]
+        return lst
+
+    def _match(s):
+        import re
+        m = re.search("[a-zA-Z0-9-]*", s)
+        return m.group(0)
+
+    root_path = Path(__file__).parent.parent
+    core_path = Path(root_path, "requirements.txt")
+    qt_path = Path(root_path, "requirements_qt.txt")
+    testing_path = Path(root_path, "requirements_testing.txt")
+    core = [_match(el) for el in _readline(core_path)]
+    additional = [_match(el) for el in _readline(qt_path)]
+    optional = [_match(el) for el in _readline(testing_path)]
+    print(optional)
+    return scooby.Report(
+        core=core,
+        additional=additional,
+        optional=optional,
+    )
 
 
 def _hasattr(variable, attribute_name, variable_type):
