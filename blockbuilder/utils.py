@@ -1,5 +1,6 @@
 """Module about shared utility features."""
 
+import warnings
 from pathlib import Path
 import numpy as np
 import vtk
@@ -57,7 +58,9 @@ def add_mesh_cell_array(mesh, array_name, array):
     """Add a cell array to the mesh."""
     from vtk.util.numpy_support import numpy_to_vtk
     cell_data = mesh.GetCellData()
-    vtk_array = numpy_to_vtk(array)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        vtk_array = numpy_to_vtk(array)
     vtk_array.SetName(array_name)
     cell_data.AddArray(vtk_array)
     cell_data.SetActiveScalars(array_name)
