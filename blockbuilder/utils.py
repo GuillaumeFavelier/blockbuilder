@@ -2,6 +2,7 @@
 
 import warnings
 from pathlib import Path
+import re
 import numpy as np
 import vtk
 import scooby
@@ -29,7 +30,6 @@ def report():
         return lst
 
     def _match(s):
-        import re
         m = re.search("[a-zA-Z0-9-]*", s)
         return m.group(0)
 
