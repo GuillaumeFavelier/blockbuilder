@@ -79,6 +79,7 @@ The minimum required [dependencies](requirements.txt) to run BlockBuilder are:
 -   numpy>=1.18.5
 -   vtk>=9.0.1
 -   qtpy>=1.9.0
+-   scooby>=0.5.5
 -   PyQt5>=5.14.2 or PySide2>=5.14.2
 
 ### Resources
