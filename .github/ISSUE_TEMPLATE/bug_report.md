@@ -23,9 +23,9 @@ A clear and concise description of what you expected to happen.
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
-**Report (after installing [`scooby`](https://github.com/banesullivan/scooby)):**
-```py
-import scooby; scooby.Report(['vtk', 'qtpy', 'PyQt5', 'PySide2'])
+**Report**
+```sh
+python -c "import blockbuilder; print(blockbuilder.report())"
 ```
 
 **Additional context**

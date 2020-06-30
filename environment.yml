@@ -7,5 +7,6 @@ dependencies:
 - numpy
 - qtpy
 - pip:
+  - scooby
   - vtk
   - blockbuilder

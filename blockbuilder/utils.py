@@ -1,7 +1,11 @@
 """Module about shared utility features."""
 
+import warnings
+from pathlib import Path
+import re
 import numpy as np
 import vtk
+from scooby import Report
 
 
 class DefaultFunction():
@@ -18,6 +22,34 @@ class DefaultFunction():
         return self.func(self.default_value)
 
 
+def report():
+    """Return the report."""
+    def _readline(p):
+        with open(p) as f:
+            lst = [line.rstrip('\n') for line in f]
+        return lst
+
+    def _match(s):
+        m = re.search("[a-zA-Z0-9-]*", s)
+        return m.group(0)
+
+    def _filter(p):
+        return [_match(el) for el in _readline(p)]
+
+    root_path = Path(__file__).parent.parent
+    core_path = Path(root_path, "requirements.txt")
+    qt_path = Path(root_path, "requirements_qt.txt")
+    testing_path = Path(root_path, "requirements_testing.txt")
+    core = _filter(core_path)
+    additional = _filter(qt_path)
+    optional = _filter(testing_path)
+    return Report(
+        core=core,
+        additional=additional,
+        optional=optional,
+    )
+
+
 def _hasattr(variable, attribute_name, variable_type):
     if not hasattr(variable, attribute_name):
         return False
@@ -28,7 +60,9 @@ def add_mesh_cell_array(mesh, array_name, array):
     """Add a cell array to the mesh."""
     from vtk.util.numpy_support import numpy_to_vtk
     cell_data = mesh.GetCellData()
-    vtk_array = numpy_to_vtk(array)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        vtk_array = numpy_to_vtk(array)
     vtk_array.SetName(array_name)
     cell_data.AddArray(vtk_array)
     cell_data.SetActiveScalars(array_name)
