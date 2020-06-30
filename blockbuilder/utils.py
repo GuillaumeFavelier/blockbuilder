@@ -5,7 +5,7 @@ from pathlib import Path
 import re
 import numpy as np
 import vtk
-import scooby
+from scooby import Report
 
 
 class DefaultFunction():
@@ -40,8 +40,7 @@ def report():
     core = [_match(el) for el in _readline(core_path)]
     additional = [_match(el) for el in _readline(qt_path)]
     optional = [_match(el) for el in _readline(testing_path)]
-    print(optional)
-    return scooby.Report(
+    return Report(
         core=core,
         additional=additional,
         optional=optional,

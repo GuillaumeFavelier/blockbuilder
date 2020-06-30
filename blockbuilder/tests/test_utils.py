@@ -1,8 +1,10 @@
 import vtk
 from qtpy.QtGui import QColor
+from scooby import Report
 from blockbuilder.utils import (_hasattr, get_poly_data, get_uniform_grid,
                                 get_structured_grid, get_mesh_cell_array,
-                                _rgb2str, _qrgb2rgb, DefaultFunction)
+                                _rgb2str, _qrgb2rgb, DefaultFunction,
+                                report)
 
 
 def test_hasattr():
@@ -13,6 +15,10 @@ def test_hasattr():
     variable = A()
     assert _hasattr(variable, "a", bool)
     assert not _hasattr(variable, "b", bool)
+
+
+def test_report():
+    assert isinstance(report(), Report)
 
 
 def test_default_function():
