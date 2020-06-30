@@ -33,13 +33,16 @@ def report():
         m = re.search("[a-zA-Z0-9-]*", s)
         return m.group(0)
 
+    def _filter(p):
+        return [_match(el) for el in _readline(p)]
+
     root_path = Path(__file__).parent.parent
     core_path = Path(root_path, "requirements.txt")
     qt_path = Path(root_path, "requirements_qt.txt")
     testing_path = Path(root_path, "requirements_testing.txt")
-    core = [_match(el) for el in _readline(core_path)]
-    additional = [_match(el) for el in _readline(qt_path)]
-    optional = [_match(el) for el in _readline(testing_path)]
+    core = _filter(core_path)
+    additional = _filter(qt_path)
+    optional = _filter(testing_path)
     return Report(
         core=core,
         additional=additional,
