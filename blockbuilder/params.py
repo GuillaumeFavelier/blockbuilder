@@ -13,7 +13,7 @@ rcParams = {
         "window_size": [1280, 720],
         "show_edges": True,
         "line_width": 3,
-        "advanced": True,
+        "advanced": False,
         "background": {
             "color": {
                 "top": [0.05, 0.05, 0.05],
