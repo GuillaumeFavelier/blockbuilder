@@ -31,7 +31,7 @@ class Selector(Element):
             opacity=opacity,
         )
         self.coords = None
-        self.coords_type = np.int
+        self.coords_type = int
 
     def select(self, coords):
         """Select a block of the grid."""
