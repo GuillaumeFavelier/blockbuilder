@@ -12,8 +12,8 @@ def test_help_dialog(qtbot):
     qtbot.addWidget(dialog)
 
     assert not dialog.isVisible()
-    dialog.show()
-    qtbot.waitForWindowShown(dialog)
+    with qtbot.waitExposed(dialog):
+        dialog.show()
     assert dialog.isVisible()
 
     dialog.ok_button.click()

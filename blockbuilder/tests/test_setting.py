@@ -16,8 +16,8 @@ def test_setting_dialog(qtbot, tmpdir):
     qtbot.addWidget(dialog)
 
     assert not dialog.isVisible()
-    dialog.show()
-    qtbot.waitForWindowShown(dialog)
+    with qtbot.waitExposed(dialog):
+        dialog.show()
     assert dialog.isVisible()
     dialog.test_input_field.setText("foo")
     dialog.test_input_vector_field.setValue(0)
@@ -33,15 +33,15 @@ def test_setting_dialog(qtbot, tmpdir):
 
 def _dialog_scenario(qtbot, button, dialog):
     for msg in [QMessageBox.Ok, QMessageBox.Cancel]:
-        button.click()
-        qtbot.waitForWindowShown(dialog)
+        with qtbot.waitExposed(dialog):
+            button.click()
         dialog.button(msg).click()
 
 
 def test_color_button(qtbot):
     button = ColorButton()
     qtbot.addWidget(button)
-    button.click()
-    qtbot.waitForWindowShown(button.color_dialog)
+    with qtbot.waitExposed(button.color_dialog):
+        button.click()
     button.color_dialog.accept()
     button.close()

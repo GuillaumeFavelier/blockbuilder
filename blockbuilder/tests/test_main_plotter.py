@@ -169,8 +169,8 @@ def test_main_plotter_move_camera(qtbot):
 def test_main_plotter_action_import_dialog(qtbot):
     plotter = MainPlotter(params=rcParams, testing=True)
     qtbot.addWidget(plotter)
-    plotter.action_import(True)
-    qtbot.waitForWindowShown(plotter.import_dialog)
+    with qtbot.waitExposed(plotter.import_dialog):
+        plotter.action_import(True)
     plotter.import_dialog.accept()
     plotter.close()
 
@@ -178,8 +178,8 @@ def test_main_plotter_action_import_dialog(qtbot):
 def test_main_plotter_action_export_dialog(qtbot):
     plotter = MainPlotter(params=rcParams, testing=True)
     qtbot.addWidget(plotter)
-    plotter.action_export(True)
-    qtbot.waitForWindowShown(plotter.export_dialog)
+    with qtbot.waitExposed(plotter.export_dialog):
+        plotter.action_export(True)
     plotter.export_dialog.accept()
     plotter.close()
 
@@ -194,8 +194,8 @@ def test_main_plotter_action_setting(qtbot, tmpdir):
 
     plotter = MainPlotter(params=rcParams, testing=True)
     qtbot.addWidget(plotter)
-    plotter.action_setting(True)
-    qtbot.waitForWindowShown(plotter.setting_dialog)
+    with qtbot.waitExposed(plotter.setting_dialog):
+        plotter.action_setting(True)
     plotter.setting_dialog.ok_button.click()
     plotter.close()
 
@@ -203,8 +203,8 @@ def test_main_plotter_action_setting(qtbot, tmpdir):
 def test_main_plotter_action_help(qtbot, tmpdir):
     plotter = MainPlotter(params=rcParams, testing=True)
     qtbot.addWidget(plotter)
-    plotter.action_help(True)
-    qtbot.waitForWindowShown(plotter.help_dialog)
+    with qtbot.waitExposed(plotter.help_dialog):
+        plotter.action_help(True)
     plotter.help_dialog.ok_button.click()
     plotter.close()
 
