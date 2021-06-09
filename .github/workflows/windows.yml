@@ -32,7 +32,9 @@ jobs:
           python-version: ${{ matrix.python.name }}
           architecture: 'x64'
         name: 'Setup python'
-      - run: .\install_opengl.ps1
+      - run: |
+          git clone --depth 1 git://github.com/pyvista/gl-ci-helpers.git
+          powershell gl-ci-helpers/appveyor/install_opengl.ps1
         shell: pwsh
         name: 'Install opengl'
       - run: |
