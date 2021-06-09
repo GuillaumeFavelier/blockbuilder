@@ -37,11 +37,11 @@ wheel:
 
 tests:
 	@echo "Run tests"
-	@pytest -v blockbuilder -n 1
+	@pytest -v blockbuilder
 
 coverage:
 	@echo "Run coverage"
-	@pytest --cov=blockbuilder -n 1
+	@pytest --cov=blockbuilder
 
 coverage-html: coverage
 	@echo "Report HTML coverage"

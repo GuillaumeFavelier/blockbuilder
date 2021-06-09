@@ -2,11 +2,11 @@ name: blockbuilder
 channels:
 - conda-forge
 dependencies:
-- python>=3.7
+- python<3.9
 - pip
 - numpy
 - qtpy
-- vtk>=9.0.1
 - pip:
+  - vtk>=9.0.1
   - scooby
   - blockbuilder

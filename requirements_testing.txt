@@ -7,6 +7,5 @@ pydocstyle
 pytest
 pytest-qt
 pytest-cov
-pytest-sugar
-pytest-xdist
+pytest-xvfb
 coverage
