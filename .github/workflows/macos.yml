@@ -23,8 +23,8 @@ jobs:
           - name: 'PyQt5'
           - name: 'PySide2'
         qt_version:
-          - name: '5.14'
-          - name: '5.15'
+          - name: '5.14.2'
+          - name: '5.15.2'
         vtk_version:
           - name: '9.0.1'
     steps:
