@@ -169,7 +169,7 @@ def test_main_plotter_move_camera(qtbot):
 def test_main_plotter_action_import_dialog(qtbot):
     plotter = MainPlotter(params=rcParams, testing=True)
     qtbot.addWidget(plotter)
-    with qtbot.waitExposed(plotter.import_dialog):
+    with qtbot.waitExposed(plotter.import_dialog, timeout=10000):
         plotter.action_import(True)
     plotter.import_dialog.accept()
     plotter.close()
@@ -178,7 +178,7 @@ def test_main_plotter_action_import_dialog(qtbot):
 def test_main_plotter_action_export_dialog(qtbot):
     plotter = MainPlotter(params=rcParams, testing=True)
     qtbot.addWidget(plotter)
-    with qtbot.waitExposed(plotter.export_dialog):
+    with qtbot.waitExposed(plotter.export_dialog, timeout=10000):
         plotter.action_export(True)
     plotter.export_dialog.accept()
     plotter.close()
