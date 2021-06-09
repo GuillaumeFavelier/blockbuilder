@@ -284,16 +284,14 @@ class MainPlotter(InteractivePlotter):
         self.export_dialog.setWindowTitle("Export")
         self.export_dialog.setNameFilter("Blockset (*.vts *.vtk)")
         self.export_dialog.setWindowIcon(self.icons[Action.EXPORT])
-        # XXX: Fails on CI if modal
-        # self.export_dialog.setModal(True)
+        self.export_dialog.setModal(True)
 
         # import dialog
         self.import_dialog = QFileDialog(self)
         self.import_dialog.setNameFilter("Blockset (*.vts *.vtk)")
         self.import_dialog.setWindowTitle("Import")
         self.import_dialog.setWindowIcon(self.icons[Action.IMPORT])
-        # XXX: Fails on CI if modal
-        # self.import_dialog.setModal(True)
+        self.import_dialog.setModal(True)
 
         # setting dialog
         self.setting_dialog = SettingDialog(self.params, self)
