@@ -12,7 +12,7 @@ on:
 
 jobs:
   macos-pip:
-    name: py${{ matrix.python.name }}-${{ matrix.qt_api.name }}-qt${{ matrix.qt_version.name }}-vtk${{ matrix.vtk_version.name }}
+    name: py${{ matrix.python.name }}-${{ matrix.qt_api.name }}-vtk${{ matrix.vtk_version.name }}
     runs-on: macos-latest
     strategy:
       matrix:
@@ -22,9 +22,6 @@ jobs:
         qt_api:
           - name: 'PyQt5'
           - name: 'PySide2'
-        qt_version:
-          - name: '5.14.2'
-          - name: '5.15.2'
         vtk_version:
           - name: '9.0.1'
     steps:
@@ -36,7 +33,7 @@ jobs:
         name: 'Setup python'
       - run: |
           python -m pip install --upgrade pip setuptools wheel
-          pip install ${{ matrix.qt_api.name }}==${{ matrix.qt_version.name }}
+          pip install ${{ matrix.qt_api.name }}
           pip install -r requirements_testing.txt
           pip install vtk==${{ matrix.vtk_version.name }}
         name: 'Install dependencies'
