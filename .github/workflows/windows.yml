@@ -45,5 +45,5 @@ jobs:
         name: 'Install dependencies'
       - run: pip install -e .
         name: 'Install blockbuilder'
-      - run: pytest -v blockbuilder -n 1
+      - run: pytest -v blockbuilder
         name: 'Run tests'

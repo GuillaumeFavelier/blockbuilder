@@ -40,7 +40,9 @@ jobs:
       architecture: 'x64'
       addToPath: true
     displayName: 'Setup python'
-  - powershell: .\install_opengl.ps1
+  - powershell: |
+      git clone --depth 1 git://github.com/pyvista/gl-ci-helpers.git
+      powershell gl-ci-helpers/appveyor/install_opengl.ps1
     displayName: 'Install opengl'
   - bash: |
       python -m pip install --upgrade pip setuptools wheel
@@ -49,7 +51,7 @@ jobs:
     displayName: 'Install dependencies'
   - bash: pip install -e .
     displayName: 'Install blockbuilder'
-  - bash: pytest -v blockbuilder -n 1
+  - bash: pytest -v blockbuilder
     displayName: 'Run tests'
 
 - job: 'Linux'
@@ -75,5 +77,5 @@ jobs:
     displayName: 'Install dependencies'
   - bash: pip install -e .
     displayName: 'Install blockbuilder'
-  - bash: pytest -v blockbuilder -n 1
+  - bash: pytest -v blockbuilder
     displayName: 'Run tests'
