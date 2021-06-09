@@ -41,7 +41,7 @@ def _dialog_scenario(qtbot, button, dialog):
 def test_color_button(qtbot):
     button = ColorButton()
     qtbot.addWidget(button)
-    with qtbot.waitExposed(button.color_dialog, timeout=10000):
+    with qtbot.waitExposed(button.color_dialog, timeout=16000):
         button.click()
     button.color_dialog.accept()
     button.close()
