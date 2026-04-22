@@ -1,4 +1,4 @@
 numpy>=1.18.5
 vtk>=9.0.1
-qtpy>=1.9.0
+qtpy>=2.4.3
 scooby>=0.5.5
